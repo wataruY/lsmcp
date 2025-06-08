@@ -34,9 +34,6 @@ Add permissions in `.claude/settings.json`.
 {
   "permissions": {
     "allow": [
-      "mcp__typescript__move_file",
-      "mcp__typescript__rename_symbol",
-      "mcp__typescript__delete_symbol",
       "mcp__typescript__find_references",
       "mcp__typescript__get_definitions",
       "mcp__typescript__get_diagnostics",
