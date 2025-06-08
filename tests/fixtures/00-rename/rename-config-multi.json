@@ -1,0 +1,64 @@
+{
+  "steps": [
+    {
+      "name": "rename-simple-variable",
+      "inputFile": "input-consolidated.ts",
+      "operations": [
+        {
+          "type": "rename",
+          "line": 2,
+          "symbolName": "foo",
+          "newName": "bar"
+        }
+      ]
+    },
+    {
+      "name": "rename-function",
+      "inputFile": "input-consolidated.ts",
+      "operations": [
+        {
+          "type": "rename",
+          "line": 8,
+          "symbolName": "foo2",
+          "newName": "bar2"
+        }
+      ]
+    },
+    {
+      "name": "rename-class",
+      "inputFile": "input-consolidated.ts",
+      "operations": [
+        {
+          "type": "rename",
+          "line": 18,
+          "symbolName": "Foo3",
+          "newName": "Bar3"
+        }
+      ]
+    },
+    {
+      "name": "rename-multiple",
+      "inputFile": "input-consolidated.ts",
+      "operations": [
+        {
+          "type": "rename",
+          "line": 2,
+          "symbolName": "foo",
+          "newName": "bar"
+        },
+        {
+          "type": "rename",
+          "line": 8,
+          "symbolName": "foo2",
+          "newName": "bar2"
+        },
+        {
+          "type": "rename",
+          "line": 18,
+          "symbolName": "Foo3",
+          "newName": "Bar3"
+        }
+      ]
+    }
+  ]
+}

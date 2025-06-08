@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { createProject, rename, addSourceFile } from "../src/rename";
+import {
+  createProject,
+  renameSymbol,
+  addSourceFile,
+} from "../src/renameSymbol";
 import fs from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 
-const FIXTURES_DIR = path.join(__dirname, "__fixtures/00-rename");
+const FIXTURES_DIR = path.join(__dirname, "fixtures/00-rename");
 
 describe("rename", () => {
   let tmpDir: string;
@@ -44,7 +48,7 @@ describe("rename", () => {
   Object.entries(config).forEach(([testName, testConfig]) => {
     it(`should rename ${testName}`, async () => {
       // Copy input file to tmp directory
-      const inputFile = path.join(FIXTURES_DIR, `input-${testName}.ts`);
+      const inputFile = path.join(FIXTURES_DIR, `${testName}.input.ts`);
       const tmpFile = path.join(tmpDir, `${testName}.ts`);
       await fs.copyFile(inputFile, tmpFile);
 
@@ -52,7 +56,7 @@ describe("rename", () => {
       const project = createProject();
       addSourceFile(project, tmpFile);
 
-      const result = await rename(project, {
+      const result = await renameSymbol(project, {
         filePath: tmpFile,
         line: testConfig.line,
         symbolName: testConfig.symbolName,
@@ -66,7 +70,48 @@ describe("rename", () => {
 
       // Compare with expected output
       const actualContent = await fs.readFile(tmpFile, "utf-8");
-      const expectedFile = path.join(FIXTURES_DIR, `expect-${testName}.ts`);
+      const expectedFile = path.join(FIXTURES_DIR, `${testName}.expected.ts`);
+      const expectedContent = await fs.readFile(expectedFile, "utf-8");
+
+      expect(actualContent.trim()).toBe(expectedContent.trim());
+    });
+  });
+
+  describe("multi-step execution", () => {
+    it("should rename multiple symbols in consolidated file", async () => {
+      // Copy consolidated input file to tmp directory
+      const inputFile = path.join(FIXTURES_DIR, "consolidated.input.ts");
+      const tmpFile = path.join(tmpDir, "consolidated.ts");
+      await fs.copyFile(inputFile, tmpFile);
+
+      // Create project
+      const project = createProject();
+      addSourceFile(project, tmpFile);
+
+      // Execute multiple rename operations
+      const operations = [
+        { line: 2, symbolName: "foo", newName: "bar" },
+        { line: 8, symbolName: "foo2", newName: "bar2" },
+        { line: 18, symbolName: "Foo3", newName: "Bar3" },
+      ];
+
+      for (const op of operations) {
+        const result = await renameSymbol(project, {
+          filePath: tmpFile,
+          line: op.line,
+          symbolName: op.symbolName,
+          newName: op.newName,
+          renameInComments: true,
+          renameInStrings: true,
+        });
+
+        expect(result.success).toBe(true);
+        expect(result.error).toBeUndefined();
+      }
+
+      // Compare with expected output
+      const actualContent = await fs.readFile(tmpFile, "utf-8");
+      const expectedFile = path.join(FIXTURES_DIR, "consolidated.expected.ts");
       const expectedContent = await fs.readFile(expectedFile, "utf-8");
 
       expect(actualContent.trim()).toBe(expectedContent.trim());

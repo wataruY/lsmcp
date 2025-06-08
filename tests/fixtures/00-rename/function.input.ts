@@ -5,4 +5,4 @@ function foo(x: number): number {
 const value = foo(5);
 console.log(foo(10));
 
-export default foo;
+export { foo };

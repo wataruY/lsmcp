@@ -5,4 +5,4 @@ function bar(x: number): number {
 const value = bar(5);
 console.log(bar(10));
 
-export default bar;
+export { bar };

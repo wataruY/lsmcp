@@ -1,9 +1,4 @@
-import {
-  Project,
-  SourceFile,
-  Node,
-  getCompilerOptionsFromTsConfig,
-} from "ts-morph";
+import { Project, SourceFile, Node, getCompilerOptionsFromTsConfig } from "ts-morph";
 
 export interface RenameRequest {
   filePath: string;
@@ -35,27 +30,23 @@ export function createProject(tsConfigPath?: string): Project {
   if (tsConfigPath) {
     const { options, errors } = getCompilerOptionsFromTsConfig(tsConfigPath);
     if (errors.length > 0) {
-      throw new Error(
-        `Failed to read tsconfig: ${errors
-          .map((e) => e.getMessageText())
-          .join(", ")}`
-      );
+      throw new Error(`Failed to read tsconfig: ${errors.map(e => e.getMessageText()).join(', ')}`);
     }
     return new Project({
       compilerOptions: options,
       skipAddingFilesFromTsConfig: false,
     });
   }
-
+  
   return new Project({
     skipAddingFilesFromTsConfig: false,
   });
 }
 
 /**
- * ファイルパスと行番号、シンボル名を指定してリネームを実行
+ * ファイルパスと行番号、シンボル名を指定してシンボルのリネームを実行
  */
-export async function rename(
+export async function renameSymbol(
   project: Project,
   request: RenameRequest
 ): Promise<RenameResult> {
@@ -71,7 +62,11 @@ export async function rename(
     }
 
     // 指定された行のシンボルを探す
-    const node = findSymbolAtLine(sourceFile, request.line, request.symbolName);
+    const node = findSymbolAtLine(
+      sourceFile,
+      request.line,
+      request.symbolName
+    );
     if (!node) {
       return {
         success: false,
@@ -161,7 +156,10 @@ function findSymbolAtLine(
       // 変数宣言の場合
       if (Node.isVariableDeclaration(node)) {
         const nameNode = node.getNameNode();
-        if (Node.isIdentifier(nameNode) && nameNode.getText() === symbolName) {
+        if (
+          Node.isIdentifier(nameNode) &&
+          nameNode.getText() === symbolName
+        ) {
           foundNode = nameNode;
           return;
         }

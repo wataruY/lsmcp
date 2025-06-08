@@ -1,4 +1,4 @@
-import { createProject, rename, addSourceFile } from "../../src/rename";
+import { createProject, renameSymbol, addSourceFile } from "../../src/renameSymbol";
 import * as path from "path";
 import { fileURLToPath } from 'url';
 
@@ -10,7 +10,7 @@ async function main() {
   const targetFile = path.join(__dirname, "main.ts");
   addSourceFile(project, targetFile);
 
-  const result = await rename(project, {
+  const result = await renameSymbol(project, {
     filePath: targetFile,
     line: 1,
     symbolName: "foo",
