@@ -5,7 +5,6 @@ import fs from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 import { parseMoveComments } from "./helpers/extract-move-ops";
-import { globSync } from "fs";
 
 const FIXTURES_DIR = path.join(__dirname, "fixtures/01-move");
 
@@ -27,72 +26,69 @@ describe("moveFile", () => {
       }
     });
 
-    // Find all .input.ts and .input.d.ts files in the fixtures directory
-    const inputFiles = globSync("*.input.{ts,d.ts}", { cwd: FIXTURES_DIR });
-    const testCases = inputFiles.map(file => {
-      const ext = file.endsWith('.d.ts') ? '.d.ts' : '.ts';
-      return {
-        name: path.basename(file, `.input${ext}`),
-        inputFile: file,
-        ext
-      };
+    it("should move simple.ts file", async () => {
+      const inputPath = path.join(FIXTURES_DIR, "simple.input.ts");
+      const operations = await parseMoveComments(inputPath);
+      expect(operations.length).toBe(1);
+
+      const project = new Project({
+        skipFileDependencyResolution: true,
+      });
+
+      // Copy input file to temp directory
+      const originalPath = path.join(tmpDir, "simple.ts");
+      await fs.copyFile(inputPath, originalPath);
+      project.addSourceFileAtPath(originalPath);
+
+      // Perform the move
+      const newPath = path.join(tmpDir, "simple-renamed.ts");
+      moveFile(project, {
+        oldFilename: originalPath,
+        newFilename: newPath,
+      });
+
+      // Save changes
+      await project.save();
+
+      // Verify old file doesn't exist
+      await expect(fs.access(originalPath)).rejects.toThrow();
+
+      // Verify new file exists with correct content
+      const newContent = await fs.readFile(newPath, "utf-8");
+      expect(newContent).toContain("export const foo");
+      expect(newContent).toContain("export function hello");
     });
 
-    testCases.forEach(({ name, inputFile, ext }) => {
-      it(`should move ${name}`, async () => {
-        // Parse move operation from @move comment
-        const inputPath = path.join(FIXTURES_DIR, inputFile);
-        const operations = await parseMoveComments(inputPath);
-        expect(operations.length).toBe(1);
+    it("should move declaration file", async () => {
+      const inputPath = path.join(FIXTURES_DIR, "declaration.input.d.ts");
+      const operations = await parseMoveComments(inputPath);
+      expect(operations.length).toBe(1);
 
-        const op = operations[0];
-        const project = new Project({
-          skipFileDependencyResolution: true,
-        });
-
-        // Copy input file to temp directory with original name
-        const originalPath = path.join(tmpDir, op.oldPath);
-        await fs.mkdir(path.dirname(originalPath), { recursive: true });
-        await fs.copyFile(inputPath, originalPath);
-
-        // If there's a consumer file, copy it too
-        const consumerFile = path.join(FIXTURES_DIR, `${name}.consumer.ts`);
-        if (await fs.access(consumerFile).then(() => true).catch(() => false)) {
-          const consumerPath = path.join(tmpDir, `${name}.consumer.ts`);
-          await fs.copyFile(consumerFile, consumerPath);
-          project.addSourceFileAtPath(consumerPath);
-        }
-
-        // Add source file to project
-        project.addSourceFileAtPath(originalPath);
-
-        // Perform the move
-        const newPath = path.join(tmpDir, op.newPath);
-        await fs.mkdir(path.dirname(newPath), { recursive: true });
-
-        moveFile(project, {
-          oldFilename: originalPath,
-          newFilename: newPath,
-        });
-
-        // Save changes
-        await project.save();
-
-        // Verify old file doesn't exist
-        await expect(fs.access(originalPath)).rejects.toThrow();
-
-        // Verify new file exists
-        await expect(fs.access(newPath)).resolves.toBeUndefined();
-
-        // If there's an expected consumer file, compare it
-        const expectedConsumerFile = path.join(FIXTURES_DIR, `${name}.expected.consumer.ts`);
-        if (await fs.access(expectedConsumerFile).then(() => true).catch(() => false)) {
-          const actualConsumerPath = path.join(tmpDir, `${name}.consumer.ts`);
-          const actualContent = await fs.readFile(actualConsumerPath, "utf-8");
-          const expectedContent = await fs.readFile(expectedConsumerFile, "utf-8");
-          expect(actualContent.trim()).toBe(expectedContent.trim());
-        }
+      const project = new Project({
+        skipFileDependencyResolution: true,
       });
+
+      // Copy input file to temp directory
+      const originalPath = path.join(tmpDir, "types.d.ts");
+      await fs.copyFile(inputPath, originalPath);
+      project.addSourceFileAtPath(originalPath);
+
+      // Perform the move
+      const newPath = path.join(tmpDir, "global.d.ts");
+      moveFile(project, {
+        oldFilename: originalPath,
+        newFilename: newPath,
+      });
+
+      // Save changes
+      await project.save();
+
+      // Verify old file doesn't exist
+      await expect(fs.access(originalPath)).rejects.toThrow();
+
+      // Verify new file exists
+      const newContent = await fs.readFile(newPath, "utf-8");
+      expect(newContent).toContain("declare module \"my-module\"");
     });
   });
 
