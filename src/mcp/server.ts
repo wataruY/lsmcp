@@ -12,6 +12,7 @@ import { getDiagnosticsTool } from "./tools/get_diagnostics.ts";
 import { getModuleSymbolsTool } from "./tools/get_module_symbols.ts";
 import { getTypeSignatureTool } from "./tools/get_type_signature.ts";
 import { getModuleGraphTool } from "./tools/get_module_graph.ts";
+import { getRelatedModulesTool } from "./tools/get_related_modules.ts";
 
 const server = new McpServer({
   name: "typescript",
@@ -28,7 +29,9 @@ const tools = [
   getDiagnosticsTool,
   getModuleSymbolsTool,
   getTypeSignatureTool,
-  getModuleGraphTool,
+  // WIP: does not work yet correctly
+  // getModuleGraphTool,
+  // getRelatedModulesTool,
 ];
 
 for (const tool of tools) {

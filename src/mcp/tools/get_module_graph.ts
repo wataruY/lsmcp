@@ -6,6 +6,11 @@ import { getModuleGraph } from "../../navigations/get_module_graph.ts";
 const paramsSchema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
   entryPoints: z.array(z.string()).describe("Entry point files to start analysis from (relative or absolute paths)"),
+  mermaidOptions: z.object({
+    direction: z.enum(["TD", "TB", "BT", "RL", "LR"]).optional().default("TD").describe("Graph direction: TD (top-down), BT (bottom-top), LR (left-right), RL (right-left)"),
+    useShortLabels: z.boolean().optional().default(false).describe("Use only filename instead of full path in labels"),
+    theme: z.enum(["default", "forest", "dark", "neutral"]).optional().describe("Mermaid theme"),
+  }).optional().default({}),
 });
 
 type Params = z.infer<typeof paramsSchema>;
@@ -140,6 +145,58 @@ export const getModuleGraphTool: ToolDef<Params, Params> = {
         lines.push(`  - ${file.path} (imported by ${file.importedBy.length} files)`);
       });
     }
+
+    // Add Mermaid graph visualization
+    const mermaidOpts = args.mermaidOptions || {};
+    const direction = mermaidOpts.direction || "TD";
+    const useShortLabels = mermaidOpts.useShortLabels ?? false;
+    
+    lines.push("");
+    lines.push("📊 Mermaid Dependency Graph:");
+    lines.push("```mermaid");
+    
+    // Add theme if specified
+    if (mermaidOpts.theme) {
+      lines.push(`%%{init: {'theme':'${mermaidOpts.theme}'}}%%`);
+    }
+    
+    lines.push(`graph ${direction}`);
+    
+    // Create node IDs by replacing special characters
+    const createNodeId = (path: string) => {
+      return path.replace(/[^\w]/g, '_').replace(/__+/g, '_');
+    };
+    
+    // Add nodes with labels
+    graph.files.forEach(file => {
+      const nodeId = createNodeId(file.path);
+      const label = useShortLabels ? (file.path.split('/').pop() || file.path) : file.path;
+      lines.push(`    ${nodeId}["${label}"]`);
+    });
+    
+    // Add edges
+    graph.files.forEach(file => {
+      const fromId = createNodeId(file.path);
+      file.imports.forEach(importPath => {
+        const toId = createNodeId(importPath);
+        lines.push(`    ${fromId} --> ${toId}`);
+      });
+    });
+    
+    // Highlight circular dependencies if any
+    if (graph.stats.circularDependencies.length > 0) {
+      lines.push("");
+      lines.push("    %% Circular dependencies are highlighted");
+      graph.stats.circularDependencies.forEach((cycle, idx) => {
+        lines.push(`    classDef circular${idx} fill:#f96,stroke:#333,stroke-width:4px;`);
+        cycle.slice(0, -1).forEach(filePath => {
+          const nodeId = createNodeId(filePath);
+          lines.push(`    class ${nodeId} circular${idx};`);
+        });
+      });
+    }
+    
+    lines.push("```");
 
     return lines.join("\n");
   },
