@@ -11,16 +11,6 @@ A specialized MCP (Model Context Protocol) server for TypeScript projects, provi
 - **Diagnostics**: Get TypeScript errors and warnings
 - **Module Analysis**: List exported symbols from modules
 
-## Installation
-
-```bash
-# Install dependencies
-pnpm install
-
-# Build
-pnpm build
-```
-
 ## Usage
 
 ### Running as MCP Server
@@ -67,6 +57,16 @@ When using this MCP server in Claude, the tools are available with the `mcp__typ
 - `mcp__typescript__get-diagnostics` - Get TypeScript diagnostics
 - `mcp__typescript__get-module-symbols` - List module exports
 - `mcp__typescript__get-type-signature` - Get detailed type signatures
+
+## Develop
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build
+pnpm build
+```
 
 ## License
 
