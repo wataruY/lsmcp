@@ -264,8 +264,16 @@ server.tool(
       .string()
       .describe("Name of the symbol to get definitions for"),
     root: z.string().describe("Root directory for resolving relative paths"),
+    before: z
+      .number()
+      .optional()
+      .describe("Number of lines to show before the definition"),
+    after: z
+      .number()
+      .optional()
+      .describe("Number of lines to show after the definition"),
   },
-  toMcpToolHandler(async ({ filePath, line, symbolName, root }) => {
+  toMcpToolHandler(async ({ filePath, line, symbolName, root, before, after }) => {
     // Always treat paths as relative to root
     const absolutePath = path.join(root, filePath);
 
@@ -329,6 +337,34 @@ server.tool(
       output.push(
         `  ${relativePath}:${def.line}:${def.column} - ${def.lineText}`
       );
+      
+      // Add context lines if requested
+      if (before || after) {
+        const defSourceFile = project.getSourceFile(def.filePath);
+        if (defSourceFile) {
+          const fullText = defSourceFile.getFullText();
+          const lines = fullText.split("\n");
+          
+          const startLine = Math.max(0, def.line - 1 - (before || 0));
+          const endLine = Math.min(lines.length, def.line + (after || 0));
+          
+          if (before && startLine < def.line - 1) {
+            output.push("");
+            for (let i = startLine; i < def.line - 1; i++) {
+              output.push(`    ${i + 1}: ${lines[i]}`);
+            }
+          }
+          
+          // Show the definition line with arrow
+          output.push(`  → ${def.line}: ${lines[def.line - 1]}`);
+          
+          if (after && def.line < endLine) {
+            for (let i = def.line; i < endLine; i++) {
+              output.push(`    ${i + 1}: ${lines[i]}`);
+            }
+          }
+        }
+      }
     }
 
     return output.join("\n");
@@ -374,25 +410,10 @@ server.tool(
       throw new Error(result.error);
     }
 
-    const { message, diagnostics } = result.value;
+    const { message } = result.value;
     
-    // Format the output
-    const output = [message];
-    
-    if (diagnostics.length > 0) {
-      output.push("");
-      output.push("Diagnostics:");
-      
-      for (const diag of diagnostics) {
-        const relativePath = path.relative(root, diag.filePath);
-        const icon = diag.category === "error" ? "❌" : diag.category === "warning" ? "⚠️" : "💡";
-        output.push(
-          `  ${icon} ${relativePath}:${diag.line}:${diag.column} - ${diag.category}: ${diag.message} [${diag.code}]`
-        );
-      }
-    }
-    
-    return output.join("\n");
+    // Return ts-morph's formatted output directly
+    return message;
   })
 );
 
