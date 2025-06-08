@@ -27,25 +27,10 @@ describe("rename", () => {
     }
   });
 
-  const config = {
-    "simple-variable": {
-      line: 1,
-      symbolName: "foo",
-      newName: "bar",
-    },
-    function: {
-      line: 1,
-      symbolName: "foo",
-      newName: "bar",
-    },
-    class: {
-      line: 1,
-      symbolName: "Foo",
-      newName: "Bar",
-    },
-  };
+  // Convention: all test fixtures rename foo -> bar (or Foo -> Bar for classes)
+  const testCases = ["simple-variable", "function", "class"];
 
-  Object.entries(config).forEach(([testName, testConfig]) => {
+  testCases.forEach((testName) => {
     it(`should rename ${testName}`, async () => {
       // Copy input file to tmp directory
       const inputFile = path.join(FIXTURES_DIR, `${testName}.input.ts`);
@@ -56,11 +41,13 @@ describe("rename", () => {
       const project = createProject();
       addSourceFile(project, tmpFile);
 
+      // Convention: rename at line 1, foo->bar (or Foo->Bar for class)
+      const isClass = testName === "class";
       const result = await renameSymbol(project, {
         filePath: tmpFile,
-        line: testConfig.line,
-        symbolName: testConfig.symbolName,
-        newName: testConfig.newName,
+        line: 1,
+        symbolName: isClass ? "Foo" : "foo",
+        newName: isClass ? "Bar" : "bar",
         renameInComments: true,
         renameInStrings: true,
       });
