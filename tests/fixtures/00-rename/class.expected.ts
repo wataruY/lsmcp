@@ -1,4 +1,4 @@
-class Bar {
+class Bar { // @rename Foo Bar
   private value: number;
   
   constructor(value: number) {
