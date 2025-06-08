@@ -123,10 +123,12 @@ describe("moveFile", () => {
     project.addSourceFileAtPath(oldPath);
     
     // Move the file
-    moveFile(project, {
+    const result = moveFile(project, {
       oldFilename: oldPath,
       newFilename: newPath,
     });
+    
+    expect(result.isOk()).toBe(true);
     
     // Save changes
     await project.save();
@@ -151,10 +153,12 @@ describe("moveFile", () => {
     project.addSourceFileAtPath(oldPath);
     
     // Move the file
-    moveFile(project, {
+    const result = moveFile(project, {
       oldFilename: oldPath,
       newFilename: newPath,
     });
+    
+    expect(result.isOk()).toBe(true);
     
     // Save changes
     await project.save();
@@ -196,16 +200,19 @@ describe("moveFile", () => {
     expect(indexContent).toContain(`import { helper } from "./utils/lib"`);
   });
 
-  it("should throw error when source file doesn't exist", () => {
+  it("should return error when source file doesn't exist", () => {
     const oldPath = path.join(tmpDir, "non-existent.ts");
     const newPath = path.join(tmpDir, "new.ts");
     
-    expect(() => {
-      moveFile(project, {
-        oldFilename: oldPath,
-        newFilename: newPath,
-      });
-    }).toThrow(`Source file not found: ${oldPath}`);
+    const result = moveFile(project, {
+      oldFilename: oldPath,
+      newFilename: newPath,
+    });
+    
+    expect(result.isErr()).toBe(true);
+    if (result.isErr()) {
+      expect(result.error).toBe(`Source file not found: ${oldPath}`);
+    }
   });
 
   it("should handle moving TypeScript declaration files", async () => {
@@ -217,10 +224,12 @@ describe("moveFile", () => {
     project.addSourceFileAtPath(oldPath);
     
     // Move the file
-    moveFile(project, {
+    const result = moveFile(project, {
       oldFilename: oldPath,
       newFilename: newPath,
     });
+    
+    expect(result.isOk()).toBe(true);
     
     // Save changes
     await project.save();

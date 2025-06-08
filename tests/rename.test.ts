@@ -58,8 +58,10 @@ describe("rename", () => {
         renameInStrings: true,
       });
 
-      expect(result.success).toBe(true);
-      expect(result.error).toBeUndefined();
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) {
+        console.error('Rename failed:', result.error);
+      }
 
       // Compare with expected output
       const actualContent = await fs.readFile(tmpFile, "utf-8");

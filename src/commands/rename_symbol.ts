@@ -4,6 +4,7 @@ import {
   Node,
   getCompilerOptionsFromTsConfig,
 } from "ts-morph";
+import { Result, ok, err } from "neverthrow";
 
 export interface RenameRequest {
   filePath: string;
@@ -14,8 +15,8 @@ export interface RenameRequest {
   renameInStrings?: boolean;
 }
 
-export interface RenameResult {
-  success: boolean;
+export interface RenameSuccess {
+  message: string;
   changedFiles: Array<{
     filePath: string;
     changes: Array<{
@@ -25,7 +26,6 @@ export interface RenameResult {
       newText: string;
     }>;
   }>;
-  error?: string;
 }
 
 /**
@@ -58,26 +58,24 @@ export function createProject(tsConfigPath?: string): Project {
 export async function renameSymbol(
   project: Project,
   request: RenameRequest
-): Promise<RenameResult> {
+): Promise<Result<RenameSuccess, string>> {
   try {
     // ソースファイルを取得
     const sourceFile = project.getSourceFile(request.filePath);
     if (!sourceFile) {
-      return {
-        success: false,
-        changedFiles: [],
-        error: `File not found: ${request.filePath}`,
-      };
+      return err(`File not found: ${request.filePath}`);
     }
 
     // 指定された行のシンボルを探す
-    const node = findSymbolAtLine(sourceFile, request.line, request.symbolName);
+    let node: Node | undefined;
+    try {
+      node = findSymbolAtLine(sourceFile, request.line, request.symbolName);
+    } catch (error) {
+      return err(error instanceof Error ? error.message : String(error));
+    }
+    
     if (!node) {
-      return {
-        success: false,
-        changedFiles: [],
-        error: `Symbol "${request.symbolName}" not found at line ${request.line}`,
-      };
+      return err(`Symbol "${request.symbolName}" not found at line ${request.line}`);
     }
 
     // リネーム前の状態を記録
@@ -95,11 +93,7 @@ export async function renameSymbol(
         renameInStrings: request.renameInStrings || false,
       });
     } else {
-      return {
-        success: false,
-        changedFiles: [],
-        error: `Cannot rename node of type ${node.getKindName()}`,
-      };
+      return err(`Cannot rename node of type ${node.getKindName()}`);
     }
 
     // 変更を検出
@@ -108,16 +102,12 @@ export async function renameSymbol(
     // プロジェクトを保存
     await project.save();
 
-    return {
-      success: true,
+    return ok({
+      message: `Successfully renamed symbol "${request.symbolName}" to "${request.newName}"`,
       changedFiles,
-    };
+    });
   } catch (error) {
-    return {
-      success: false,
-      changedFiles: [],
-      error: error instanceof Error ? error.message : String(error),
-    };
+    return err(error instanceof Error ? error.message : String(error));
   }
 }
 
@@ -129,29 +119,38 @@ function findSymbolAtLine(
   line: number,
   symbolName: string
 ): Node | undefined {
-  let foundNode: Node | undefined;
+  const candidateNodes: Node[] = [];
 
   sourceFile.forEachDescendant((node) => {
-    // 既に見つかっている場合はスキップ
-    if (foundNode) return;
-
     const startLine = sourceFile.getLineAndColumnAtPos(node.getStart()).line;
-    const endLine = sourceFile.getLineAndColumnAtPos(node.getEnd()).line;
-
-    // 指定された行に含まれているかチェック
-    if (line >= startLine && line <= endLine) {
+    
+    // 指定された行から始まるノードのみをチェック
+    if (line === startLine) {
       // 識別子の場合
       if (Node.isIdentifier(node) && node.getText() === symbolName) {
-        foundNode = node;
-        return;
+        // 親が名前付きノードの場合は、親ノードを優先
+        const parent = node.getParent();
+        if (parent && hasGetNameMethod(parent)) {
+          try {
+            if ((parent as any).getName() === symbolName) {
+              // 親ノードを使用（重複を避けるため）
+              if (!candidateNodes.some(n => n === parent)) {
+                candidateNodes.push(parent);
+              }
+              return; // 識別子自体は追加しない
+            }
+          } catch {
+            // getName()が使えない場合は識別子を使用
+          }
+        }
+        candidateNodes.push(node);
       }
 
       // 名前付きノードの場合（クラス、関数、変数など）
       if (hasGetNameMethod(node)) {
         try {
           if ((node as any).getName() === symbolName) {
-            foundNode = node;
-            return;
+            candidateNodes.push(node);
           }
         } catch {
           // getName()が使えないノードは無視
@@ -162,14 +161,46 @@ function findSymbolAtLine(
       if (Node.isVariableDeclaration(node)) {
         const nameNode = node.getNameNode();
         if (Node.isIdentifier(nameNode) && nameNode.getText() === symbolName) {
-          foundNode = nameNode;
-          return;
+          candidateNodes.push(node); // 変数宣言ノードを使用
         }
       }
     }
   });
 
-  return foundNode;
+  // 重複を除去（同じシンボルを表す異なるノードタイプを統合）
+  const uniqueNodes = candidateNodes.filter((node) => {
+    // 同じ位置から始まる他のノードがある場合、より具体的なノードを優先
+    const nodeStart = node.getStart();
+    const duplicates = candidateNodes.filter(n => n.getStart() === nodeStart);
+    
+    if (duplicates.length > 1) {
+      // 名前付きノード（クラス、関数など）を優先
+      const namedNodes = duplicates.filter(n => hasGetNameMethod(n) || Node.isVariableDeclaration(n));
+      if (namedNodes.length > 0) {
+        return namedNodes[0] === node;
+      }
+    }
+    
+    return true;
+  });
+
+  // まだ複数の候補がある場合、同じ行の異なる位置にある可能性
+  if (uniqueNodes.length > 1) {
+    // 列位置でソートして、同じ列位置のものだけをチェック
+    const firstNodeCol = sourceFile.getLineAndColumnAtPos(uniqueNodes[0].getStart()).column;
+    const sameColumnNodes = uniqueNodes.filter(n => 
+      sourceFile.getLineAndColumnAtPos(n.getStart()).column === firstNodeCol
+    );
+    
+    if (sameColumnNodes.length > 1) {
+      throw new Error(`Multiple occurrences of symbol "${symbolName}" found on line ${line}. Please be more specific.`);
+    }
+    
+    // 異なる列位置の場合は最初の出現を使用
+    return uniqueNodes[0];
+  }
+
+  return uniqueNodes[0];
 }
 
 /**
@@ -189,8 +220,8 @@ function captureFileStates(project: Project): Map<string, string> {
 function detectChanges(
   project: Project,
   beforeStates: Map<string, string>
-): RenameResult["changedFiles"] {
-  const changedFiles: RenameResult["changedFiles"] = [];
+): RenameSuccess["changedFiles"] {
+  const changedFiles: RenameSuccess["changedFiles"] = [];
 
   for (const sourceFile of project.getSourceFiles()) {
     const filePath = sourceFile.getFilePath();

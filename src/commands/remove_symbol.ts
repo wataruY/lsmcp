@@ -1,4 +1,5 @@
 import { Project, SourceFile, Node, SyntaxKind } from "ts-morph";
+import { Result, ok, err } from "neverthrow";
 
 export interface RemoveSymbolRequest {
   filePath: string;
@@ -6,10 +7,9 @@ export interface RemoveSymbolRequest {
   symbolName: string;
 }
 
-export interface RemoveSymbolResult {
-  success: boolean;
+export interface RemoveSymbolSuccess {
+  message: string;
   removedFromFiles: string[];
-  error?: string;
 }
 
 /**
@@ -18,15 +18,11 @@ export interface RemoveSymbolResult {
 export async function removeSymbol(
   project: Project,
   request: RemoveSymbolRequest
-): Promise<RemoveSymbolResult> {
+): Promise<Result<RemoveSymbolSuccess, string>> {
   try {
     const sourceFile = project.getSourceFile(request.filePath);
     if (!sourceFile) {
-      return {
-        success: false,
-        removedFromFiles: [],
-        error: `File not found: ${request.filePath}`,
-      };
+      return err(`File not found: ${request.filePath}`);
     }
 
     const node = findSymbolAtLine(
@@ -35,11 +31,7 @@ export async function removeSymbol(
       request.symbolName
     );
     if (!node) {
-      return {
-        success: false,
-        removedFromFiles: [],
-        error: `Symbol "${request.symbolName}" not found at line ${request.line}`,
-      };
+      return err(`Symbol "${request.symbolName}" not found at line ${request.line}`);
     }
 
     const removedFromFiles: string[] = [sourceFile.getFilePath()];
@@ -47,11 +39,7 @@ export async function removeSymbol(
     // Get the declaration node to remove
     const declaration = getDeclarationNode(node);
     if (!declaration) {
-      return {
-        success: false,
-        removedFromFiles: [],
-        error: `Cannot find declaration for symbol "${request.symbolName}"`,
-      };
+      return err(`Cannot find declaration for symbol "${request.symbolName}"`);
     }
 
     // Remove the declaration
@@ -72,26 +60,18 @@ export async function removeSymbol(
       // For other declarations (classes, functions, interfaces, etc.)
       (declaration as any).remove();
     } else {
-      return {
-        success: false,
-        removedFromFiles: [],
-        error: `Cannot remove node of type ${declaration.getKindName()}`,
-      };
+      return err(`Cannot remove node of type ${declaration.getKindName()}`);
     }
 
     // Save the project
     await project.save();
 
-    return {
-      success: true,
+    return ok({
+      message: `Successfully removed symbol "${request.symbolName}"`,
       removedFromFiles,
-    };
+    });
   } catch (error) {
-    return {
-      success: false,
-      removedFromFiles: [],
-      error: error instanceof Error ? error.message : String(error),
-    };
+    return err(error instanceof Error ? error.message : String(error));
   }
 }
 
