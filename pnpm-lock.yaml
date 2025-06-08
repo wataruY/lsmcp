@@ -14,9 +14,6 @@ importers:
       '@modelcontextprotocol/sdk':
         specifier: ^1.12.1
         version: 1.12.1
-      '@types/node':
-        specifier: ^22.15.30
-        version: 22.15.30
       neverthrow:
         specifier: ^8.2.0
         version: 8.2.0
@@ -27,6 +24,9 @@ importers:
         specifier: ^3.25.56
         version: 3.25.56
     devDependencies:
+      '@types/node':
+        specifier: ^22.15.30
+        version: 22.15.30
       tsdown:
         specifier: ^0.12.7
         version: 0.12.7(typescript@5.8.3)

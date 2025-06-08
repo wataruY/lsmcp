@@ -3,9 +3,12 @@
     "allow": [
       "Bash(pnpm test)",
       "Bash(ls:*)",
+      "Bash(grep:*)",
       "mcp__typescript__find-references",
-      "mcp__typescript__get-definition",
-      "mcp__typescript__get-diagnostics"
+      "mcp__typescript__get-definitions",
+      "mcp__typescript__get-diagnostics",
+      "mcp__typescript__get-module-symbols",
+      "mcp__typescript__get-type-signature"
     ],
     "deny": []
   }
