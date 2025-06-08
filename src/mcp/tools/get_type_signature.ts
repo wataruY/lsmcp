@@ -9,9 +9,7 @@ const schema = z.object({
   moduleName: z
     .string()
     .describe("The module containing the type (e.g., 'neverthrow', './utils')"),
-  typeName: z
-    .string()
-    .describe("The name of the type to analyze"),
+  typeName: z.string().describe("The name of the type to analyze"),
   root: z.string().describe("Root directory for resolving relative paths"),
   filePath: z
     .string()
@@ -23,30 +21,33 @@ type Params = z.infer<typeof schema>;
 
 export const getTypeSignatureTool: ToolDef<Params, Params> = {
   name: "get_type_signature",
-  description: "Get detailed signature information for a specific type (function, class, interface, type alias, etc.)",
+  description:
+    "Get detailed signature information for a specific type (function, class, interface, type alias, etc.)",
   schema,
   handler: async ({ moduleName, typeName, root, filePath }) => {
-      const project = await findProjectForFile(filePath ? path.join(root, filePath) : root);
+    const project = await findProjectForFile(
+      filePath ? path.join(root, filePath) : root
+    );
 
-      // Get type signature
-      const result = getTypeSignature(project, {
-        moduleName,
-        typeName,
-        filePath: filePath ? path.join(root, filePath) : undefined,
-      });
+    // Get type signature
+    const result = getTypeSignature(project, {
+      moduleName,
+      typeName,
+      filePath: filePath ? path.join(root, filePath) : undefined,
+    });
 
-      if (result.isErr()) {
-        throw new Error(result.error);
-      }
+    if (result.isErr()) {
+      throw new Error(result.error);
+    }
 
-      const { message, signature, documentation, relatedTypes } = result.value;
+    const { message, signature, documentation, relatedTypes } = result.value;
 
-      return formatTypeSignature({
-        message,
-        signature,
-        documentation,
-        relatedTypes,
-        root,
-      });
+    return formatTypeSignature({
+      message,
+      signature,
+      documentation,
+      relatedTypes,
+      root,
+    });
   },
 };

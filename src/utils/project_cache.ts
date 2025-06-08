@@ -117,3 +117,28 @@ export function clearProjectCache(): void {
 export function getProjectCacheSize(): number {
   return projectCache.size;
 }
+
+/**
+ * Get or create a source file with cache clearing
+ * This ensures the source file is fresh and its descendants are forgotten
+ */
+export async function getOrCreateSourceFileWithRefresh(
+  filePath: string
+): Promise<import("ts-morph").SourceFile> {
+  const project = await findProjectForFile(filePath);
+  
+  // Try to get existing source file
+  let sourceFile = project.getSourceFile(filePath);
+  
+  if (sourceFile) {
+    // Refresh from file system to get latest content
+    sourceFile.refreshFromFileSystem();
+    // Clear cached descendants to ensure fresh analysis
+    sourceFile.forgetDescendants();
+  } else {
+    // Add the file if it doesn't exist
+    sourceFile = project.addSourceFileAtPath(filePath);
+  }
+  
+  return sourceFile;
+}

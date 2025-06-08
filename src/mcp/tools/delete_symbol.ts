@@ -2,7 +2,10 @@ import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { deleteSymbol } from "../../commands/delete_symbol.ts";
-import { findProjectForFile } from "../../utils/project_cache.ts";
+import {
+  findProjectForFile,
+  getOrCreateSourceFileWithRefresh,
+} from "../../utils/project_cache.ts";
 import { resolveLineParameter } from "../line_utils.ts";
 import type { ToolDef } from "../types.ts";
 
@@ -29,7 +32,8 @@ type OutputParams = z.output<typeof schema>;
 
 export const deleteSymbolTool: ToolDef<InputParams, OutputParams> = {
   name: "delete_symbol",
-  description: "Delete a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
+  description:
+    "Delete a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
   schema,
   handler: async ({ filePath, line, symbolName, root, removeReferences }) => {
     // Always treat paths as relative to root
@@ -40,16 +44,8 @@ export const deleteSymbolTool: ToolDef<InputParams, OutputParams> = {
 
     const project = await findProjectForFile(absolutePath);
 
-    // Ensure the source file is loaded in the project
-    let sourceFile = project.getSourceFile(absolutePath);
-    if (!sourceFile) {
-      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
-      try {
-        sourceFile = project.addSourceFileAtPath(absolutePath);
-      } catch (error) {
-        throw new Error(`File not found: ${absolutePath}`);
-      }
-    }
+    // Ensure the source file is loaded in the project with fresh content
+    const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
 
     // Resolve line parameter
     const resolvedLine = resolveLineParameter(sourceFile, line);

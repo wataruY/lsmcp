@@ -1,7 +1,10 @@
 import { z } from "zod";
 import path from "path";
 import { moveFile } from "../../commands/move_file.ts";
-import { findProjectForFile } from "../../utils/project_cache.ts";
+import {
+  findProjectForFile,
+  getOrCreateSourceFileWithRefresh,
+} from "../../utils/project_cache.ts";
 import type { ToolDef } from "../types.ts";
 
 const schemaShape = {
@@ -22,7 +25,8 @@ type OutputParams = z.output<typeof schema>;
 
 export const moveFileTool: ToolDef<InputParams, OutputParams> = {
   name: "move_file",
-  description: "Move a TypeScript/JavaScript file to a new location and update all import statements",
+  description:
+    "Move a TypeScript/JavaScript file to a new location and update all import statements",
   schema,
   handler: async ({ oldPath, newPath, root, overwrite }) => {
     // Always treat paths as relative to root
@@ -31,15 +35,11 @@ export const moveFileTool: ToolDef<InputParams, OutputParams> = {
 
     const project = await findProjectForFile(absoluteOldPath);
 
-    // Ensure the source file is loaded in the project
-    let sourceFile = project.getSourceFile(absoluteOldPath);
-    if (!sourceFile) {
-      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
-      try {
-        sourceFile = project.addSourceFileAtPath(absoluteOldPath);
-      } catch (error) {
-        throw new Error(`File not found: ${absoluteOldPath}`);
-      }
+    // Ensure the source file is loaded in the project with fresh content
+    try {
+      await getOrCreateSourceFileWithRefresh(absoluteOldPath);
+    } catch (error) {
+      throw new Error(`File not found: ${absoluteOldPath}`);
     }
 
     // Perform the move

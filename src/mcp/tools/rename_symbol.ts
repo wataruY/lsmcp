@@ -1,7 +1,10 @@
 import { z } from "zod";
 import path from "path";
 import { renameSymbol } from "../../commands/rename_symbol.ts";
-import { findProjectForFile } from "../../utils/project_cache.ts";
+import {
+  findProjectForFile,
+  getOrCreateSourceFileWithRefresh,
+} from "../../utils/project_cache.ts";
 import { resolveLineParameter } from "../line_utils.ts";
 import type { ToolDef } from "../types.ts";
 
@@ -21,7 +24,8 @@ type Params = z.infer<typeof schema>;
 
 export const renameSymbolTool: ToolDef<Params, Params> = {
   name: "rename_symbol",
-  description: "Rename a TypeScript/JavaScript symbol (variable, function, class, etc.) across the codebase",
+  description:
+    "Rename a TypeScript/JavaScript symbol (variable, function, class, etc.) across the codebase",
   schema,
   handler: async ({ filePath, line, oldName, newName, root }) => {
     // Always treat paths as relative to root
@@ -29,16 +33,8 @@ export const renameSymbolTool: ToolDef<Params, Params> = {
     // Check if file exists
     const project = await findProjectForFile(absolutePath);
 
-    // Ensure the source file is loaded in the project
-    let sourceFile = project.getSourceFile(absolutePath);
-    if (!sourceFile) {
-      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
-      try {
-        sourceFile = project.addSourceFileAtPath(absolutePath);
-      } catch (error) {
-        throw new Error(`File not found: ${absolutePath}`);
-      }
-    }
+    // Ensure the source file is loaded in the project with fresh content
+    const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
 
     // Resolve line parameter
     const resolvedLine = resolveLineParameter(sourceFile, line);
