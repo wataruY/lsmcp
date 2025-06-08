@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { toMcpToolHandler, resultHandler } from "./mcp_server_utils.ts";
+import { toMcpToolHandler } from "./mcp_server_utils.ts";
 import { ok, err } from "neverthrow";
 
-describe("toMcpResponse", () => {
+describe("toMcpHandler", () => {
   it("should convert string to MCP format when no error occurs", async () => {
     const handler = toMcpToolHandler(async () => {
       return "Success message";
@@ -46,54 +46,6 @@ describe("toMcpResponse", () => {
     const result = await handler({});
     expect(result).toEqual({
       content: [{ type: "text", text: "Sync result message" }],
-    });
-  });
-});
-
-describe("resultHandler", () => {
-  it("should return success message from ok result", async () => {
-    const handler = resultHandler(async () => {
-      return ok({ message: "Operation successful", data: 123 });
-    });
-
-    const result = await handler({});
-    expect(result).toEqual({
-      content: [{ type: "text", text: "Operation successful" }],
-    });
-  });
-
-  it("should return error message from err result", async () => {
-    const handler = resultHandler(async () => {
-      return err("Something went wrong");
-    });
-
-    const result = await handler({});
-    expect(result).toEqual({
-      content: [{ type: "text", text: "Error: Something went wrong" }],
-      isError: true,
-    });
-  });
-
-  it("should handle thrown errors", async () => {
-    const handler = resultHandler(async () => {
-      throw new Error("Unexpected error");
-    });
-
-    const result = await handler({});
-    expect(result).toEqual({
-      content: [{ type: "text", text: "Error: Unexpected error" }],
-      isError: true,
-    });
-  });
-
-  it("should work with sync handlers returning Result", async () => {
-    const handler = resultHandler(() => {
-      return ok({ message: "Sync success" });
-    });
-
-    const result = await handler({});
-    expect(result).toEqual({
-      content: [{ type: "text", text: "Sync success" }],
     });
   });
 });
