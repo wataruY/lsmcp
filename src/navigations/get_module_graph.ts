@@ -1,6 +1,6 @@
 import { Project } from "ts-morph";
 import { Result, ok, err } from "neverthrow";
-import * as path from "path";
+import { isAbsolute, resolve, relative, dirname, join } from "path";
 
 export interface ModuleNode {
   filePath: string;
@@ -54,9 +54,9 @@ export function getModuleGraph(
     // Resolve entry points to absolute paths
     const resolvedEntryPoints: string[] = [];
     for (const entryPoint of request.entryPoints) {
-      const absolutePath = path.isAbsolute(entryPoint) 
+      const absolutePath = isAbsolute(entryPoint) 
         ? entryPoint 
-        : path.resolve(request.rootDir, entryPoint);
+        : resolve(request.rootDir, entryPoint);
       
       // Add the file to the project if it doesn't exist
       let sourceFile = project.getSourceFile(absolutePath);
@@ -161,11 +161,11 @@ export function getModuleGraph(
 
     // Convert to output format
     const files = Array.from(graph.nodes.values()).map(node => ({
-      path: path.relative(request.rootDir, node.filePath),
-      imports: node.imports.map(p => path.relative(request.rootDir, p)),
-      exports: node.exports.map(p => path.relative(request.rootDir, p)),
+      path: relative(request.rootDir, node.filePath),
+      imports: node.imports.map(p => relative(request.rootDir, p)),
+      exports: node.exports.map(p => relative(request.rootDir, p)),
       exportedSymbols: node.exportedSymbols,
-      importedBy: node.importedFrom.map(p => path.relative(request.rootDir, p)),
+      importedBy: node.importedFrom.map(p => relative(request.rootDir, p)),
     }));
 
     return ok({
@@ -177,7 +177,7 @@ export function getModuleGraph(
           totalImports,
           totalExports,
           circularDependencies: circularDeps.map(cycle => 
-            cycle.map(p => path.relative(request.rootDir, p))
+            cycle.map(p => relative(request.rootDir, p))
           ),
         },
       },
@@ -197,8 +197,8 @@ function resolveModulePath(
     return null;
   }
 
-  const fromDir = path.dirname(fromFile);
-  let resolvedPath = path.resolve(fromDir, moduleSpecifier);
+  const fromDir = dirname(fromFile);
+  let resolvedPath = resolve(fromDir, moduleSpecifier);
 
   // Try with TypeScript extensions
   const extensions = ['.ts', '.tsx', '.d.ts', '.js', '.jsx'];
@@ -234,7 +234,7 @@ function resolveModulePath(
 
   // Try index files
   for (const ext of extensions) {
-    const indexPath = path.join(resolvedPath, `index${ext}`);
+    const indexPath = join(resolvedPath, `index${ext}`);
     const result = tryGetOrAddSourceFile(indexPath);
     if (result) return result;
   }

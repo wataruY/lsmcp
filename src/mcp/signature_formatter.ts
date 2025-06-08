@@ -1,5 +1,5 @@
 import type { TypeSignature, Definition } from "../navigations/get_type_signature.ts";
-import * as path from "path";
+import { relative } from "path";
 
 export interface FormatTypeSignatureInput {
   message: string;
@@ -21,7 +21,7 @@ export function formatTypeSignature(input: FormatTypeSignatureInput): string {
   if (signature.definitions && signature.definitions.length > 0) {
     output.push("📍 Definitions:");
     for (const def of signature.definitions) {
-      const relativePath = path.relative(root, def.filePath);
+      const relativePath = relative(root, def.filePath);
       let defStr = `  ${def.kind}: ${relativePath}:${def.line}:${def.column}`;
       
       // Add name information
@@ -41,7 +41,7 @@ export function formatTypeSignature(input: FormatTypeSignatureInput): string {
   if (relatedTypes && relatedTypes.length > 0) {
     output.push("🔗 Related Types:");
     for (const relType of relatedTypes) {
-      const relativePath = path.relative(root, relType.filePath);
+      const relativePath = relative(root, relType.filePath);
       let relStr = `  ${relType.kind}: ${relativePath}:${relType.line}:${relType.column}`;
       
       if (relType.name) {

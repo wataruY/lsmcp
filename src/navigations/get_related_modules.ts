@@ -1,6 +1,6 @@
 import { Project, SourceFile } from "ts-morph";
 import { Result, ok, err } from "neverthrow";
-import * as path from "path";
+import { isAbsolute, resolve, relative, dirname, join } from "path";
 
 export interface GetRelatedModulesRequest {
   filePath: string;
@@ -30,9 +30,9 @@ export function getRelatedModules(
   request: GetRelatedModulesRequest
 ): Result<GetRelatedModulesSuccess, string> {
   try {
-    const absolutePath = path.isAbsolute(request.filePath)
+    const absolutePath = isAbsolute(request.filePath)
       ? request.filePath
-      : path.resolve(request.rootDir, request.filePath);
+      : resolve(request.rootDir, request.filePath);
 
     // Get or add the target file
     let sourceFile = project.getSourceFile(absolutePath);
@@ -58,7 +58,7 @@ export function getRelatedModules(
         const symbols = namedImports.map(imp => imp.getName());
         
         relatedModules.push({
-          path: path.relative(request.rootDir, resolvedModule),
+          path: relative(request.rootDir, resolvedModule),
           relationship: "imports",
           symbols: symbols.length > 0 ? symbols : undefined,
         });
@@ -77,7 +77,7 @@ export function getRelatedModules(
           const symbols = namedExports.map(exp => exp.getName());
           
           relatedModules.push({
-            path: path.relative(request.rootDir, resolvedModule),
+            path: relative(request.rootDir, resolvedModule),
             relationship: "re-exports",
             symbols: symbols.length > 0 ? symbols : undefined,
           });
@@ -103,7 +103,7 @@ export function getRelatedModules(
           const symbols = namedImports.map(imp => imp.getName());
           
           relatedModules.push({
-            path: path.relative(request.rootDir, otherFile.getFilePath()),
+            path: relative(request.rootDir, otherFile.getFilePath()),
             relationship: "imported-by",
             symbols: symbols.length > 0 ? symbols : undefined,
           });
@@ -122,7 +122,7 @@ export function getRelatedModules(
             const symbols = namedExports.map(exp => exp.getName());
             
             relatedModules.push({
-              path: path.relative(request.rootDir, otherFile.getFilePath()),
+              path: relative(request.rootDir, otherFile.getFilePath()),
               relationship: "re-exported-by",
               symbols: symbols.length > 0 ? symbols : undefined,
             });
@@ -141,7 +141,7 @@ export function getRelatedModules(
 
     return ok({
       message: `Found ${relatedModules.length} related modules`,
-      targetFile: path.relative(request.rootDir, targetFilePath),
+      targetFile: relative(request.rootDir, targetFilePath),
       relatedModules,
       stats,
     });
@@ -160,8 +160,8 @@ function resolveModulePath(
     return null;
   }
 
-  const fromDir = path.dirname(fromFile);
-  let resolvedPath = path.resolve(fromDir, moduleSpecifier);
+  const fromDir = dirname(fromFile);
+  let resolvedPath = resolve(fromDir, moduleSpecifier);
 
   // Try with TypeScript extensions
   const extensions = ['.ts', '.tsx', '.d.ts', '.js', '.jsx'];
@@ -197,7 +197,7 @@ function resolveModulePath(
 
   // Try index files
   for (const ext of extensions) {
-    const indexPath = path.join(resolvedPath, `index${ext}`);
+    const indexPath = join(resolvedPath, `index${ext}`);
     const result = tryGetOrAddSourceFile(indexPath);
     if (result) return result;
   }

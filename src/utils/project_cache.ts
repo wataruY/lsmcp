@@ -4,8 +4,8 @@ import {
   ModuleKind,
   ModuleResolutionKind,
 } from "ts-morph";
-import * as path from "path";
-import * as fs from "fs/promises";
+import { resolve, join, dirname } from "path";
+import { access } from "fs/promises";
 
 // Cache for projects by tsconfig path
 const projectCache = new Map<string, Project>();
@@ -14,18 +14,18 @@ const projectCache = new Map<string, Project>();
  * Find the nearest tsconfig.json file starting from the given directory
  */
 async function findTsConfig(startPath: string): Promise<string | null> {
-  let currentPath = path.resolve(startPath);
+  let currentPath = resolve(startPath);
 
   while (true) {
-    const tsconfigPath = path.join(currentPath, "tsconfig.json");
+    const tsconfigPath = join(currentPath, "tsconfig.json");
     try {
-      await fs.access(tsconfigPath);
+      await access(tsconfigPath);
       return tsconfigPath;
     } catch {
       // tsconfig.json not found in this directory
     }
 
-    const parentPath = path.dirname(currentPath);
+    const parentPath = dirname(currentPath);
     if (parentPath === currentPath) {
       // Reached root directory
       break;
@@ -98,8 +98,8 @@ export async function getOrCreateProject(
  * Find the appropriate project for a given file path
  */
 export async function findProjectForFile(filePath: string): Promise<Project> {
-  const absolutePath = path.resolve(filePath);
-  const directory = path.dirname(absolutePath);
+  const absolutePath = resolve(filePath);
+  const directory = dirname(absolutePath);
 
   return getOrCreateProject(directory);
 }

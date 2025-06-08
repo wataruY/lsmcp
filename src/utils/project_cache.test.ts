@@ -5,7 +5,7 @@ import {
   clearProjectCache,
   getProjectCacheSize,
 } from "./project_cache.ts";
-import * as path from "path";
+import { join } from "path";
 
 describe("project_cache", () => {
   beforeEach(() => {
@@ -15,13 +15,13 @@ describe("project_cache", () => {
   it("should cache projects by tsconfig", async () => {
     // First call should create a new project
     const project1 = await getOrCreateProject(
-      path.join(process.cwd(), "tests/fixtures/00-rename")
+      join(process.cwd(), "tests/fixtures/00-rename")
     );
     expect(getProjectCacheSize()).toBe(1);
 
     // Second call with same directory should return cached project
     const project2 = await getOrCreateProject(
-      path.join(process.cwd(), "tests/fixtures/00-rename")
+      join(process.cwd(), "tests/fixtures/00-rename")
     );
     expect(project1).toBe(project2);
     expect(getProjectCacheSize()).toBe(1);
@@ -30,10 +30,10 @@ describe("project_cache", () => {
   it("should create different projects for different tsconfigs", async () => {
     // Different directories with different tsconfigs
     const project1 = await getOrCreateProject(
-      path.join(process.cwd(), "tests/fixtures/00-rename")
+      join(process.cwd(), "tests/fixtures/00-rename")
     );
     const project2 = await getOrCreateProject(
-      path.join(process.cwd(), "tests/fixtures/01-move")
+      join(process.cwd(), "tests/fixtures/01-move")
     );
 
     expect(project1).not.toBe(project2);
@@ -55,7 +55,7 @@ describe("project_cache", () => {
     // When starting from a subdirectory, it should find parent tsconfig
     const project1 = await getOrCreateProject(process.cwd());
     const project2 = await getOrCreateProject(
-      path.join(process.cwd(), "src/utils")
+      join(process.cwd(), "src/utils")
     );
 
     // Both should use the same root tsconfig
@@ -65,7 +65,7 @@ describe("project_cache", () => {
 
   describe("findProjectForFile", () => {
     it("should find project for a file path", async () => {
-      const filePath = path.join(process.cwd(), "src/utils/project_cache.ts");
+      const filePath = join(process.cwd(), "src/utils/project_cache.ts");
       const project = await findProjectForFile(filePath);
 
       expect(project).toBeDefined();
@@ -73,8 +73,8 @@ describe("project_cache", () => {
     });
 
     it("should use same project for files in same directory", async () => {
-      const file1 = path.join(process.cwd(), "src/commands/move_file.ts");
-      const file2 = path.join(process.cwd(), "src/commands/rename_symbol.ts");
+      const file1 = join(process.cwd(), "src/commands/move_file.ts");
+      const file2 = join(process.cwd(), "src/commands/rename_symbol.ts");
 
       const project1 = await findProjectForFile(file1);
       const project2 = await findProjectForFile(file2);
@@ -85,7 +85,7 @@ describe("project_cache", () => {
 
     it("should handle relative paths", async () => {
       const relativePath = "src/utils/project_cache.ts";
-      const absolutePath = path.join(process.cwd(), relativePath);
+      const absolutePath = join(process.cwd(), relativePath);
 
       const project1 = await findProjectForFile(relativePath);
       const project2 = await findProjectForFile(absolutePath);
