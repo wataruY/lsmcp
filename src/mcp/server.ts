@@ -10,6 +10,7 @@ import { renameSymbol } from "../commands/rename_symbol.ts";
 import { deleteSymbol } from "../commands/delete_symbol.ts";
 import { findReferences } from "../navigations/find_references.ts";
 import { goToDefinition } from "../navigations/go_to_definition.ts";
+import { getDiagnosticsForFile } from "../navigations/get_diagnostics_for_file.ts";
 import { findProjectForFile } from "../utils/project_cache.ts";
 import { toMcpToolHandler } from "./mcp_server_utils.ts";
 
@@ -281,6 +282,56 @@ server.tool(
       );
     }
 
+    return output.join("\n");
+  })
+);
+
+// Tool: Get Diagnostics
+server.tool(
+  "get-diagnostics",
+  "Get TypeScript diagnostics (errors, warnings) for a single file",
+  {
+    filePath: z
+      .string()
+      .describe("File path to check for diagnostics (relative to root)"),
+    root: z.string().describe("Root directory for resolving relative paths"),
+  },
+  toMcpToolHandler(async ({ filePath, root }) => {
+    // Always treat paths as relative to root
+    const absolutePath = path.join(root, filePath);
+
+    // Check if file exists
+    await fs.access(absolutePath);
+
+    const project = await findProjectForFile(absolutePath);
+
+    // Get diagnostics
+    const result = getDiagnosticsForFile(project, {
+      filePath: absolutePath,
+    });
+
+    if (result.isErr()) {
+      throw new Error(result.error);
+    }
+
+    const { message, diagnostics } = result.value;
+    
+    // Format the output
+    const output = [message];
+    
+    if (diagnostics.length > 0) {
+      output.push("");
+      output.push("Diagnostics:");
+      
+      for (const diag of diagnostics) {
+        const relativePath = path.relative(root, diag.filePath);
+        const icon = diag.category === "error" ? "❌" : diag.category === "warning" ? "⚠️" : "💡";
+        output.push(
+          `  ${icon} ${relativePath}:${diag.line}:${diag.column} - ${diag.category}: ${diag.message} [${diag.code}]`
+        );
+      }
+    }
+    
     return output.join("\n");
   })
 );
