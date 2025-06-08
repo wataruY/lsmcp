@@ -11,6 +11,8 @@ import { deleteSymbol } from "../commands/delete_symbol.ts";
 import { findReferences } from "../navigations/find_references.ts";
 import { goToDefinition } from "../navigations/go_to_definition.ts";
 import { getDiagnostics } from "../navigations/get_diagnostics.ts";
+import { getModuleSymbols } from "../navigations/get_module_symbols.ts";
+import { getTypeSignature } from "../navigations/get_type_signature.ts";
 import { findProjectForFile } from "../utils/project_cache.ts";
 import { toMcpToolHandler } from "./mcp_server_utils.ts";
 
@@ -432,6 +434,185 @@ server.tool(
     
     // Return ts-morph's formatted output directly
     return message;
+  })
+);
+
+// Tool: Get Module Symbols (simplified version)
+server.tool(
+  "get-module-symbols",
+  "Get all exported symbols from a TypeScript/JavaScript module without detailed signatures",
+  {
+    moduleName: z
+      .string()
+      .describe("The module to analyze (e.g., 'neverthrow', './local-module')"),
+    root: z.string().describe("Root directory for resolving relative paths"),
+    filePath: z
+      .string()
+      .optional()
+      .describe("Context file for resolving relative imports"),
+  },
+  toMcpToolHandler(async ({ moduleName, root, filePath }) => {
+    const project = await findProjectForFile(filePath ? path.join(root, filePath) : root);
+
+    // Get module symbols
+    const result = getModuleSymbols(project, {
+      moduleName,
+      filePath: filePath ? path.join(root, filePath) : undefined,
+    });
+
+    if (result.isErr()) {
+      throw new Error(result.error);
+    }
+
+    const { message, symbols } = result.value;
+
+    // Format the output
+    const output = [
+      message,
+      "",
+    ];
+
+    // Add symbols by category
+    if (symbols.types.length > 0) {
+      output.push(`📋 Types: ${symbols.types.map(s => s.name).join(", ")}`);
+    }
+    if (symbols.interfaces.length > 0) {
+      output.push(`📐 Interfaces: ${symbols.interfaces.map(s => s.name).join(", ")}`);
+    }
+    if (symbols.classes.length > 0) {
+      output.push(`🏗️ Classes: ${symbols.classes.map(s => s.name).join(", ")}`);
+    }
+    if (symbols.functions.length > 0) {
+      output.push(`⚡ Functions: ${symbols.functions.map(s => s.name).join(", ")}`);
+    }
+    if (symbols.variables.length > 0) {
+      output.push(`📦 Variables: ${symbols.variables.map(s => s.name).join(", ")}`);
+    }
+    if (symbols.others.length > 0) {
+      output.push(`❓ Others: ${symbols.others.map(s => s.name).join(", ")}`);
+    }
+
+    return output.join("\n");
+  })
+);
+
+// Tool: Get Type Signature
+server.tool(
+  "get-type-signature",
+  "Get detailed signature information for a specific type (function, class, interface, type alias, etc.)",
+  {
+    moduleName: z
+      .string()
+      .describe("The module containing the type (e.g., 'neverthrow', './utils')"),
+    typeName: z
+      .string()
+      .describe("The name of the type to analyze"),
+    root: z.string().describe("Root directory for resolving relative paths"),
+    filePath: z
+      .string()
+      .optional()
+      .describe("Context file for resolving relative imports"),
+  },
+  toMcpToolHandler(async ({ moduleName, typeName, root, filePath }) => {
+    const project = await findProjectForFile(filePath ? path.join(root, filePath) : root);
+
+    // Get type signature
+    const result = getTypeSignature(project, {
+      moduleName,
+      typeName,
+      filePath: filePath ? path.join(root, filePath) : undefined,
+    });
+
+    if (result.isErr()) {
+      throw new Error(result.error);
+    }
+
+    const { message, signature, documentation } = result.value;
+
+    // Format the output
+    const output = [
+      message,
+      "",
+    ];
+
+    // Add documentation if available
+    if (documentation) {
+      output.push("📖 Documentation:");
+      output.push(documentation);
+      output.push("");
+    }
+
+    // Format based on the kind of type
+    if (signature.kind === "function" && signature.functionSignatures) {
+      output.push("📝 Function Signatures:");
+      for (let i = 0; i < signature.functionSignatures.length; i++) {
+        const sig = signature.functionSignatures[i];
+        
+        if (signature.functionSignatures.length > 1) {
+          output.push(`\nOverload ${i + 1}:`);
+        }
+        
+        // Type parameters
+        if (sig.typeParameters && sig.typeParameters.length > 0) {
+          output.push(`  Type Parameters: <${sig.typeParameters.join(", ")}>`);
+        }
+        
+        // Parameters
+        output.push("  Parameters:");
+        if (sig.parameters.length === 0) {
+          output.push("    (none)");
+        } else {
+          for (const param of sig.parameters) {
+            let paramStr = `    ${param.name}${param.optional ? "?" : ""}: ${param.type}`;
+            if (param.defaultValue) {
+              paramStr += ` = ${param.defaultValue}`;
+            }
+            output.push(paramStr);
+          }
+        }
+        
+        // Return type
+        output.push(`  Returns: ${sig.returnType}`);
+      }
+    } else if (signature.kind === "type" && signature.typeDefinition) {
+      output.push(`📋 Type Definition:`);
+      if (signature.typeParameters && signature.typeParameters.length > 0) {
+        output.push(`  Type Parameters: <${signature.typeParameters.join(", ")}>`);
+      }
+      output.push(`  Type: ${signature.typeDefinition}`);
+    } else if ((signature.kind === "interface" || signature.kind === "class") && (signature.properties || signature.methods)) {
+      output.push(`${signature.kind === "interface" ? "📐 Interface" : "🏗️ Class"} Definition:`);
+      
+      if (signature.typeParameters && signature.typeParameters.length > 0) {
+        output.push(`  Type Parameters: <${signature.typeParameters.join(", ")}>`);
+      }
+      
+      if (signature.properties && signature.properties.length > 0) {
+        output.push("\n  Properties:");
+        for (const prop of signature.properties) {
+          output.push(`    ${prop.name}${prop.optional ? "?" : ""}: ${prop.type}`);
+        }
+      }
+      
+      if (signature.methods && signature.methods.length > 0) {
+        output.push("\n  Methods:");
+        for (const method of signature.methods) {
+          output.push(`    ${method.name}():`);
+          for (const sig of method.signatures) {
+            if (sig.typeParameters && sig.typeParameters.length > 0) {
+              output.push(`      Type Parameters: <${sig.typeParameters.join(", ")}>`);
+            }
+            output.push(`      Parameters: ${sig.parameters.map(p => `${p.name}${p.optional ? "?" : ""}: ${p.type}`).join(", ")}`);
+            output.push(`      Returns: ${sig.returnType}`);
+          }
+        }
+      }
+    } else if (signature.kind === "variable" && signature.typeDefinition) {
+      output.push(`📦 Variable Type:`);
+      output.push(`  Type: ${signature.typeDefinition}`);
+    }
+
+    return output.join("\n");
   })
 );
 
