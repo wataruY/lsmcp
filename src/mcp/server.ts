@@ -192,12 +192,12 @@ server.tool(
     line: z
       .number()
       .describe("Line number where the symbol is located (1-based)"),
-    column: z
-      .number()
-      .describe("Column number where the symbol is located (1-based)"),
+    symbolName: z
+      .string()
+      .describe("Name of the symbol to find references for"),
     root: z.string().describe("Root directory for resolving relative paths"),
   },
-  toMcpToolHandler(async ({ filePath, line, column, root }) => {
+  toMcpToolHandler(async ({ filePath, line, symbolName, root }) => {
     // Always treat paths as relative to root
     const absolutePath = path.join(root, filePath);
 
@@ -216,6 +216,24 @@ server.tool(
         throw new Error(`File not found: ${absolutePath}`);
       }
     }
+
+    // Get the line text
+    const fullText = sourceFile.getFullText();
+    const lines = fullText.split("\n");
+    const lineText = lines[line - 1];
+
+    if (!lineText) {
+      throw new Error(`Invalid line number: ${line}`);
+    }
+
+    // Find the column position of the symbol in the line
+    const symbolIndex = lineText.indexOf(symbolName);
+    if (symbolIndex === -1) {
+      throw new Error(`Symbol "${symbolName}" not found on line ${line}`);
+    }
+
+    // Convert to 1-based column (symbolIndex is 0-based)
+    const column = symbolIndex + 1;
 
     // Find references
     const result = findReferences(project, {

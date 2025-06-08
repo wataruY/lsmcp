@@ -1,6 +1,12 @@
 {
   "permissions": {
-    "allow": ["Bash(pnpm test)", "Bash(ls:*)"],
+    "allow": [
+      "Bash(pnpm test)",
+      "Bash(ls:*)",
+      "mcp__typescript__find-references",
+      "mcp__typescript__get-definition",
+      "mcp__typescript__get-diagnostics"
+    ],
     "deny": []
   }
 }
