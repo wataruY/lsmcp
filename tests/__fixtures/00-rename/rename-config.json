@@ -1,0 +1,17 @@
+{
+  "simple-variable": {
+    "line": 1,
+    "symbolName": "foo",
+    "newName": "bar"
+  },
+  "function": {
+    "line": 1,
+    "symbolName": "foo",
+    "newName": "bar"
+  },
+  "class": {
+    "line": 1,
+    "symbolName": "Foo",
+    "newName": "Bar"
+  }
+}
