@@ -1,4 +1,9 @@
-import { Project, ScriptTarget, ModuleKind, ModuleResolutionKind } from "ts-morph";
+import {
+  Project,
+  ScriptTarget,
+  ModuleKind,
+  ModuleResolutionKind,
+} from "ts-morph";
 import * as path from "path";
 import * as fs from "fs/promises";
 
@@ -10,7 +15,7 @@ const projectCache = new Map<string, Project>();
  */
 async function findTsConfig(startPath: string): Promise<string | null> {
   let currentPath = path.resolve(startPath);
-  
+
   while (true) {
     const tsconfigPath = path.join(currentPath, "tsconfig.json");
     try {
@@ -19,7 +24,7 @@ async function findTsConfig(startPath: string): Promise<string | null> {
     } catch {
       // tsconfig.json not found in this directory
     }
-    
+
     const parentPath = path.dirname(currentPath);
     if (parentPath === currentPath) {
       // Reached root directory
@@ -27,57 +32,65 @@ async function findTsConfig(startPath: string): Promise<string | null> {
     }
     currentPath = parentPath;
   }
-  
+
   return null;
 }
 
 /**
  * Get or create a TypeScript project, using cache for the same tsconfig
  */
-export async function getOrCreateProject(workingDir?: string): Promise<Project> {
+export async function getOrCreateProject(
+  workingDir?: string
+): Promise<Project> {
   const searchPath = workingDir || process.cwd();
-  
+
   // Find the nearest tsconfig.json
   const tsconfigPath = await findTsConfig(searchPath);
-  
+
   // Use a special key for projects without tsconfig
   const cacheKey = tsconfigPath || "$$default$$";
-  
+
   // Check cache first
   const cachedProject = projectCache.get(cacheKey);
   if (cachedProject) {
     return cachedProject;
   }
-  
+
   // Create new project
   let project: Project;
-  
+
   if (tsconfigPath) {
     // Create project with tsconfig
     project = new Project({
       tsConfigFilePath: tsconfigPath,
       skipFileDependencyResolution: true,
+      manipulationSettings: {
+        usePrefixAndSuffixTextForRename: true,
+      },
     });
   } else {
     // Create default project without tsconfig
     project = new Project({
       skipFileDependencyResolution: true,
+      manipulationSettings: {
+        usePrefixAndSuffixTextForRename: true,
+      },
       compilerOptions: {
         allowJs: true,
-        jsx: "preserve" as any,
-        target: ScriptTarget.ES2020,
+        target: ScriptTarget.ESNext,
         module: ModuleKind.ESNext,
-        moduleResolution: ModuleResolutionKind.Node10,
+        moduleResolution: ModuleResolutionKind.Bundler,
         esModuleInterop: true,
+        noEmit: true,
         skipLibCheck: true,
-        strict: false,
+        strict: true,
       },
     });
   }
-  
+
   // Cache the project
   projectCache.set(cacheKey, project);
-  
+
   return project;
 }
 
@@ -87,7 +100,7 @@ export async function getOrCreateProject(workingDir?: string): Promise<Project> 
 export async function findProjectForFile(filePath: string): Promise<Project> {
   const absolutePath = path.resolve(filePath);
   const directory = path.dirname(absolutePath);
-  
+
   return getOrCreateProject(directory);
 }
 

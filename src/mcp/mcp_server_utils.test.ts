@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { toMcpToolHandler } from "./mcp_server_utils.ts";
-import { ok, err } from "neverthrow";
 
 describe("toMcpHandler", () => {
   it("should convert string to MCP format when no error occurs", async () => {
