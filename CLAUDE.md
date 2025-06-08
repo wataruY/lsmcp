@@ -14,6 +14,9 @@ AI に TS の操作に特化した操作を提供する
 ## Rules
 
 - file は snake case
+- ユニットテストは `.test.ts` で src 以下に配置
+- インテグレーションテストは tests/ 以下に配置
+- Deno 互換のために、 `import {} from "./x.ts";` のように拡張子を付ける
 
 ## 内部実装
 

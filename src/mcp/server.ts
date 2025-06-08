@@ -3,74 +3,39 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { Project } from "ts-morph";
 import * as path from "path";
 import * as fs from "fs/promises";
 import { moveFile } from "../commands/move_file.js";
 import { renameSymbol } from "../commands/rename_symbol.js";
 import { removeSymbol } from "../commands/remove_symbol.js";
+import { findProjectForFile } from "../utils/project_cache.js";
 
 const server = new McpServer({
   name: "typescript",
   version: "1.0.0",
 });
 
-// Create a project instance that will be reused
-let project: Project | null = null;
-
-async function getOrCreateProject(workingDir?: string): Promise<Project> {
-  if (!project) {
-    project = new Project({
-      skipFileDependencyResolution: true,
-      compilerOptions: {
-        allowJs: true,
-        jsx: "preserve" as any,
-      },
-    });
-
-    // If working directory is provided, try to load tsconfig
-    if (workingDir) {
-      const tsconfigPath = path.join(workingDir, "tsconfig.json");
-      try {
-        await fs.access(tsconfigPath);
-        project = new Project({
-          tsConfigFilePath: tsconfigPath,
-          skipFileDependencyResolution: true,
-        });
-      } catch {
-        // Use default project if tsconfig not found
-      }
-    }
-  }
-  return project;
-}
-
 // Tool: Move File
 server.tool(
   "ts-move-file",
   "Move a TypeScript/JavaScript file to a new location and update all import statements",
   {
-    oldPath: z.string().describe("Current file path (absolute or relative)"),
-    newPath: z.string().describe("New file path (absolute or relative)"),
-    workingDir: z
+    oldPath: z.string().describe("Current file path (relative to root)"),
+    newPath: z.string().describe("New file path (relative to root)"),
+    root: z
       .string()
-      .optional()
-      .describe("Working directory for relative paths"),
+      .describe("Root directory for resolving relative paths"),
   },
-  async ({ oldPath, newPath, workingDir }) => {
+  async ({ oldPath, newPath, root }) => {
     try {
-      const cwd = workingDir || process.cwd();
-      const absoluteOldPath = path.isAbsolute(oldPath)
-        ? oldPath
-        : path.join(cwd, oldPath);
-      const absoluteNewPath = path.isAbsolute(newPath)
-        ? newPath
-        : path.join(cwd, newPath);
+      // Always treat paths as relative to root
+      const absoluteOldPath = path.join(root, oldPath);
+      const absoluteNewPath = path.join(root, newPath);
 
       // Check if source file exists
       await fs.access(absoluteOldPath);
 
-      const project = await getOrCreateProject(cwd);
+      const project = await findProjectForFile(absoluteOldPath);
 
       // Add the source file if not already in project
       if (!project.getSourceFile(absoluteOldPath)) {
@@ -131,7 +96,7 @@ server.tool(
   "ts-rename-symbol",
   "Rename a TypeScript/JavaScript symbol (variable, function, class, etc.) across the codebase",
   {
-    filePath: z.string().describe("File path containing the symbol"),
+    filePath: z.string().describe("File path containing the symbol (relative to root)"),
     line: z
       .number()
       .describe("Line number where the symbol is defined (1-based)"),
@@ -141,22 +106,19 @@ server.tool(
       .describe("Column number where the symbol is defined (1-based)"),
     oldName: z.string().describe("Current name of the symbol"),
     newName: z.string().describe("New name for the symbol"),
-    workingDir: z
+    root: z
       .string()
-      .optional()
-      .describe("Working directory for relative paths"),
+      .describe("Root directory for resolving relative paths"),
   },
-  async ({ filePath, line, oldName, newName, workingDir }) => {
+  async ({ filePath, line, oldName, newName, root }) => {
     try {
-      const cwd = workingDir || process.cwd();
-      const absolutePath = path.isAbsolute(filePath)
-        ? filePath
-        : path.join(cwd, filePath);
+      // Always treat paths as relative to root
+      const absolutePath = path.join(root, filePath);
 
       // Check if file exists
       await fs.access(absolutePath);
 
-      const project = await getOrCreateProject(cwd);
+      const project = await findProjectForFile(absolutePath);
 
       // Add the source file if not already in project
       if (!project.getSourceFile(absolutePath)) {
@@ -234,7 +196,7 @@ server.tool(
   "ts-remove-symbol",
   "Remove a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
   {
-    filePath: z.string().describe("File path containing the symbol"),
+    filePath: z.string().describe("File path containing the symbol (relative to root)"),
     line: z
       .number()
       .describe("Line number where the symbol is defined (1-based)"),
@@ -244,22 +206,19 @@ server.tool(
       .optional()
       .default(true)
       .describe("Also remove all references to the symbol"),
-    workingDir: z
+    root: z
       .string()
-      .optional()
-      .describe("Working directory for relative paths"),
+      .describe("Root directory for resolving relative paths"),
   },
-  async ({ filePath, line, symbolName, removeReferences, workingDir }) => {
+  async ({ filePath, line, symbolName, removeReferences, root }) => {
     try {
-      const cwd = workingDir || process.cwd();
-      const absolutePath = path.isAbsolute(filePath)
-        ? filePath
-        : path.join(cwd, filePath);
+      // Always treat paths as relative to root
+      const absolutePath = path.join(root, filePath);
 
       // Check if file exists
       await fs.access(absolutePath);
 
-      const project = await getOrCreateProject(cwd);
+      const project = await findProjectForFile(absolutePath);
 
       // Add the source file if not already in project
       if (!project.getSourceFile(absolutePath)) {
