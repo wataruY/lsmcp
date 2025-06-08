@@ -8,7 +8,8 @@ import fs from "fs/promises";
 import { moveFile } from "../commands/move_file.ts";
 import { renameSymbol } from "../commands/rename_symbol.ts";
 import { removeSymbol } from "../commands/remove_symbol.ts";
-import { findReferences } from "../navigations/find_references";
+import { findReferences } from "../navigations/find_references.ts";
+import { goToDefinition } from "../navigations/go_to_definition.ts";
 import { findProjectForFile } from "../utils/project_cache.ts";
 import { toMcpToolHandler } from "./mcp_server_utils.ts";
 
@@ -196,6 +197,82 @@ server.tool(
     
     for (const ref of references) {
       output.push(`  ${ref.filePath}:${ref.line}:${ref.column} - ${ref.lineText}`);
+    }
+    
+    return output.join("\n");
+  })
+);
+
+// Tool: Get Definitions
+server.tool(
+  "get-definitions",
+  "Get the definition(s) of a TypeScript/JavaScript symbol",
+  {
+    filePath: z
+      .string()
+      .describe("File path containing the symbol (relative to root)"),
+    line: z
+      .number()
+      .describe("Line number where the symbol is located (1-based)"),
+    symbolName: z.string().describe("Name of the symbol to get definitions for"),
+    root: z.string().describe("Root directory for resolving relative paths"),
+  },
+  toMcpToolHandler(async ({ filePath, line, symbolName, root }) => {
+    // Always treat paths as relative to root
+    const absolutePath = path.join(root, filePath);
+
+    // Check if file exists
+    await fs.access(absolutePath);
+
+    const project = await findProjectForFile(absolutePath);
+    
+    // Get the source file to find the column position
+    const sourceFile = project.getSourceFile(absolutePath);
+    if (!sourceFile) {
+      throw new Error(`File not found: ${absolutePath}`);
+    }
+
+    // Get the line text
+    const fullText = sourceFile.getFullText();
+    const lines = fullText.split('\n');
+    const lineText = lines[line - 1];
+    
+    if (!lineText) {
+      throw new Error(`Invalid line number: ${line}`);
+    }
+
+    // Find the column position of the symbol in the line
+    const symbolIndex = lineText.indexOf(symbolName);
+    if (symbolIndex === -1) {
+      throw new Error(`Symbol "${symbolName}" not found on line ${line}`);
+    }
+
+    // Convert to 1-based column (symbolIndex is 0-based)
+    const column = symbolIndex + 1;
+
+    // Find definition using the column position
+    const result = goToDefinition(project, {
+      filePath: absolutePath,
+      line,
+      column,
+    });
+
+    if (result.isErr()) {
+      throw new Error(result.error);
+    }
+
+    const { message, definitions, symbol } = result.value;
+    
+    // Format the output
+    const output = [
+      message,
+      `Symbol: ${symbol.name} (${symbol.kind})`,
+      "",
+      "Definitions:",
+    ];
+    
+    for (const def of definitions) {
+      output.push(`  ${def.filePath}:${def.line}:${def.column} - ${def.lineText}`);
     }
     
     return output.join("\n");
