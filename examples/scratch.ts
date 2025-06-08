@@ -1,4 +1,4 @@
-import { Value } from "./other-types";
+import { Value } from "./other-types.ts";
 
 /**
  * debug file for MCP server testing
