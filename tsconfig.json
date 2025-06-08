@@ -10,5 +10,9 @@
     "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true,
     "lib": ["esnext", "dom"]
-  }
+  },
+  "exclude": [
+    "tests/fixtures/**/*",
+    "examples/**/*"
+  ]
 }

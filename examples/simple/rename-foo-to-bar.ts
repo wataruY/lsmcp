@@ -1,12 +1,16 @@
-import { createProject, renameSymbol, addSourceFile } from "../../src/renameSymbol";
+import {
+  createProject,
+  renameSymbol,
+  addSourceFile,
+} from "../../src/commands/rename_symbol";
 import * as path from "path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function main() {
   const project = createProject(path.join(__dirname, "../../tsconfig.json"));
-  
+
   const targetFile = path.join(__dirname, "main.ts");
   addSourceFile(project, targetFile);
 
@@ -16,7 +20,7 @@ async function main() {
     symbolName: "foo",
     newName: "bar",
     renameInComments: true,
-    renameInStrings: true
+    renameInStrings: true,
   });
 
   if (result.success) {

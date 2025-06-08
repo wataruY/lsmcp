@@ -10,6 +10,10 @@ in jpn
 
 AI に TS に特化したリファクタツールを与える。
 
+## Rules
+
+- file は snake case
+
 ## 内部実装
 
 最初は ts-morph を使って実現する。ts-morph だけで実装不可能な場合、 LSP や TypeScript Lauguage Service を使って実装する。

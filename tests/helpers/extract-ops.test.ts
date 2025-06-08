@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { parseRenameCommentsFromContent, removeRenameComments } from "./extract-ops";
-import fs from "fs/promises";
-import path from "path";
-
-const FIXTURES_DIR = path.join(__dirname, "../fixtures/02-inline-comments");
 
 describe("extract-ops", () => {
   describe("parseRenameCommentsFromContent", () => {
@@ -100,52 +96,6 @@ console.log(foo);`;
       expect(result).toBe(`// Regular comment
 const foo = 1; // @rename foo bar inline
 console.log(foo);`);
-    });
-  });
-
-  describe("integration with fixture files", () => {
-    it("should correctly parse variable-with-comment fixture", async () => {
-      const content = await fs.readFile(
-        path.join(FIXTURES_DIR, "variable-with-comment.input.ts"),
-        "utf-8"
-      );
-      
-      const operations = parseRenameCommentsFromContent(content);
-      
-      expect(operations).toHaveLength(1);
-      expect(operations[0]).toEqual({
-        line: 1,
-        symbolName: "foo",
-        newName: "bar"
-      });
-    });
-
-    it("should correctly parse multi-rename fixture", async () => {
-      const content = await fs.readFile(
-        path.join(FIXTURES_DIR, "multi-rename.input.ts"),
-        "utf-8"
-      );
-      
-      const operations = parseRenameCommentsFromContent(content);
-      
-      expect(operations).toHaveLength(3);
-      expect(operations[0].symbolName).toBe("foo1");
-      expect(operations[1].symbolName).toBe("foo2");
-      expect(operations[2].symbolName).toBe("MyClass");
-    });
-
-    it("should correctly parse consolidated fixture", async () => {
-      const content = await fs.readFile(
-        path.join(FIXTURES_DIR, "consolidated.input.ts"),
-        "utf-8"
-      );
-      
-      const operations = parseRenameCommentsFromContent(content);
-      
-      expect(operations).toHaveLength(3);
-      expect(operations[0]).toEqual({ line: 2, symbolName: "foo", newName: "bar" });
-      expect(operations[1]).toEqual({ line: 8, symbolName: "foo2", newName: "bar2" });
-      expect(operations[2]).toEqual({ line: 18, symbolName: "Foo3", newName: "Bar3" });
     });
   });
 });

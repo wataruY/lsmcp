@@ -3,11 +3,12 @@ import {
   createProject,
   renameSymbol,
   addSourceFile,
-} from "../src/renameSymbol";
+} from "../src/commands/rename_symbol";
 import fs from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 import { parseRenameComments } from "./helpers/extract-ops";
+import { globSync } from "fs";
 
 const FIXTURES_DIR = path.join(__dirname, "fixtures/00-rename");
 
@@ -28,7 +29,9 @@ describe("rename", () => {
     }
   });
 
-  const testCases = ["simple-variable", "function", "class"];
+  // Find all .input.ts files in the fixtures directory
+  const inputFiles = globSync("*.input.ts", { cwd: FIXTURES_DIR });
+  const testCases = inputFiles.map(file => path.basename(file, ".input.ts"));
 
   testCases.forEach((testName) => {
     it(`should rename ${testName}`, async () => {
@@ -66,5 +69,4 @@ describe("rename", () => {
       expect(actualContent.trim()).toBe(expectedContent.trim());
     });
   });
-
 });
