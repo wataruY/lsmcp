@@ -7,6 +7,16 @@ export interface GetTypeSignatureRequest {
   filePath?: string; // Optional context file for resolving relative imports
 }
 
+export interface Definition {
+  filePath: string;
+  line: number;
+  column: number;
+  kind: string; // e.g., "Type alias", "Interface", "Class", etc.
+  name?: string; // The name at this definition location
+  originalName?: string; // For aliases, the name of the original definition
+  importedFrom?: string; // Module path if this is an imported type
+}
+
 export interface TypeSignature {
   kind: "function" | "class" | "interface" | "type" | "variable";
   // For functions
@@ -17,6 +27,7 @@ export interface TypeSignature {
   methods?: MethodInfo[];
   // Common
   typeParameters?: string[];
+  definitions?: Definition[];
 }
 
 export interface FunctionSignature {
@@ -49,6 +60,7 @@ export interface GetTypeSignatureSuccess {
   typeName: string;
   signature: TypeSignature;
   documentation?: string;
+  relatedTypes?: Definition[]; // Related types found in the signature
 }
 
 /**
@@ -57,6 +69,273 @@ export interface GetTypeSignatureSuccess {
 function simplifyTypeName(typeName: string): string {
   // Remove import("...") wrapper and get just the type name
   return typeName.replace(/import\("[^"]+"\)\./g, '');
+}
+
+/**
+ * Find related types used in signatures and track their definitions
+ */
+function findRelatedTypes(
+  sourceFile: Node["getSourceFile"]["prototype"],
+  signature: TypeSignature
+): Definition[] {
+  const relatedTypes: Definition[] = [];
+  const processedTypes = new Set<string>();
+  
+  // Helper to find type info from the source file
+  const findTypeInfo = (typeName: string): Definition | undefined => {
+    if (processedTypes.has(typeName)) return;
+    processedTypes.add(typeName);
+    
+    // Look for imports in the source file
+    const imports = sourceFile.getImportDeclarations();
+    for (const imp of imports) {
+      const namedImports = imp.getNamedImports();
+      for (const named of namedImports) {
+        if (named.getName() === typeName || named.getAliasNode()?.getText() === typeName) {
+          const moduleSpecifier = imp.getModuleSpecifierValue();
+          
+          // Try to resolve the actual type definition
+          const project = sourceFile.getProject();
+          let targetFile: Node["getSourceFile"]["prototype"] | undefined;
+          
+          if (moduleSpecifier.startsWith('.')) {
+            // Resolve relative import
+            const currentDir = sourceFile.getDirectoryPath();
+            const resolvedPath = moduleSpecifier.replace(/^\.\//, currentDir + '/');
+            targetFile = project.getSourceFile(resolvedPath + '.ts') || 
+                        project.getSourceFile(resolvedPath + '.tsx') ||
+                        project.getSourceFile(resolvedPath + '/index.ts');
+          }
+          
+          if (targetFile) {
+            // Find the type declaration in the target file
+            const typeAlias = targetFile.getTypeAlias(typeName);
+            const interfaceDecl = targetFile.getInterface(typeName);
+            const classDecl = targetFile.getClass(typeName);
+            
+            const decl = typeAlias || interfaceDecl || classDecl;
+            if (decl) {
+              const start = decl.getStart();
+              const { line, column } = targetFile.getLineAndColumnAtPos(start);
+              
+              return {
+                filePath: targetFile.getFilePath(),
+                line,
+                column,
+                kind: typeAlias ? "Type alias" : interfaceDecl ? "Interface" : "Class",
+                name: typeName,
+                importedFrom: moduleSpecifier
+              };
+            }
+          }
+          
+          // Even if we can't resolve the file, record the import
+          return {
+            filePath: moduleSpecifier,
+            line: 1,
+            column: 1,
+            kind: "Import",
+            name: typeName,
+            importedFrom: moduleSpecifier
+          };
+        }
+      }
+    }
+    
+    return undefined;
+  };
+  
+  // Extract type names from signature
+  const typeNames = new Set<string>();
+  
+  // Process function signatures
+  if (signature.functionSignatures) {
+    for (const funcSig of signature.functionSignatures) {
+      // Extract from return type
+      const returnTypeMatch = funcSig.returnType.match(/\b([A-Z][a-zA-Z0-9]*)\b/g);
+      if (returnTypeMatch) {
+        returnTypeMatch.forEach(t => typeNames.add(t));
+      }
+      
+      // Extract from parameters
+      for (const param of funcSig.parameters) {
+        const paramTypeMatch = param.type.match(/\b([A-Z][a-zA-Z0-9]*)\b/g);
+        if (paramTypeMatch) {
+          paramTypeMatch.forEach(t => typeNames.add(t));
+        }
+      }
+    }
+  }
+  
+  // Process type names
+  for (const typeName of typeNames) {
+    // Skip built-in types
+    if (['String', 'Number', 'Boolean', 'Array', 'Object', 'Promise', 'Date', 'Error', 'Function'].includes(typeName)) {
+      continue;
+    }
+    
+    const typeInfo = findTypeInfo(typeName);
+    if (typeInfo) {
+      relatedTypes.push(typeInfo);
+    }
+  }
+  
+  return relatedTypes;
+}
+
+/**
+ * Extract definitions from a symbol, including aliases
+ */
+function extractDefinitions(symbol: Node["getSymbol"]["prototype"], requestedName?: string): Definition[] {
+  const definitions: Definition[] = [];
+  
+  // Get the original symbol (not aliased)
+  const actualSymbol = symbol.getAliasedSymbol() || symbol;
+  const originalName = actualSymbol.getName();
+  
+  // Add definitions from the actual symbol
+  const declarations = actualSymbol.getDeclarations();
+  for (const decl of declarations) {
+    const sourceFile = decl.getSourceFile();
+    const start = decl.getStart();
+    const { line, column } = sourceFile.getLineAndColumnAtPos(start);
+    
+    let kind = "Unknown";
+    let name = originalName;
+    
+    if (Node.isFunctionDeclaration(decl)) {
+      kind = "Function";
+      name = decl.getName() || originalName;
+    } else if (Node.isMethodDeclaration(decl)) {
+      kind = "Method";
+      name = decl.getName() || originalName;
+    } else if (Node.isClassDeclaration(decl)) {
+      kind = "Class";
+      name = decl.getName() || originalName;
+    } else if (Node.isInterfaceDeclaration(decl)) {
+      kind = "Interface";
+      name = decl.getName() || originalName;
+    } else if (Node.isTypeAliasDeclaration(decl)) {
+      kind = "Type alias";
+      name = decl.getName() || originalName;
+    } else if (Node.isVariableDeclaration(decl)) {
+      kind = "Variable";
+      name = decl.getName() || originalName;
+    } else if (Node.isPropertySignature(decl)) {
+      kind = "Property";
+      name = decl.getName() || originalName;
+    } else if (Node.isMethodSignature(decl)) {
+      kind = "Method signature";
+      name = decl.getName() || originalName;
+    } else if (Node.isExportSpecifier(decl)) {
+      kind = "Export";
+      // For export specifiers, getName() returns the original name
+      name = decl.getName();
+      // Check if there's an alias
+      const aliasNode = decl.getAliasNode();
+      if (aliasNode) {
+        // This is an aliased export, so the name we see is different
+        name = aliasNode.getText();
+      }
+    } else if (Node.isImportSpecifier(decl)) {
+      kind = "Import";
+      name = decl.getName();
+    }
+    
+    definitions.push({
+      filePath: sourceFile.getFilePath(),
+      line,
+      column,
+      kind,
+      name
+    });
+  }
+  
+  // If this is an alias, also add the alias declaration (but skip temporary files)
+  if (symbol.getAliasedSymbol() && symbol !== actualSymbol) {
+    const aliasDeclarations = symbol.getDeclarations();
+    const aliasName = symbol.getName();
+    
+    for (const decl of aliasDeclarations) {
+      const sourceFile = decl.getSourceFile();
+      const filePath = sourceFile.getFilePath();
+      
+      // Skip temporary analysis files
+      if (filePath.includes('temp_type_analysis.ts')) continue;
+      
+      const start = decl.getStart();
+      const { line, column } = sourceFile.getLineAndColumnAtPos(start);
+      
+      let declName = aliasName;
+      
+      // Get the actual name from the declaration if possible
+      if (Node.isExportSpecifier(decl)) {
+        // For aliased exports, get the alias name if it exists
+        const aliasNode = decl.getAliasNode();
+        if (aliasNode) {
+          declName = aliasNode.getText();
+        } else {
+          declName = decl.getName();
+        }
+      } else if (Node.isImportSpecifier(decl)) {
+        // For aliased imports, get the alias name if it exists
+        const aliasNode = decl.getAliasNode();
+        if (aliasNode) {
+          declName = aliasNode.getText();
+        } else {
+          declName = decl.getName();
+        }
+      } else if (Node.isTypeAliasDeclaration(decl)) {
+        declName = decl.getName() || aliasName;
+      }
+      
+      definitions.push({
+        filePath,
+        line,
+        column,
+        kind: "Alias",
+        name: declName,
+        originalName: originalName
+      });
+    }
+  }
+  
+  // Also check if this symbol is re-exported with different names
+  // This is important for cases like: export { User as BaseUser }
+  if (requestedName && requestedName !== originalName) {
+    // Find all export declarations that might export this symbol
+    for (const decl of actualSymbol.getDeclarations()) {
+      const sourceFile = decl.getSourceFile();
+      
+      // Look for export declarations in the same file
+      const exportDeclarations = sourceFile.getExportDeclarations();
+      for (const exportDecl of exportDeclarations) {
+        const namedExports = exportDecl.getNamedExports();
+        for (const namedExport of namedExports) {
+          // Check if this export references our symbol
+          if (namedExport.getName() === originalName) {
+            const aliasNode = namedExport.getAliasNode();
+            if (aliasNode && aliasNode.getText() === requestedName) {
+              // Found an export that aliases our symbol with the requested name
+              const start = namedExport.getStart();
+              const { line, column } = sourceFile.getLineAndColumnAtPos(start);
+              
+              definitions.push({
+                filePath: sourceFile.getFilePath(),
+                line,
+                column,
+                kind: "Alias",
+                name: requestedName,
+                originalName: originalName
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return definitions;
 }
 
 /**
@@ -249,6 +528,25 @@ export function getTypeSignature(
   request: GetTypeSignatureRequest
 ): Result<GetTypeSignatureSuccess, string> {
   try {
+    // For relative imports, ensure the source file is fresh
+    if (request.moduleName.startsWith('.') && request.filePath) {
+      const contextFile = project.getSourceFile(request.filePath);
+      if (contextFile) {
+        contextFile.refreshFromFileSystem();
+        contextFile.forgetDescendants();
+      }
+      
+      // Also refresh the target module file
+      const contextDir = request.filePath.substring(0, request.filePath.lastIndexOf('/'));
+      const modulePath = request.moduleName.replace(/^\.\//, '');
+      const resolvedPath = contextDir + '/' + modulePath;
+      const targetFile = project.getSourceFile(resolvedPath) || project.getSourceFile(resolvedPath + '.ts');
+      if (targetFile) {
+        targetFile.refreshFromFileSystem();
+        targetFile.forgetDescendants();
+      }
+    }
+    
     // Create a temporary source file that imports the module
     const importPath = `import { ${request.typeName} } from "${request.moduleName}";`;
     
@@ -298,6 +596,44 @@ export function getTypeSignature(
       return err(`No declarations found for type: ${request.typeName}`);
     }
     
+    // Extract definitions including aliases
+    const definitions = extractDefinitions(symbol, request.typeName);
+    
+    // Also look for the export in the source module that exports this with the requested name
+    let moduleFile = project.getSourceFile(request.moduleName);
+    if (!moduleFile && request.filePath) {
+      // Try to resolve relative import
+      const contextDir = request.filePath.substring(0, request.filePath.lastIndexOf('/'));
+      const modulePath = request.moduleName.replace(/^\.\//, '');
+      const resolvedPath = contextDir + '/' + modulePath;
+      moduleFile = project.getSourceFile(resolvedPath);
+    }
+    
+    if (moduleFile) {
+      // Look for export declarations
+      const exportDecls = moduleFile.getExportDeclarations();
+      for (const exportDecl of exportDecls) {
+        const namedExports = exportDecl.getNamedExports();
+        for (const namedExport of namedExports) {
+          const exportAlias = namedExport.getAliasNode();
+          if (exportAlias && exportAlias.getText() === request.typeName) {
+            // This is the export we're looking for
+            const start = namedExport.getStart();
+            const { line, column } = moduleFile.getLineAndColumnAtPos(start);
+            
+            definitions.push({
+              filePath: moduleFile.getFilePath(),
+              line,
+              column,
+              kind: "Alias",
+              name: request.typeName,
+              originalName: namedExport.getName()
+            });
+          }
+        }
+      }
+    }
+    
     const firstDecl = declarations[0];
     const type = actualSymbol.getTypeAtLocation(firstDecl);
     
@@ -310,7 +646,8 @@ export function getTypeSignature(
       // It's a function or function-like
       signature = {
         kind: "function",
-        functionSignatures: extractFunctionSignatures(type, firstDecl)
+        functionSignatures: extractFunctionSignatures(type, firstDecl),
+        definitions
       };
     }
     // Check if it's a class
@@ -337,7 +674,8 @@ export function getTypeSignature(
         kind: "class",
         properties: extractProperties(instanceType, firstDecl),
         methods: extractMethods(instanceType, firstDecl),
-        typeParameters: typeParamStrings
+        typeParameters: typeParamStrings,
+        definitions
       };
     }
     // Check if it's an interface
@@ -359,7 +697,8 @@ export function getTypeSignature(
         kind: "interface",
         properties: extractProperties(interfaceType, firstDecl),
         methods: extractMethods(interfaceType, firstDecl),
-        typeParameters: typeParamStrings
+        typeParameters: typeParamStrings,
+        definitions
       };
     }
     // Check if it's a type alias
@@ -377,14 +716,16 @@ export function getTypeSignature(
       signature = {
         kind: "type",
         typeDefinition: simplifyTypeName(firstDecl.getType().getText()),
-        typeParameters: typeParamStrings
+        typeParameters: typeParamStrings,
+        definitions
       };
     }
     // Otherwise it's a variable
     else {
       signature = {
         kind: "variable",
-        typeDefinition: simplifyTypeName(type.getText())
+        typeDefinition: simplifyTypeName(type.getText()),
+        definitions
       };
     }
     
@@ -397,11 +738,16 @@ export function getTypeSignature(
     // Clean up temporary file
     sourceFile.delete();
     
+    // Find related types - use the source file where the type is actually declared
+    const declSourceFile = firstDecl.getSourceFile();
+    const relatedTypes = findRelatedTypes(declSourceFile, signature);
+    
     return ok({
       message: `Found signature for ${signature.kind} "${request.typeName}"`,
       typeName: request.typeName,
       signature,
-      documentation
+      documentation,
+      relatedTypes: relatedTypes.length > 0 ? relatedTypes : undefined
     });
   } catch (error) {
     return err(error instanceof Error ? error.message : String(error));

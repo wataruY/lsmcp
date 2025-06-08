@@ -527,13 +527,52 @@ server.tool(
       throw new Error(result.error);
     }
 
-    const { message, signature, documentation } = result.value;
+    const { message, signature, documentation, relatedTypes } = result.value;
 
     // Format the output
     const output = [
       message,
       "",
     ];
+
+    // Add definitions if available
+    if (signature.definitions && signature.definitions.length > 0) {
+      output.push("📍 Definitions:");
+      for (const def of signature.definitions) {
+        const relativePath = path.relative(root, def.filePath);
+        let defStr = `  ${def.kind}: ${relativePath}:${def.line}:${def.column}`;
+        
+        // Add name information
+        if (def.name) {
+          defStr += ` (${def.name})`;
+        }
+        if (def.kind === "Alias" && def.originalName) {
+          defStr += ` → ${def.originalName}`;
+        }
+        
+        output.push(defStr);
+      }
+      output.push("");
+    }
+
+    // Add related types if available
+    if (relatedTypes && relatedTypes.length > 0) {
+      output.push("🔗 Related Types:");
+      for (const relType of relatedTypes) {
+        const relativePath = path.relative(root, relType.filePath);
+        let relStr = `  ${relType.kind}: ${relativePath}:${relType.line}:${relType.column}`;
+        
+        if (relType.name) {
+          relStr += ` (${relType.name})`;
+        }
+        if (relType.importedFrom) {
+          relStr += ` from "${relType.importedFrom}"`;
+        }
+        
+        output.push(relStr);
+      }
+      output.push("");
+    }
 
     // Add documentation if available
     if (documentation) {
@@ -552,27 +591,33 @@ server.tool(
           output.push(`\nOverload ${i + 1}:`);
         }
         
-        // Type parameters
+        // Format as TypeScript function signature
+        let signatureStr = "  ";
+        
+        // Add type parameters if present
         if (sig.typeParameters && sig.typeParameters.length > 0) {
-          output.push(`  Type Parameters: <${sig.typeParameters.join(", ")}>`);
-        }
-        
-        // Parameters
-        output.push("  Parameters:");
-        if (sig.parameters.length === 0) {
-          output.push("    (none)");
+          signatureStr += `<${sig.typeParameters.join(", ")}>(`;
         } else {
-          for (const param of sig.parameters) {
-            let paramStr = `    ${param.name}${param.optional ? "?" : ""}: ${param.type}`;
-            if (param.defaultValue) {
-              paramStr += ` = ${param.defaultValue}`;
-            }
-            output.push(paramStr);
-          }
+          signatureStr += "(";
         }
         
-        // Return type
-        output.push(`  Returns: ${sig.returnType}`);
+        // Add parameters
+        const paramStrs = sig.parameters.map(param => {
+          let paramStr = param.name;
+          if (param.optional && !param.defaultValue) {
+            paramStr += "?";
+          }
+          paramStr += ": " + param.type;
+          if (param.defaultValue) {
+            paramStr += " = " + param.defaultValue;
+          }
+          return paramStr;
+        });
+        
+        signatureStr += paramStrs.join(", ");
+        signatureStr += "): " + sig.returnType;
+        
+        output.push(signatureStr);
       }
     } else if (signature.kind === "type" && signature.typeDefinition) {
       output.push(`📋 Type Definition:`);
@@ -597,13 +642,25 @@ server.tool(
       if (signature.methods && signature.methods.length > 0) {
         output.push("\n  Methods:");
         for (const method of signature.methods) {
-          output.push(`    ${method.name}():`);
           for (const sig of method.signatures) {
-            if (sig.typeParameters && sig.typeParameters.length > 0) {
-              output.push(`      Type Parameters: <${sig.typeParameters.join(", ")}>`);
-            }
-            output.push(`      Parameters: ${sig.parameters.map(p => `${p.name}${p.optional ? "?" : ""}: ${p.type}`).join(", ")}`);
-            output.push(`      Returns: ${sig.returnType}`);
+            const typeParamStr = sig.typeParameters && sig.typeParameters.length > 0
+              ? `<${sig.typeParameters.join(", ")}>`
+              : "";
+            
+            const paramStrs = sig.parameters.map(p => {
+              let paramStr = p.name;
+              if (p.optional && !p.defaultValue) {
+                paramStr += "?";
+              }
+              paramStr += ": " + p.type;
+              if (p.defaultValue) {
+                paramStr += " = " + p.defaultValue;
+              }
+              return paramStr;
+            });
+            
+            const signatureStr = `    ${method.name}${typeParamStr}(${paramStrs.join(", ")}): ${sig.returnType}`;
+            output.push(signatureStr);
           }
         }
       }

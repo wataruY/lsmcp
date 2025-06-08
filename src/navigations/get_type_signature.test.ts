@@ -199,6 +199,57 @@ describe("getTypeSignature", () => {
     testModule.delete();
   });
 
+  it("should extract definitions including aliases", () => {
+    const project = new Project({
+      compilerOptions: {
+        moduleResolution: 100, // Bundler
+      },
+    });
+
+    // Create a test module with type aliases
+    const testModule = project.createSourceFile(
+      "test-aliases.ts",
+      `
+      export interface BaseUser {
+        id: number;
+        name: string;
+      }
+      
+      export type User = BaseUser & {
+        email: string;
+      };
+      
+      export type AdminUser = User & {
+        permissions: string[];
+      };
+      `
+    );
+
+    const result = getTypeSignature(project, {
+      moduleName: "./test-aliases.ts",
+      typeName: "AdminUser",
+    });
+
+    expect(result.isOk()).toBe(true);
+    if (result.isOk()) {
+      const { signature } = result.value;
+      expect(signature.kind).toBe("type");
+      expect(signature.definitions).toBeDefined();
+      expect(signature.definitions!.length).toBeGreaterThan(0);
+      
+      // Should have at least one definition
+      const def = signature.definitions![0];
+      expect(def.filePath).toContain("test-aliases.ts");
+      expect(def.kind).toBe("Type alias");
+      expect(def.line).toBeGreaterThan(0);
+      expect(def.column).toBeGreaterThan(0);
+      expect(def.name).toBe("AdminUser");
+    }
+
+    // Clean up
+    testModule.delete();
+  });
+
   it("should simplify type names", () => {
     const project = new Project({
       compilerOptions: {
