@@ -27,9 +27,12 @@ greet(456); // Type error`
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
-      const { diagnostics, summary } = result.value;
-      expect(summary.errors).toBe(2);
+      const { diagnostics, message } = result.value;
       expect(diagnostics).toHaveLength(2);
+      
+      // Check that message contains formatted diagnostics
+      expect(message).toContain("main.ts");
+      expect(message).toContain("Type 'number' is not assignable to type 'string'");
       
       // First error: string = 123
       expect(diagnostics[0].line).toBe(1);
@@ -66,8 +69,7 @@ export function useThis() {
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
-      const { diagnostics, summary } = result.value;
-      expect(summary.errors).toBe(1);
+      const { diagnostics } = result.value;
       expect(diagnostics).toHaveLength(1);
       expect(diagnostics[0].message).toContain("'unusedVar' is declared but its value is never read");
     }
@@ -96,11 +98,9 @@ console.log(add(1, 2));`
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
-      const { diagnostics, summary, message } = result.value;
+      const { diagnostics, message } = result.value;
       expect(diagnostics).toHaveLength(0);
-      expect(summary.errors).toBe(0);
-      expect(summary.warnings).toBe(0);
-      expect(message).toContain("No diagnostics");
+      expect(message).toBe("No diagnostics found in 1 file.");
     }
   });
 
@@ -126,8 +126,7 @@ console.log(nonExistent);`
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
-      const { diagnostics, summary } = result.value;
-      expect(summary.errors).toBeGreaterThan(0);
+      const { diagnostics } = result.value;
       expect(diagnostics.length).toBeGreaterThan(0);
       expect(diagnostics[0].category).toBe("error");
     }
@@ -169,8 +168,7 @@ console.log(nonExistent);`
 
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
-      const { diagnostics, summary } = result.value;
-      expect(summary.errors).toBeGreaterThan(0);
+      const { diagnostics } = result.value;
       expect(diagnostics.length).toBeGreaterThan(0);
       expect(diagnostics[0].category).toBe("error");
       // TypeScript reports this as a missing implementation error

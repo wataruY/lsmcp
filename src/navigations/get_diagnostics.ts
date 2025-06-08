@@ -18,12 +18,6 @@ export interface Diagnostic {
 export interface GetDiagnosticsSuccess {
   message: string;
   diagnostics: Diagnostic[];
-  summary: {
-    errors: number;
-    warnings: number;
-    suggestions: number;
-    messages: number;
-  };
   fileCount: number;
 }
 
@@ -52,13 +46,8 @@ export function getDiagnostics(
 
   try {
     const results: Diagnostic[] = [];
-    const summary = {
-      errors: 0,
-      warnings: 0,
-      suggestions: 0,
-      messages: 0,
-    };
     let processedFiles = 0;
+    const allDiagnostics: any[] = [];
 
     for (const filePath of request.filePaths) {
       const sourceFile = project.getSourceFile(filePath);
@@ -71,6 +60,7 @@ export function getDiagnostics(
 
       // Get pre-emit diagnostics for this specific file
       const diagnostics = sourceFile.getPreEmitDiagnostics();
+      allDiagnostics.push(...diagnostics);
 
       for (const diagnostic of diagnostics) {
         const diagSourceFile = diagnostic.getSourceFile();
@@ -84,22 +74,6 @@ export function getDiagnostics(
         const length = diagnostic.getLength() || 0;
         const category = diagnostic.getCategory();
         const categoryStr = categoryToString(category);
-
-        // Update summary counts
-        switch (category) {
-          case DiagnosticCategory.Error:
-            summary.errors++;
-            break;
-          case DiagnosticCategory.Warning:
-            summary.warnings++;
-            break;
-          case DiagnosticCategory.Suggestion:
-            summary.suggestions++;
-            break;
-          case DiagnosticCategory.Message:
-            summary.messages++;
-            break;
-        }
 
         let line = 1;
         let column = 1;
@@ -126,30 +100,15 @@ export function getDiagnostics(
       return err("No valid source files found");
     }
 
-    const totalCount = results.length;
-    const summaryParts: string[] = [];
-    
-    if (summary.errors > 0) {
-      summaryParts.push(`${summary.errors} error${summary.errors > 1 ? 's' : ''}`);
-    }
-    if (summary.warnings > 0) {
-      summaryParts.push(`${summary.warnings} warning${summary.warnings > 1 ? 's' : ''}`);
-    }
-    if (summary.suggestions > 0) {
-      summaryParts.push(`${summary.suggestions} suggestion${summary.suggestions > 1 ? 's' : ''}`);
-    }
-    if (summary.messages > 0) {
-      summaryParts.push(`${summary.messages} message${summary.messages > 1 ? 's' : ''}`);
-    }
 
-    const summaryText = summaryParts.length > 0 
-      ? summaryParts.join(", ")
-      : "No diagnostics";
+    // Use ts-morph's built-in formatting for the message
+    const message = allDiagnostics.length > 0
+      ? project.formatDiagnosticsWithColorAndContext(allDiagnostics)
+      : `No diagnostics found in ${processedFiles} file${processedFiles === 1 ? '' : 's'}.`;
 
     return ok({
-      message: `Found ${totalCount} diagnostic${totalCount === 1 ? '' : 's'} in ${processedFiles} file${processedFiles === 1 ? '' : 's'}: ${summaryText}`,
+      message,
       diagnostics: results,
-      summary,
       fileCount: processedFiles,
     });
   } catch (error) {
