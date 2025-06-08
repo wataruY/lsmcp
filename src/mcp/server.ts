@@ -7,7 +7,7 @@ import path from "path";
 import fs from "fs/promises";
 import { moveFile } from "../commands/move_file.ts";
 import { renameSymbol } from "../commands/rename_symbol.ts";
-import { removeSymbol } from "../commands/remove_symbol.ts";
+import { deleteSymbol } from "../commands/delete_symbol.ts";
 import { findReferences } from "../navigations/find_references.ts";
 import { goToDefinition } from "../navigations/go_to_definition.ts";
 import { findProjectForFile } from "../utils/project_cache.ts";
@@ -101,10 +101,10 @@ server.tool(
   })
 );
 
-// Tool: Remove Symbol
+// Tool: Delete Symbol
 server.tool(
-  "remove-symbol",
-  "Remove a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
+  "delete-symbol",
+  "Delete a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
   {
     filePath: z
       .string()
@@ -112,41 +112,39 @@ server.tool(
     line: z
       .number()
       .describe("Line number where the symbol is defined (1-based)"),
-    symbolName: z.string().describe("Name of the symbol to remove"),
+    symbolName: z.string().describe("Name of the symbol to delete"),
     removeReferences: z
       .boolean()
       .optional()
       .default(true)
-      .describe("Also remove all references to the symbol"),
+      .describe("Also delete all references to the symbol"),
     root: z.string().describe("Root directory for resolving relative paths"),
   },
-  toMcpToolHandler(
-    async ({ filePath, line, symbolName, root }) => {
-      // Always treat paths as relative to root
-      const absolutePath = path.join(root, filePath);
+  toMcpToolHandler(async ({ filePath, line, symbolName, root }) => {
+    // Always treat paths as relative to root
+    const absolutePath = path.join(root, filePath);
 
-      // Check if file exists
-      await fs.access(absolutePath);
+    // Check if file exists
+    await fs.access(absolutePath);
 
-      const project = await findProjectForFile(absolutePath);
+    const project = await findProjectForFile(absolutePath);
 
-      // Perform the removal
-      const result = await removeSymbol(project, {
-        filePath: absolutePath,
-        line,
-        symbolName,
-      });
+    // Perform the removal
+    const result = await deleteSymbol(project, {
+      filePath: absolutePath,
+      line,
+      symbolName,
+    });
 
-      if (result.isErr()) {
-        throw new Error(result.error);
-      }
-
-      // Save all changes
-      await project.save();
-      const { message, removedFromFiles } = result.value;
-      return `${message} from ${removedFromFiles.length} file(s).`;
+    if (result.isErr()) {
+      throw new Error(result.error);
     }
-  )
+
+    // Save all changes
+    await project.save();
+    const { message, removedFromFiles } = result.value;
+    return `${message} from ${removedFromFiles.length} file(s).`;
+  })
 );
 
 // Tool: Find References
@@ -186,7 +184,7 @@ server.tool(
     }
 
     const { message, references, symbol } = result.value;
-    
+
     // Format the output
     const output = [
       message,
@@ -194,11 +192,14 @@ server.tool(
       "",
       "References:",
     ];
-    
+
     for (const ref of references) {
-      output.push(`  ${ref.filePath}:${ref.line}:${ref.column} - ${ref.lineText}`);
+      const relativePath = path.relative(root, ref.filePath);
+      output.push(
+        `  ${relativePath}:${ref.line}:${ref.column} - ${ref.lineText}`
+      );
     }
-    
+
     return output.join("\n");
   })
 );
@@ -214,7 +215,9 @@ server.tool(
     line: z
       .number()
       .describe("Line number where the symbol is located (1-based)"),
-    symbolName: z.string().describe("Name of the symbol to get definitions for"),
+    symbolName: z
+      .string()
+      .describe("Name of the symbol to get definitions for"),
     root: z.string().describe("Root directory for resolving relative paths"),
   },
   toMcpToolHandler(async ({ filePath, line, symbolName, root }) => {
@@ -225,7 +228,7 @@ server.tool(
     await fs.access(absolutePath);
 
     const project = await findProjectForFile(absolutePath);
-    
+
     // Get the source file to find the column position
     const sourceFile = project.getSourceFile(absolutePath);
     if (!sourceFile) {
@@ -234,9 +237,9 @@ server.tool(
 
     // Get the line text
     const fullText = sourceFile.getFullText();
-    const lines = fullText.split('\n');
+    const lines = fullText.split("\n");
     const lineText = lines[line - 1];
-    
+
     if (!lineText) {
       throw new Error(`Invalid line number: ${line}`);
     }
@@ -262,7 +265,7 @@ server.tool(
     }
 
     const { message, definitions, symbol } = result.value;
-    
+
     // Format the output
     const output = [
       message,
@@ -270,11 +273,14 @@ server.tool(
       "",
       "Definitions:",
     ];
-    
+
     for (const def of definitions) {
-      output.push(`  ${def.filePath}:${def.line}:${def.column} - ${def.lineText}`);
+      const relativePath = path.relative(root, def.filePath);
+      output.push(
+        `  ${relativePath}:${def.line}:${def.column} - ${def.lineText}`
+      );
     }
-    
+
     return output.join("\n");
   })
 );

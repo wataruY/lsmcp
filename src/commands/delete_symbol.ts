@@ -1,13 +1,13 @@
 import { Project, SourceFile, Node, SyntaxKind } from "ts-morph";
 import { Result, ok, err } from "neverthrow";
 
-export interface RemoveSymbolRequest {
+export interface DeleteSymbolRequest {
   filePath: string;
   line: number;
   symbolName: string;
 }
 
-export interface RemoveSymbolSuccess {
+export interface DeleteSymbolSuccess {
   message: string;
   removedFromFiles: string[];
 }
@@ -15,23 +15,21 @@ export interface RemoveSymbolSuccess {
 /**
  * ファイルパスと行番号、シンボル名を指定してシンボルを削除
  */
-export async function removeSymbol(
+export async function deleteSymbol(
   project: Project,
-  request: RemoveSymbolRequest
-): Promise<Result<RemoveSymbolSuccess, string>> {
+  request: DeleteSymbolRequest
+): Promise<Result<DeleteSymbolSuccess, string>> {
   try {
     const sourceFile = project.getSourceFile(request.filePath);
     if (!sourceFile) {
       return err(`File not found: ${request.filePath}`);
     }
 
-    const node = findSymbolAtLine(
-      sourceFile,
-      request.line,
-      request.symbolName
-    );
+    const node = findSymbolAtLine(sourceFile, request.line, request.symbolName);
     if (!node) {
-      return err(`Symbol "${request.symbolName}" not found at line ${request.line}`);
+      return err(
+        `Symbol "${request.symbolName}" not found at line ${request.line}`
+      );
     }
 
     const removedFromFiles: string[] = [sourceFile.getFilePath()];
@@ -45,7 +43,9 @@ export async function removeSymbol(
     // Remove the declaration
     if (Node.isVariableDeclaration(declaration)) {
       // For variable declarations, we need to remove the variable statement
-      const variableStatement = declaration.getFirstAncestorByKind(SyntaxKind.VariableStatement);
+      const variableStatement = declaration.getFirstAncestorByKind(
+        SyntaxKind.VariableStatement
+      );
       if (variableStatement && Node.isVariableStatement(variableStatement)) {
         const declarations = variableStatement.getDeclarations();
         if (declarations.length === 1) {
@@ -56,7 +56,7 @@ export async function removeSymbol(
           declaration.remove();
         }
       }
-    } else if (typeof (declaration as any).remove === 'function') {
+    } else if (typeof (declaration as any).remove === "function") {
       // For other declarations (classes, functions, interfaces, etc.)
       (declaration as any).remove();
     } else {
@@ -110,10 +110,7 @@ function findSymbolAtLine(
 
       if (Node.isVariableDeclaration(node)) {
         const nameNode = node.getNameNode();
-        if (
-          Node.isIdentifier(nameNode) &&
-          nameNode.getText() === symbolName
-        ) {
+        if (Node.isIdentifier(nameNode) && nameNode.getText() === symbolName) {
           foundNode = nameNode;
           return;
         }
@@ -137,11 +134,11 @@ function getDeclarationNode(node: Node): Node | undefined {
       return parent;
     }
   }
-  
+
   if (isDeclarationNode(node)) {
     return node;
   }
-  
+
   return undefined;
 }
 
@@ -158,7 +155,6 @@ function isDeclarationNode(node: Node): boolean {
     Node.isVariableDeclaration(node)
   );
 }
-
 
 /**
  * Check if node has getName method
