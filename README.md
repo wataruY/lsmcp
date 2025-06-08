@@ -20,7 +20,7 @@ Add to your mcp settings:
 ```json
 {
   "mcpServers": {
-    "typescript-mcp": {
+    "typescript": {
       "command": "npx",
       "args": ["-y", "typescript-mcp@latest"]
     }
