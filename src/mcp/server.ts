@@ -10,7 +10,7 @@ import { renameSymbol } from "../commands/rename_symbol.ts";
 import { deleteSymbol } from "../commands/delete_symbol.ts";
 import { findReferences } from "../navigations/find_references.ts";
 import { goToDefinition } from "../navigations/go_to_definition.ts";
-import { getDiagnosticsForFile } from "../navigations/get_diagnostics_for_file.ts";
+import { getDiagnostics } from "../navigations/get_diagnostics.ts";
 import { findProjectForFile } from "../utils/project_cache.ts";
 import { toMcpToolHandler } from "./mcp_server_utils.ts";
 
@@ -39,6 +39,17 @@ server.tool(
     const absoluteNewPath = path.join(root, newPath);
 
     const project = await findProjectForFile(absoluteOldPath);
+
+    // Ensure the source file is loaded in the project
+    let sourceFile = project.getSourceFile(absoluteOldPath);
+    if (!sourceFile) {
+      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
+      try {
+        sourceFile = project.addSourceFileAtPath(absoluteOldPath);
+      } catch (error) {
+        throw new Error(`File not found: ${absoluteOldPath}`);
+      }
+    }
 
     // Perform the move
     const result = moveFile(project, {
@@ -79,6 +90,17 @@ server.tool(
     const absolutePath = path.join(root, filePath);
     // Check if file exists
     const project = await findProjectForFile(absolutePath);
+
+    // Ensure the source file is loaded in the project
+    let sourceFile = project.getSourceFile(absolutePath);
+    if (!sourceFile) {
+      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
+      try {
+        sourceFile = project.addSourceFileAtPath(absolutePath);
+      } catch (error) {
+        throw new Error(`File not found: ${absolutePath}`);
+      }
+    }
 
     // Perform the rename
     const result = await renameSymbol(project, {
@@ -130,6 +152,17 @@ server.tool(
 
     const project = await findProjectForFile(absolutePath);
 
+    // Ensure the source file is loaded in the project
+    let sourceFile = project.getSourceFile(absolutePath);
+    if (!sourceFile) {
+      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
+      try {
+        sourceFile = project.addSourceFileAtPath(absolutePath);
+      } catch (error) {
+        throw new Error(`File not found: ${absolutePath}`);
+      }
+    }
+
     // Perform the removal
     const result = await deleteSymbol(project, {
       filePath: absolutePath,
@@ -172,6 +205,17 @@ server.tool(
     await fs.access(absolutePath);
 
     const project = await findProjectForFile(absolutePath);
+
+    // Ensure the source file is loaded in the project
+    let sourceFile = project.getSourceFile(absolutePath);
+    if (!sourceFile) {
+      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
+      try {
+        sourceFile = project.addSourceFileAtPath(absolutePath);
+      } catch (error) {
+        throw new Error(`File not found: ${absolutePath}`);
+      }
+    }
 
     // Find references
     const result = findReferences(project, {
@@ -231,9 +275,14 @@ server.tool(
     const project = await findProjectForFile(absolutePath);
 
     // Get the source file to find the column position
-    const sourceFile = project.getSourceFile(absolutePath);
+    let sourceFile = project.getSourceFile(absolutePath);
     if (!sourceFile) {
-      throw new Error(`File not found: ${absolutePath}`);
+      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
+      try {
+        sourceFile = project.addSourceFileAtPath(absolutePath);
+      } catch (error) {
+        throw new Error(`File not found: ${absolutePath}`);
+      }
     }
 
     // Get the line text
@@ -305,9 +354,20 @@ server.tool(
 
     const project = await findProjectForFile(absolutePath);
 
+    // Ensure the source file is loaded in the project
+    let sourceFile = project.getSourceFile(absolutePath);
+    if (!sourceFile) {
+      // Try to add the file if it's not in the project (e.g., excluded in tsconfig)
+      try {
+        sourceFile = project.addSourceFileAtPath(absolutePath);
+      } catch (error) {
+        throw new Error(`File not found: ${absolutePath}`);
+      }
+    }
+
     // Get diagnostics
-    const result = getDiagnosticsForFile(project, {
-      filePath: absolutePath,
+    const result = getDiagnostics(project, {
+      filePaths: [absolutePath],
     });
 
     if (result.isErr()) {

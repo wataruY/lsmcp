@@ -1,8 +1,8 @@
 import { Project } from "ts-morph";
 import { describe, it, expect } from "vitest";
-import { getDiagnosticsForFile } from "./get_diagnostics_for_file.ts";
+import { getDiagnostics } from "./get_diagnostics.ts";
 
-describe("getDiagnosticsForFile", () => {
+describe("getDiagnostics", () => {
   it("should find type errors", () => {
     const project = new Project({
       useInMemoryFileSystem: true,
@@ -21,8 +21,8 @@ function greet(name: string) {
 greet(456); // Type error`
     );
 
-    const result = getDiagnosticsForFile(project, {
-      filePath: "/src/main.ts",
+    const result = getDiagnostics(project, {
+      filePaths: ["/src/main.ts"],
     });
 
     expect(result.isOk()).toBe(true);
@@ -60,8 +60,8 @@ export function useThis() {
 }`
     );
 
-    const result = getDiagnosticsForFile(project, {
-      filePath: "/src/utils.ts",
+    const result = getDiagnostics(project, {
+      filePaths: ["/src/utils.ts"],
     });
 
     expect(result.isOk()).toBe(true);
@@ -90,8 +90,8 @@ export function useThis() {
 console.log(add(1, 2));`
     );
 
-    const result = getDiagnosticsForFile(project, {
-      filePath: "/src/clean.ts",
+    const result = getDiagnostics(project, {
+      filePaths: ["/src/clean.ts"],
     });
 
     expect(result.isOk()).toBe(true);
@@ -120,8 +120,8 @@ console.log(add(1, 2));`
 console.log(nonExistent);`
     );
 
-    const result = getDiagnosticsForFile(project, {
-      filePath: "/src/missing-import.ts",
+    const result = getDiagnostics(project, {
+      filePaths: ["/src/missing-import.ts"],
     });
 
     expect(result.isOk()).toBe(true);
@@ -138,13 +138,13 @@ console.log(nonExistent);`
       useInMemoryFileSystem: true,
     });
 
-    const result = getDiagnosticsForFile(project, {
-      filePath: "/src/nonexistent.ts",
+    const result = getDiagnostics(project, {
+      filePaths: ["/src/nonexistent.ts"],
     });
 
     expect(result.isErr()).toBe(true);
     if (result.isErr()) {
-      expect(result.error).toContain("File not found");
+      expect(result.error).toContain("No valid source files found");
     }
   });
 
@@ -163,8 +163,8 @@ console.log(nonExistent);`
 }`
     );
 
-    const result = getDiagnosticsForFile(project, {
-      filePath: "/src/syntax-error.ts",
+    const result = getDiagnostics(project, {
+      filePaths: ["/src/syntax-error.ts"],
     });
 
     expect(result.isOk()).toBe(true);

@@ -1,5 +1,5 @@
 import { Project } from "ts-morph";
-import { findReferences } from "../../src/navigations/find_references";
+import { findReferences } from "./find_references";
 import { expect, test, describe } from "vitest";
 
 describe("findReferences", () => {
@@ -68,8 +68,8 @@ console.log(greet("TypeScript"));
     if (result.isOk()) {
       expect(result.value.references).toHaveLength(3);
       expect(result.value.symbol.name).toBe("greet");
-      expect(result.value.references.some(ref => ref.line === 5)).toBe(true);
-      expect(result.value.references.some(ref => ref.line === 6)).toBe(true);
+      expect(result.value.references.some((ref) => ref.line === 5)).toBe(true);
+      expect(result.value.references.some((ref) => ref.line === 6)).toBe(true);
     }
   });
 
@@ -112,8 +112,10 @@ sharedFunction();`
     if (result.isOk()) {
       expect(result.value.references.length).toBeGreaterThan(2);
       expect(result.value.symbol.name).toBe("sharedValue");
-      
-      const filesPaths = [...new Set(result.value.references.map(ref => ref.filePath))];
+
+      const filesPaths = [
+        ...new Set(result.value.references.map((ref) => ref.filePath)),
+      ];
       expect(filesPaths).toHaveLength(2);
     }
   });
@@ -158,8 +160,8 @@ console.log(calc.getValue());`
     if (result.isOk()) {
       expect(result.value.symbol.name).toBe("value");
       expect(result.value.references.length).toBeGreaterThanOrEqual(3);
-      
-      const lines = result.value.references.map(ref => ref.line);
+
+      const lines = result.value.references.map((ref) => ref.line);
       expect(lines).toContain(2);
       expect(lines).toContain(5);
       expect(lines).toContain(6);
