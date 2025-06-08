@@ -2,8 +2,12 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@mizchi/readability": "^0.5.8",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "@types/node": "^22.15.30",
     "zod": "^3.25.56"
+  },
+  "devDependencies": {
+    "ts-morph": "^26.0.0"
   }
 }

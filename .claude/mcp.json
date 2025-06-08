@@ -2,7 +2,7 @@
   "mcpServers": {
     "local": {
       "command": "node",
-      "args": [".claude/mcp/local.ts"]
+      "args": [".claude/mcp-server.ts"]
     }
   }
 }
