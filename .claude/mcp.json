@@ -3,6 +3,10 @@
     "local": {
       "command": "node",
       "args": [".claude/mcp-server.ts"]
+    },
+    "typescript": {
+      "command": "node",
+      "args": ["dist/mcp.js"]
     }
   }
 }

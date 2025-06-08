@@ -5,10 +5,11 @@ in jpn
 - pnpm
 - typescript
 - ts-morph
+- tsdown: bundler for typescript (rolldown based)
 
 ## Goal
 
-AI に TS に特化したリファクタツールを与える。
+AI に TS の操作に特化した操作を提供する
 
 ## Rules
 

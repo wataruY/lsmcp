@@ -9,11 +9,14 @@
     "zod": "^3.25.56"
   },
   "devDependencies": {
+    "tsdown": "^0.12.7",
     "typescript": "^5.7.3",
     "vitest": "^3.2.2"
   },
   "scripts": {
+    "build": "tsdown",
     "test": "vitest --run",
-    "typecheck": "tsc -p . --noEmit"
+    "typecheck": "tsc -p . --noEmit",
+    "mcp-server": "node dist/mcp/server.js"
   }
 }
