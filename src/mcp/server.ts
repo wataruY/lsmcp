@@ -35,18 +35,7 @@ server.tool(
     const absoluteOldPath = path.join(root, oldPath);
     const absoluteNewPath = path.join(root, newPath);
 
-    // Check if source file exists
-    await fs.access(absoluteOldPath);
-
     const project = await findProjectForFile(absoluteOldPath);
-
-    // Add the source file if not already in project
-    if (!project.getSourceFile(absoluteOldPath)) {
-      project.addSourceFileAtPath(absoluteOldPath);
-    }
-
-    // The project should already have all necessary files loaded via tsconfig.json
-    // If not, the findProjectForFile function should handle loading the project files
 
     // Perform the move
     const result = moveFile(project, {
@@ -85,19 +74,8 @@ server.tool(
   toMcpToolHandler(async ({ filePath, line, oldName, newName, root }) => {
     // Always treat paths as relative to root
     const absolutePath = path.join(root, filePath);
-
     // Check if file exists
-    await fs.access(absolutePath);
-
     const project = await findProjectForFile(absolutePath);
-
-    // Add the source file if not already in project
-    if (!project.getSourceFile(absolutePath)) {
-      project.addSourceFileAtPath(absolutePath);
-    }
-
-    // The project should already have all necessary files loaded via tsconfig.json
-    // If not, the findProjectForFile function should handle loading the project files
 
     // Perform the rename
     const result = await renameSymbol(project, {
@@ -141,7 +119,7 @@ server.tool(
     root: z.string().describe("Root directory for resolving relative paths"),
   },
   toMcpToolHandler(
-    async ({ filePath, line, symbolName, removeReferences, root }) => {
+    async ({ filePath, line, symbolName, root }) => {
       // Always treat paths as relative to root
       const absolutePath = path.join(root, filePath);
 
@@ -149,14 +127,6 @@ server.tool(
       await fs.access(absolutePath);
 
       const project = await findProjectForFile(absolutePath);
-
-      // Add the source file if not already in project
-      if (!project.getSourceFile(absolutePath)) {
-        project.addSourceFileAtPath(absolutePath);
-      }
-
-      // The project should already have all necessary files loaded via tsconfig.json
-      // If not, the findProjectForFile function should handle loading the project files
 
       // Perform the removal
       const result = await removeSymbol(project, {
@@ -171,7 +141,6 @@ server.tool(
 
       // Save all changes
       await project.save();
-
       const { message, removedFromFiles } = result.value;
       return `${message} from ${removedFromFiles.length} file(s).`;
     }
