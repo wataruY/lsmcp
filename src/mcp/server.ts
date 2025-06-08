@@ -24,8 +24,13 @@ server.tool(
     oldPath: z.string().describe("Current file path (relative to root)"),
     newPath: z.string().describe("New file path (relative to root)"),
     root: z.string().describe("Root directory for resolving relative paths"),
+    overwrite: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe("Overwrite the destination file if it exists"),
   },
-  toMcpToolHandler(async ({ oldPath, newPath, root }) => {
+  toMcpToolHandler(async ({ oldPath, newPath, root, overwrite }) => {
     // Always treat paths as relative to root
     const absoluteOldPath = path.join(root, oldPath);
     const absoluteNewPath = path.join(root, newPath);
@@ -47,6 +52,7 @@ server.tool(
     const result = moveFile(project, {
       oldFilename: absoluteOldPath,
       newFilename: absoluteNewPath,
+      overwrite,
     });
 
     if (result.isErr()) {

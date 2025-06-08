@@ -8,7 +8,7 @@ export interface MoveFileResult {
 
 export function moveFile(
   project: Project,
-  options: { oldFilename: string; newFilename: string }
+  options: { oldFilename: string; newFilename: string; overwrite?: boolean }
 ): Result<MoveFileResult, string> {
   const { oldFilename, newFilename } = options;
   const sourceFile = project.getSourceFile(oldFilename);
@@ -30,7 +30,7 @@ export function moveFile(
     }
     
     // Perform the move
-    sourceFile.move(newFilename);
+    sourceFile.move(newFilename, { overwrite: options.overwrite });
     
     return ok({
       message: `Successfully moved file from "${oldFilename}" to "${newFilename}"`,
