@@ -4,11 +4,11 @@
       "Bash(pnpm test)",
       "Bash(ls:*)",
       "Bash(grep:*)",
-      "mcp__typescript__find-references",
-      "mcp__typescript__get-definitions",
-      "mcp__typescript__get-diagnostics",
-      "mcp__typescript__get-module-symbols",
-      "mcp__typescript__get-type-signature"
+      "mcp__typescript__find_references",
+      "mcp__typescript__get_definitions",
+      "mcp__typescript__get_diagnostics",
+      "mcp__typescript__get_module_symbols",
+      "mcp__typescript__get_type_signature"
     ],
     "deny": []
   }

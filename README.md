@@ -34,11 +34,14 @@ Add permissions in `.claude/settings.json`.
 {
   "permissions": {
     "allow": [
-      "mcp__typescript__find-references",
-      "mcp__typescript__get-definitions",
-      "mcp__typescript__get-diagnostics",
-      "mcp__typescript__get-module-symbols",
-      "mcp__typescript__get-type-signature"
+      "mcp__typescript__move_file",
+      "mcp__typescript__rename_symbol",
+      "mcp__typescript__delete_symbol",
+      "mcp__typescript__find_references",
+      "mcp__typescript__get_definitions",
+      "mcp__typescript__get_diagnostics",
+      "mcp__typescript__get_module_symbols",
+      "mcp__typescript__get_type_signature"
     ],
     "deny": []
   }
@@ -49,14 +52,14 @@ Add permissions in `.claude/settings.json`.
 
 When using this MCP server in Claude, the tools are available with the `mcp__typescript__` prefix:
 
-- `mcp__typescript__move-file` - Move TypeScript/JavaScript files
-- `mcp__typescript__rename-symbol` - Rename symbols across the project
-- `mcp__typescript__delete-symbol` - Delete symbols and their references
-- `mcp__typescript__find-references` - Find all references to a symbol
-- `mcp__typescript__get-definitions` - Get symbol definitions
-- `mcp__typescript__get-diagnostics` - Get TypeScript diagnostics
-- `mcp__typescript__get-module-symbols` - List module exports
-- `mcp__typescript__get-type-signature` - Get detailed type signatures
+- `mcp__typescript__move_file` - Move TypeScript/JavaScript files
+- `mcp__typescript__rename_symbol` - Rename symbols across the project
+- `mcp__typescript__delete_symbol` - Delete symbols and their references
+- `mcp__typescript__find_references` - Find all references to a symbol
+- `mcp__typescript__get_definitions` - Get symbol definitions
+- `mcp__typescript__get_diagnostics` - Get TypeScript diagnostics
+- `mcp__typescript__get_module_symbols` - List module exports
+- `mcp__typescript__get_type_signature` - Get detailed type signatures
 
 ## Develop
 

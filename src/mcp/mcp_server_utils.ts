@@ -1,3 +1,7 @@
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { ToolDef } from "./types.ts";
+import { z } from "zod";
+
 type ToolResult = {
   content: Array<{ type: "text"; text: string }>;
   isError?: boolean;
@@ -36,4 +40,19 @@ export function toMcpToolHandler<T>(
       };
     }
   };
+}
+
+/**
+ * Register a tool definition with the MCP server
+ */
+export function registerTool(server: McpServer, tool: ToolDef<any>) {
+  // Extract the shape from the ZodObject schema
+  const schemaShape = (tool.schema as z.ZodObject<any>).shape;
+  
+  server.tool(
+    tool.name,
+    tool.description,
+    schemaShape,
+    toMcpToolHandler(tool.handler)
+  );
 }
