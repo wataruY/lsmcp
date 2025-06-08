@@ -8,6 +8,7 @@ import fs from "fs/promises";
 import { moveFile } from "../commands/move_file.ts";
 import { renameSymbol } from "../commands/rename_symbol.ts";
 import { removeSymbol } from "../commands/remove_symbol.ts";
+import { findReferences } from "../navigations/find_references";
 import { findProjectForFile } from "../utils/project_cache.ts";
 import { toMcpToolHandler } from "./mcp_server_utils.ts";
 
@@ -145,6 +146,60 @@ server.tool(
       return `${message} from ${removedFromFiles.length} file(s).`;
     }
   )
+);
+
+// Tool: Find References
+server.tool(
+  "find-references",
+  "Find all references to a TypeScript/JavaScript symbol across the codebase",
+  {
+    filePath: z
+      .string()
+      .describe("File path containing the symbol (relative to root)"),
+    line: z
+      .number()
+      .describe("Line number where the symbol is located (1-based)"),
+    column: z
+      .number()
+      .describe("Column number where the symbol is located (1-based)"),
+    root: z.string().describe("Root directory for resolving relative paths"),
+  },
+  toMcpToolHandler(async ({ filePath, line, column, root }) => {
+    // Always treat paths as relative to root
+    const absolutePath = path.join(root, filePath);
+
+    // Check if file exists
+    await fs.access(absolutePath);
+
+    const project = await findProjectForFile(absolutePath);
+
+    // Find references
+    const result = findReferences(project, {
+      filePath: absolutePath,
+      line,
+      column,
+    });
+
+    if (result.isErr()) {
+      throw new Error(result.error);
+    }
+
+    const { message, references, symbol } = result.value;
+    
+    // Format the output
+    const output = [
+      message,
+      `Symbol: ${symbol.name} (${symbol.kind})`,
+      "",
+      "References:",
+    ];
+    
+    for (const ref of references) {
+      output.push(`  ${ref.filePath}:${ref.line}:${ref.column} - ${ref.lineText}`);
+    }
+    
+    return output.join("\n");
+  })
 );
 
 // Start the server
