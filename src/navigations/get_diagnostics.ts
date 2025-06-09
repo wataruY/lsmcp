@@ -104,7 +104,7 @@ export function getDiagnostics(
     // Use ts-morph's built-in formatting for the message
     const message = allDiagnostics.length > 0
       ? project.formatDiagnosticsWithColorAndContext(allDiagnostics)
-      : `No diagnostics found in ${processedFiles} file${processedFiles === 1 ? '' : 's'}.`;
+      : `No diagnostics found in ${String(processedFiles)} file${processedFiles === 1 ? '' : 's'}.`;
 
     return ok({
       message,

@@ -28,7 +28,7 @@ export async function deleteSymbol(
     const node = findSymbolAtLine(sourceFile, request.line, request.symbolName);
     if (!node) {
       return err(
-        `Symbol "${request.symbolName}" not found at line ${request.line}`
+        `Symbol "${request.symbolName}" not found at line ${String(request.line)}`
       );
     }
 

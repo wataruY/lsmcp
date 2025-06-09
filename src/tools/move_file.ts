@@ -1,6 +1,7 @@
 import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
+import { type Result, ok, err } from "neverthrow";
 import { moveFile } from "../commands/move_file";
 import {
   findProjectForFile,
@@ -31,7 +32,7 @@ export async function handleMoveFile({
   oldPath,
   newPath,
   overwrite,
-}: z.infer<typeof schema>): Promise<MoveFileResult> {
+}: z.infer<typeof schema>): Promise<Result<MoveFileResult, string>> {
   // Always treat paths as relative to root
   const absoluteOldPath = path.join(root, oldPath);
   const absoluteNewPath = path.join(root, newPath);
@@ -39,10 +40,17 @@ export async function handleMoveFile({
   const project = findProjectForFile(absoluteOldPath);
 
   // Ensure the source file is loaded in the project with fresh content
-  try {
-    await getOrCreateSourceFileWithRefresh(absoluteOldPath);
-  } catch {
-    throw new Error(`File not found: ${absoluteOldPath}`);
+  const sourceFileResult = (() => {
+    try {
+      getOrCreateSourceFileWithRefresh(absoluteOldPath);
+      return ok(undefined);
+    } catch {
+      return err(`File not found: ${absoluteOldPath}`);
+    }
+  })();
+
+  if (sourceFileResult.isErr()) {
+    return err(sourceFileResult.error);
   }
 
   // Perform the move
@@ -53,13 +61,61 @@ export async function handleMoveFile({
   });
 
   if (result.isErr()) {
-    throw new Error(result.error);
+    return err(result.error);
   }
 
   // Save all changes
   await project.save();
 
-  return result.value;
+  return ok(result.value);
+}
+
+async function analyzeImportChanges(
+  file: string,
+  oldPath: string,
+  newPath: string
+): Promise<Result<string[], string>> {
+  const contentResult = await fs.readFile(file, 'utf-8')
+    .then(content => ok(content))
+    .catch((error: unknown) => err(error instanceof Error ? error.message : String(error)));
+
+  if (contentResult.isErr()) {
+    return ok([`    Import statements updated`]);
+  }
+
+  const lines = contentResult.value.split('\n');
+  
+  // Find lines with import statements that reference the moved file
+  const importRegex = /(?:import|from|require)\s*\(?['"`]([^'"`]+)['"`]\)?/g;
+  
+  const importChanges = lines.flatMap((line, i) => {
+    const lineNum = i + 1;
+    const matches: string[] = [];
+    let match;
+    
+    while ((match = importRegex.exec(line)) !== null) {
+      const importPath = match[1];
+      const fileDir = path.dirname(file);
+      const resolvedNewPath = path.resolve(fileDir, importPath);
+      const normalizedNewPath = path.normalize(newPath);
+      
+      if (resolvedNewPath === normalizedNewPath || importPath.includes(path.basename(newPath, path.extname(newPath)))) {
+        const relativeOldPath = path.relative(fileDir, oldPath).replace(/\\/g, '/');
+        const oldLine = line.replace(importPath, relativeOldPath.startsWith('.') ? relativeOldPath : './' + relativeOldPath);
+        
+        if (oldLine !== line) {
+          matches.push(
+            `    @@ -${String(lineNum)},1 +${String(lineNum)},1 @@`,
+            `    - ${oldLine}`,
+            `    + ${line}`
+          );
+        }
+      }
+    }
+    return matches;
+  });
+  
+  return ok(importChanges.length > 0 ? importChanges : [`    Import statements updated`]);
 }
 
 export async function formatMoveFileResult(
@@ -67,11 +123,11 @@ export async function formatMoveFileResult(
   oldPath: string,
   newPath: string,
   root: string
-): Promise<string> {
+): Promise<Result<string, string>> {
   const { message, changedFiles } = result;
   
   const output = [
-    `${message}. Updated imports in ${changedFiles.length} file(s).`,
+    `${message}. Updated imports in ${String(changedFiles.length)} file(s).`,
     "",
     "Changes:",
   ];
@@ -80,69 +136,34 @@ export async function formatMoveFileResult(
   const oldRelativePath = path.relative(root, oldPath);
   const newRelativePath = path.relative(root, newPath);
   
-  for (const file of changedFiles) {
-    if (file === oldPath) {
-      // This is the moved file itself
-      output.push(`  File moved: ${oldRelativePath} → ${newRelativePath}`);
-      continue;
-    }
-    
-    const relativePath = path.relative(root, file);
-    output.push(`  ${relativePath}:`);
-    
-    try {
-      // Read the current file content to show import changes
-      const content = await fs.readFile(file, 'utf-8');
-      const lines = content.split('\n');
-      
-      // Find lines with import statements that reference the moved file
-      let foundChanges = false;
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const lineNum = i + 1;
-        
-        // Look for import statements that might reference the moved file
-        const importRegex = /(?:import|from|require)\s*\(?['"`]([^'"`]+)['"`]\)?/g;
-        let match;
-        
-        while ((match = importRegex.exec(line)) !== null) {
-          const importPath = match[1];
-          
-          // Check if this import path references the new location
-          // We need to handle relative imports properly
-          const fileDir = path.dirname(file);
-          const resolvedNewPath = path.resolve(fileDir, importPath);
-          const normalizedNewPath = path.normalize(newPath);
-          
-          // Check if the resolved import path matches our new file path
-          if (resolvedNewPath === normalizedNewPath || importPath.includes(path.basename(newPath, path.extname(newPath)))) {
-            // Calculate what the old import path would have been
-            const relativeOldPath = path.relative(fileDir, oldPath).replace(/\\/g, '/');
-            
-            // Construct the old line
-            const oldLine = line.replace(importPath, relativeOldPath.startsWith('.') ? relativeOldPath : './' + relativeOldPath);
-            
-            if (oldLine !== line) {
-              output.push(`    @@ -${lineNum},1 +${lineNum},1 @@`);
-              output.push(`    - ${oldLine}`);
-              output.push(`    + ${line}`);
-              foundChanges = true;
-            }
-          }
-        }
+  // Process each changed file
+  const fileResults = await Promise.all(
+    changedFiles.map(async (file) => {
+      if (file === oldPath) {
+        // This is the moved file itself
+        return ok([`  File moved: ${oldRelativePath} → ${newRelativePath}`]);
       }
       
-      if (!foundChanges) {
-        // If we couldn't detect specific changes, show a generic message
-        output.push(`    Import statements updated`);
+      const relativePath = path.relative(root, file);
+      const importAnalysis = await analyzeImportChanges(file, oldPath, newPath);
+      
+      if (importAnalysis.isErr()) {
+        return err(importAnalysis.error);
       }
-    } catch {
-      // Fallback to simple format if file reading fails
-      output.push(`    Import statements updated`);
+      
+      return ok([`  ${relativePath}:`, ...importAnalysis.value]);
+    })
+  );
+  
+  // Check if any file processing failed
+  for (const fileResult of fileResults) {
+    if (fileResult.isErr()) {
+      return err(fileResult.error);
     }
+    output.push(...fileResult.value);
   }
   
-  return output.join("\n");
+  return ok(output.join("\n"));
 }
 
 export const moveFileTool: ToolDef<typeof schema> = {
@@ -152,8 +173,18 @@ export const moveFileTool: ToolDef<typeof schema> = {
   schema,
   handler: async (args) => {
     const result = await handleMoveFile(args);
+    if (result.isErr()) {
+      throw new Error(result.error);
+    }
+    
     const absoluteOldPath = path.join(args.root, args.oldPath);
     const absoluteNewPath = path.join(args.root, args.newPath);
-    return await formatMoveFileResult(result, absoluteOldPath, absoluteNewPath, args.root);
+    const formattedResult = await formatMoveFileResult(result.value, absoluteOldPath, absoluteNewPath, args.root);
+    
+    if (formattedResult.isErr()) {
+      throw new Error(formattedResult.error);
+    }
+    
+    return formattedResult.value;
   },
 };

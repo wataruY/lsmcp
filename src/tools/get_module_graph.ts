@@ -22,7 +22,7 @@ export const getModuleGraphTool: ToolDef<typeof paramsSchema> = {
   description:
     "Analyze the module dependency graph of a TypeScript/JavaScript project",
   schema: paramsSchema,
-  handler: async (args) => {
+  handler: (args) => {
     // Create a fresh project for module graph analysis without tsconfig exclusions
     const project = new Project({
       compilerOptions: {
@@ -202,6 +202,6 @@ export const getModuleGraphTool: ToolDef<typeof paramsSchema> = {
       lines.push("```");
     }
 
-    return lines.join("\n");
+    return Promise.resolve(lines.join("\n"));
   },
 };

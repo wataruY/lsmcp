@@ -182,9 +182,9 @@ export function getProjectCacheSize(): number {
  * Get or create a source file with cache clearing
  * This ensures the source file is fresh and its descendants are forgotten
  */
-export async function getOrCreateSourceFileWithRefresh(
+export function getOrCreateSourceFileWithRefresh(
   filePath: string
-): Promise<import("ts-morph").SourceFile> {
+): import("ts-morph").SourceFile {
   const project = findProjectForFile(filePath);
   
   // Try to get existing source file

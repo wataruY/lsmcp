@@ -5,6 +5,12 @@ import { mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 
+interface MoveDirectoryResult {
+  success: boolean;
+  movedFiles: Array<{ path: string }>;
+  message: string;
+}
+
 describe("move_directory", () => {
   const testDir = join(process.cwd(), "test-tmp-move-dir");
   let project: Project;
@@ -66,7 +72,7 @@ export const useButton = () => Button();`
         overwrite: false
       });
       
-      const parsed = JSON.parse(result);
+      const parsed = JSON.parse(result) as MoveDirectoryResult;
       expect(parsed.success).toBe(true);
       expect(parsed.movedFiles).toHaveLength(2);
       expect(parsed.movedFiles).toContainEqual({ path: "src/ui/components/Button.ts" });
@@ -80,7 +86,7 @@ export const useButton = () => Button();`
       const project = new Project({ tsConfigFilePath: join(testDir, "tsconfig.json") });
       const helpersFile = project.getSourceFileOrThrow(join(testDir, "src", "utils", "helpers.ts"));
       const helpersText = helpersFile.getFullText();
-      console.log("Helper file content:", helpersText);
+      // Helper file content should contain updated import
       expect(helpersText).toContain("../ui/components/Button");
     } finally {
       process.chdir(originalCwd);
@@ -121,7 +127,7 @@ export const useButton = () => Button();`
         overwrite: true
       });
       
-      const parsed = JSON.parse(result);
+      const parsed = JSON.parse(result) as MoveDirectoryResult;
       expect(parsed.success).toBe(true);
       expect(parsed.movedFiles).toHaveLength(2);
     } finally {

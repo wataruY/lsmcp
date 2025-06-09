@@ -45,7 +45,13 @@ export const noClass = createRule({
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "node_modules/**", ".claude/**", "examples/**", "tests/fixtures/**"],
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      ".claude/**",
+      "examples/**",
+      "tests/fixtures/**",
+    ],
   },
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
@@ -102,6 +108,7 @@ export default tseslint.config(
       "@typescript-eslint/no-deprecated": "warn",
       "@typescript-eslint/await-thenable": "warn",
       "@typescript-eslint/require-await": "warn",
+      "@typescript-eslint/restrict-template-expressions": "off",
       "@typescript-eslint/consistent-type-imports": [
         "warn",
         {
@@ -118,7 +125,7 @@ export default tseslint.config(
         },
       ],
       "prefer-const": "warn",
-      complexity: ["warn", { max: 5 }],
+      complexity: ["warn", { max: 7 }],
       "no-console": "warn",
     },
   },

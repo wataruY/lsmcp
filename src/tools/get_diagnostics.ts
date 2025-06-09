@@ -32,7 +32,7 @@ export async function handleGetDiagnostics({
   const project = findProjectForFile(absolutePath);
 
   // Ensure the source file is loaded in the project with fresh content
-  await getOrCreateSourceFileWithRefresh(absolutePath);
+  getOrCreateSourceFileWithRefresh(absolutePath);
 
   // Get diagnostics
   const result = getDiagnostics(project, {

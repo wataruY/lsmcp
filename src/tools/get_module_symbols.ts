@@ -32,11 +32,11 @@ export interface GetModuleSymbolsResult {
   };
 }
 
-export async function handleGetModuleSymbols({
+export function handleGetModuleSymbols({
   root,
   moduleName,
   filePath,
-}: z.infer<typeof schema>): Promise<GetModuleSymbolsResult> {
+}: z.infer<typeof schema>): GetModuleSymbolsResult {
   const project = findProjectForFile(
     filePath ? path.join(root, filePath) : root
   );
@@ -98,8 +98,8 @@ export const getModuleSymbolsTool: ToolDef<typeof schema> = {
   description:
     "Get all exported symbols from a TypeScript/JavaScript module without detailed signatures",
   schema,
-  handler: async (args) => {
-    const result = await handleGetModuleSymbols(args);
-    return formatGetModuleSymbolsResult(result);
+  handler: (args) => {
+    const result = handleGetModuleSymbols(args);
+    return Promise.resolve(formatGetModuleSymbolsResult(result));
   },
 };

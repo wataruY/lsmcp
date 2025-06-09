@@ -14,7 +14,7 @@ export function resolveLineParameter(
     // Direct line number provided
     const lines = sourceFile.getFullText().split("\n");
     if (lineParam < 1 || lineParam > lines.length) {
-      throw new Error(`Invalid line number: ${lineParam}. File has ${lines.length} lines.`);
+      throw new Error(`Invalid line number: ${String(lineParam)}. File has ${String(lines.length)} lines.`);
     }
     return lineParam;
   }
@@ -62,7 +62,7 @@ export function findSymbolInLine(
   const lines = fullText.split("\n");
   
   if (lineNumber < 1 || lineNumber > lines.length) {
-    throw new Error(`Invalid line number: ${lineNumber}. File has ${lines.length} lines.`);
+    throw new Error(`Invalid line number: ${String(lineNumber)}. File has ${String(lines.length)} lines.`);
   }
   
   const lineText = lines[lineNumber - 1];
@@ -79,12 +79,12 @@ export function findSymbolInLine(
   }
   
   if (occurrences.length === 0) {
-    throw new Error(`Symbol "${symbolName}" not found on line ${lineNumber}`);
+    throw new Error(`Symbol "${symbolName}" not found on line ${String(lineNumber)}`);
   }
   
   if (index < 0 || index >= occurrences.length) {
     throw new Error(
-      `Symbol "${symbolName}" only appears ${occurrences.length} time(s) on line ${lineNumber}, but index ${index} was requested`
+      `Symbol "${symbolName}" only appears ${String(occurrences.length)} time(s) on line ${String(lineNumber)}, but index ${String(index)} was requested`
     );
   }
   

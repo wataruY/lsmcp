@@ -42,12 +42,12 @@ export function goToDefinition(
 
   const node = sourceFile.getDescendantAtPos(position);
   if (!node) {
-    return err(`No node found at position ${request.line}:${request.column}`);
+    return err(`No node found at position ${String(request.line)}:${String(request.column)}`);
   }
 
   const symbol = node.getSymbol();
   if (!symbol) {
-    return err(`No symbol found at position ${request.line}:${request.column}`);
+    return err(`No symbol found at position ${String(request.line)}:${String(request.column)}`);
   }
 
   const symbolName = symbol.getName();
@@ -57,7 +57,7 @@ export function goToDefinition(
     // Find the identifier node
     const identifier = Node.isIdentifier(node) ? node : node.getFirstDescendantByKind(ts.SyntaxKind.Identifier);
     if (!identifier) {
-      return err(`No identifier found at position ${request.line}:${request.column}`);
+      return err(`No identifier found at position ${String(request.line)}:${String(request.column)}`);
     }
 
     // Get definition nodes

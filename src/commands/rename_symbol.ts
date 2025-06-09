@@ -75,7 +75,7 @@ export async function renameSymbol(
     }
     
     if (!node) {
-      return err(`Symbol "${request.symbolName}" not found at line ${request.line}`);
+      return err(`Symbol "${request.symbolName}" not found at line ${String(request.line)}`);
     }
 
     // リネーム前の状態を記録
@@ -193,7 +193,7 @@ function findSymbolAtLine(
     );
     
     if (sameColumnNodes.length > 1) {
-      throw new Error(`Multiple occurrences of symbol "${symbolName}" found on line ${line}. Please be more specific.`);
+      throw new Error(`Multiple occurrences of symbol "${symbolName}" found on line ${String(line)}. Please be more specific.`);
     }
     
     // 異なる列位置の場合は最初の出現を使用

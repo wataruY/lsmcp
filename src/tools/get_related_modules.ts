@@ -13,7 +13,7 @@ export const getRelatedModulesTool: ToolDef<typeof paramsSchema> = {
   description:
     "Get all modules related to a specific file (imports, imported by, re-exports, re-exported by)",
   schema: paramsSchema,
-  handler: async (args) => {
+  handler: (args) => {
     // Create a fresh project for analysis without tsconfig exclusions
     const project = new Project({
       compilerOptions: {
@@ -151,6 +151,6 @@ export const getRelatedModulesTool: ToolDef<typeof paramsSchema> = {
 
     lines.push("```");
 
-    return lines.join("\n");
+    return Promise.resolve(lines.join("\n"));
   },
 };

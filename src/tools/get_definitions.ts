@@ -57,7 +57,7 @@ export async function handleGetDefinitions({
   const project = findProjectForFile(absolutePath);
 
   // Get the source file to find the column position with fresh content
-  const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
+  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
 
   // Resolve line parameter
   const resolvedLine = resolveLineParameter(sourceFile, line);
@@ -79,11 +79,11 @@ export async function handleGetDefinitions({
   return result.value;
 }
 
-export async function formatGetDefinitionsResult(
+export function formatGetDefinitionsResult(
   result: GetDefinitionsResult,
   root: string,
   options?: { before?: number; after?: number }
-): Promise<string> {
+): string {
   const { message, definitions, symbol } = result;
 
   // Format the output
@@ -102,7 +102,7 @@ export async function formatGetDefinitionsResult(
 
     // Add context lines if requested
     if (options?.before || options?.after) {
-      const defSourceFile = await getOrCreateSourceFileWithRefresh(
+      const defSourceFile = getOrCreateSourceFileWithRefresh(
         def.filePath
       );
       if (defSourceFile) {
@@ -145,6 +145,6 @@ export const getDefinitionsTool: ToolDef<typeof schema> = {
       line,
       symbolName,
     });
-    return formatGetDefinitionsResult(result, root, { before, after });
+    return Promise.resolve(formatGetDefinitionsResult(result, root, { before, after }));
   },
 };

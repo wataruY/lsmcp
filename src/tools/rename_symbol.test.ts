@@ -11,8 +11,11 @@ describe("rename_symbol", () => {
       };
 
       const formatted = await formatRenameSymbolResult(result, "/project");
-      expect(formatted).toMatch("Renamed 'oldName' to 'newName' in 0 file(s) with 0 change(s).");
-      expect(formatted).toMatch("Changes:");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Renamed 'oldName' to 'newName' in 0 file(s) with 0 change(s).");
+        expect(formatted.value).toMatch("Changes:");
+      }
     });
 
     it("should format rename with single file changed", async () => {
@@ -34,10 +37,13 @@ describe("rename_symbol", () => {
       };
 
       const formatted = await formatRenameSymbolResult(result, "/project");
-      expect(formatted).toMatch("Renamed 'getUserId' to 'getUserID' in 1 file(s) with 1 change(s).");
-      expect(formatted).toMatch("src/user.ts:");
-      // Since we can't read the actual file in tests, it will fall back to simple format
-      expect(formatted).toMatch('Line 10: "getUserId" → "getUserID"');
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Renamed 'getUserId' to 'getUserID' in 1 file(s) with 1 change(s).");
+        expect(formatted.value).toMatch("src/user.ts:");
+        // Since we can't read the actual file in tests, it will fall back to simple format
+        expect(formatted.value).toMatch('Line 10: "getUserId" → "getUserID"');
+      }
     });
 
     it("should format rename with multiple files and changes", async () => {
@@ -87,10 +93,13 @@ describe("rename_symbol", () => {
       };
 
       const formatted = await formatRenameSymbolResult(result, "/project");
-      expect(formatted).toMatch("Renamed 'Component' to 'BaseComponent' in 3 file(s) with 4 change(s).");
-      expect(formatted).toMatch("src/components/Button.tsx:");
-      expect(formatted).toMatch("src/components/Form.tsx:");
-      expect(formatted).toMatch("src/index.ts:");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Renamed 'Component' to 'BaseComponent' in 3 file(s) with 4 change(s).");
+        expect(formatted.value).toMatch("src/components/Button.tsx:");
+        expect(formatted.value).toMatch("src/components/Form.tsx:");
+        expect(formatted.value).toMatch("src/index.ts:");
+      }
     });
 
     it("should format class rename with many changes", async () => {
@@ -152,10 +161,13 @@ describe("rename_symbol", () => {
       };
 
       const formatted = await formatRenameSymbolResult(result, "/project");
-      expect(formatted).toMatch("Renamed class 'User' to 'UserModel' in 3 file(s) with 6 change(s).");
-      expect(formatted).toMatch("src/models/user.ts:");
-      expect(formatted).toMatch("src/services/auth.ts:");
-      expect(formatted).toMatch("src/api/user.api.ts:");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Renamed class 'User' to 'UserModel' in 3 file(s) with 6 change(s).");
+        expect(formatted.value).toMatch("src/models/user.ts:");
+        expect(formatted.value).toMatch("src/services/auth.ts:");
+        expect(formatted.value).toMatch("src/api/user.api.ts:");
+      }
     });
 
     it("should handle empty changes array", async () => {
@@ -170,8 +182,11 @@ describe("rename_symbol", () => {
       };
 
       const formatted = await formatRenameSymbolResult(result, "/project");
-      expect(formatted).toMatch("Renamed 'unusedSymbol' to 'newUnusedSymbol' in 1 file(s) with 0 change(s).");
-      expect(formatted).toMatch("src/unused.ts:");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Renamed 'unusedSymbol' to 'newUnusedSymbol' in 1 file(s) with 0 change(s).");
+        expect(formatted.value).toMatch("src/unused.ts:");
+      }
     });
   });
 });

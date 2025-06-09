@@ -17,8 +17,11 @@ describe("move_file", () => {
         "/project"
       );
       
-      expect(formatted).toMatch("Moved file from 'src/old.ts' to 'src/new.ts'. Updated imports in 1 file(s).");
-      expect(formatted).toMatch("File moved: src/old.ts → src/new.ts");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Moved file from 'src/old.ts' to 'src/new.ts'. Updated imports in 1 file(s).");
+        expect(formatted.value).toMatch("File moved: src/old.ts → src/new.ts");
+      }
     });
 
     it("should format successful move with single import update", async () => {
@@ -34,9 +37,12 @@ describe("move_file", () => {
         "/project"
       );
       
-      expect(formatted).toMatch("Moved file from 'utils/helper.ts' to 'lib/helper.ts'. Updated imports in 2 file(s).");
-      expect(formatted).toMatch("File moved: utils/helper.ts → lib/helper.ts");
-      expect(formatted).toMatch("src/index.ts:");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Moved file from 'utils/helper.ts' to 'lib/helper.ts'. Updated imports in 2 file(s).");
+        expect(formatted.value).toMatch("File moved: utils/helper.ts → lib/helper.ts");
+        expect(formatted.value).toMatch("src/index.ts:");
+      }
     });
 
     it("should format successful move with multiple import updates", async () => {
@@ -58,12 +64,15 @@ describe("move_file", () => {
         "/project"
       );
       
-      expect(formatted).toMatch("Moved file from 'components/Button.tsx' to 'ui/Button.tsx'. Updated imports in 5 file(s).");
-      expect(formatted).toMatch("File moved: components/Button.tsx → ui/Button.tsx");
-      expect(formatted).toMatch("src/App.tsx:");
-      expect(formatted).toMatch("src/pages/Home.tsx:");
-      expect(formatted).toMatch("src/pages/About.tsx:");
-      expect(formatted).toMatch("src/components/Form.tsx:");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Moved file from 'components/Button.tsx' to 'ui/Button.tsx'. Updated imports in 5 file(s).");
+        expect(formatted.value).toMatch("File moved: components/Button.tsx → ui/Button.tsx");
+        expect(formatted.value).toMatch("src/App.tsx:");
+        expect(formatted.value).toMatch("src/pages/Home.tsx:");
+        expect(formatted.value).toMatch("src/pages/About.tsx:");
+        expect(formatted.value).toMatch("src/components/Form.tsx:");
+      }
     });
 
     it("should format move to different directory", async () => {
@@ -83,10 +92,13 @@ describe("move_file", () => {
         "/project"
       );
       
-      expect(formatted).toMatch("Moved file from 'src/utils/math.ts' to 'lib/math/index.ts'. Updated imports in 3 file(s).");
-      expect(formatted).toMatch("File moved: src/utils/math.ts → lib/math/index.ts");
-      expect(formatted).toMatch("src/calculator.ts:");
-      expect(formatted).toMatch("src/statistics.ts:");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Moved file from 'src/utils/math.ts' to 'lib/math/index.ts'. Updated imports in 3 file(s).");
+        expect(formatted.value).toMatch("File moved: src/utils/math.ts → lib/math/index.ts");
+        expect(formatted.value).toMatch("src/calculator.ts:");
+        expect(formatted.value).toMatch("src/statistics.ts:");
+      }
     });
 
     it("should format rename within same directory", async () => {
@@ -107,11 +119,14 @@ describe("move_file", () => {
         "/project"
       );
       
-      expect(formatted).toMatch("Moved file from 'types/user.ts' to 'types/User.ts'. Updated imports in 4 file(s).");
-      expect(formatted).toMatch("File moved: types/user.ts → types/User.ts");
-      expect(formatted).toMatch("src/models/user.model.ts:");
-      expect(formatted).toMatch("src/services/auth.service.ts:");
-      expect(formatted).toMatch("src/api/users.api.ts:");
+      expect(formatted.isOk()).toBe(true);
+      if (formatted.isOk()) {
+        expect(formatted.value).toMatch("Moved file from 'types/user.ts' to 'types/User.ts'. Updated imports in 4 file(s).");
+        expect(formatted.value).toMatch("File moved: types/user.ts → types/User.ts");
+        expect(formatted.value).toMatch("src/models/user.model.ts:");
+        expect(formatted.value).toMatch("src/services/auth.service.ts:");
+        expect(formatted.value).toMatch("src/api/users.api.ts:");
+      }
     });
   });
 });

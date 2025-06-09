@@ -19,12 +19,12 @@ const schema = z.object({
 
 export type GetTypeInModuleResult = FormatTypeSignatureInput;
 
-export async function handleGetTypeInModule({
+export function handleGetTypeInModule({
   root,
   moduleName,
   typeName,
   filePath,
-}: z.infer<typeof schema>): Promise<GetTypeInModuleResult> {
+}: z.infer<typeof schema>): GetTypeInModuleResult {
   const project = findProjectForFile(
     filePath ? path.join(root, filePath) : root
   );
@@ -58,8 +58,8 @@ export const getTypeInModuleTool: ToolDef<typeof schema> = {
   description:
     "Get detailed signature information for a specific type (function, class, interface, type alias, etc.) from a module",
   schema,
-  handler: async (args) => {
-    const result = await handleGetTypeInModule(args);
-    return formatTypeSignature(result);
+  handler: (args) => {
+    const result = handleGetTypeInModule(args);
+    return Promise.resolve(formatTypeSignature(result));
   },
 };

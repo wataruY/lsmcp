@@ -55,7 +55,7 @@ export async function handleGetTypeAtSymbol({
   findProjectForFile(absolutePath);
 
   // Get the source file to find the symbol position with fresh content
-  const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
+  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
 
   // Resolve line parameter
   const resolvedLine = resolveLineParameter(sourceFile, line);
@@ -72,13 +72,13 @@ export async function handleGetTypeAtSymbol({
   // Get the node at this position
   const node = sourceFile.getDescendantAtPos(position);
   if (!node) {
-    throw new Error(`No node found at position ${resolvedLine}:${column}`);
+    throw new Error(`No node found at position ${String(resolvedLine)}:${String(column)}`);
   }
 
   // Get symbol information
   const symbol = node.getSymbol();
   if (!symbol) {
-    throw new Error(`No symbol found for "${symbolName}" at ${resolvedLine}:${column}`);
+    throw new Error(`No symbol found for "${symbolName}" at ${String(resolvedLine)}:${String(column)}`);
   }
 
   // Get type information

@@ -49,7 +49,7 @@ export async function handleFindReferences({
   const project = findProjectForFile(absolutePath);
 
   // Ensure the source file is loaded in the project with fresh content
-  const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
+  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
 
   // Resolve line parameter
   const resolvedLine = resolveLineParameter(sourceFile, line);

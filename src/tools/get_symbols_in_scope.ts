@@ -151,7 +151,7 @@ export async function handleGetSymbolsInScope({
   const project = findProjectForFile(absolutePath);
 
   // Get the source file with fresh content
-  const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
+  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
 
   // Resolve line parameter
   const resolvedLine = resolveLineParameter(sourceFile, line);
