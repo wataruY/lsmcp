@@ -27,13 +27,10 @@ const schemaShape = {
 
 const schema = z.object(schemaShape);
 
-type InputParams = z.input<typeof schema>;
-type OutputParams = z.output<typeof schema>;
-
-export const deleteSymbolTool: ToolDef<InputParams, OutputParams> = {
+export const deleteSymbolTool: ToolDef<typeof schema> = {
   name: "delete_symbol",
   description:
-    "Delete a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
+    "Delete a TypeScript symbol (variable, function, class, etc.) and all its references",
   schema,
   handler: async ({ filePath, line, symbolName, root, removeReferences }) => {
     // Always treat paths as relative to root

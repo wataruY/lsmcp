@@ -1,7 +1,8 @@
-import { type ZodSchema } from "zod";
-export type ToolDef<TInput, TOutput = TInput> = {
+import { type ZodType } from "zod";
+
+export type ToolDef<S extends ZodType> = {
   name: string;
   description: string;
-  schema: ZodSchema<TOutput, any, TInput>;
-  handler: (args: TOutput) => Promise<string>;
+  schema: S;
+  handler: (args: S["_output"]) => Promise<string>;
 };

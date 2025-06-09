@@ -8,26 +8,22 @@ const paramsSchema = z.object({
   filePath: z.string().describe("Target file path (relative or absolute)"),
 });
 
-type Params = z.infer<typeof paramsSchema>;
-
-export const getRelatedModulesTool: ToolDef<Params, Params> = {
+export const getRelatedModulesTool: ToolDef<typeof paramsSchema> = {
   name: "get_related_modules",
-  description: "Get all modules related to a specific file (imports, imported by, re-exports, re-exported by)",
+  description:
+    "Get all modules related to a specific file (imports, imported by, re-exports, re-exported by)",
   schema: paramsSchema,
   handler: async (args) => {
     // Create a fresh project for analysis without tsconfig exclusions
     const project = new Project({
       compilerOptions: {
-        target: 99, // ESNext
-        module: 99, // ESNext
-        moduleResolution: 2, // Node
         allowJs: true,
         skipLibCheck: true,
         strict: false,
       },
       skipFileDependencyResolution: true,
     });
-    
+
     const result = getRelatedModules(project, {
       filePath: args.filePath,
       rootDir: args.root,
@@ -44,18 +40,25 @@ export const getRelatedModulesTool: ToolDef<Params, Params> = {
     lines.push(`Found ${relatedModules.length} related modules\n`);
 
     // Group by relationship type
-    const imports = relatedModules.filter(m => m.relationship === "imports");
-    const importedBy = relatedModules.filter(m => m.relationship === "imported-by");
-    const reExports = relatedModules.filter(m => m.relationship === "re-exports");
-    const reExportedBy = relatedModules.filter(m => m.relationship === "re-exported-by");
+    const imports = relatedModules.filter((m) => m.relationship === "imports");
+    const importedBy = relatedModules.filter(
+      (m) => m.relationship === "imported-by"
+    );
+    const reExports = relatedModules.filter(
+      (m) => m.relationship === "re-exports"
+    );
+    const reExportedBy = relatedModules.filter(
+      (m) => m.relationship === "re-exported-by"
+    );
 
     // Show imports
     if (imports.length > 0) {
       lines.push(`📥 Imports (${imports.length}):`);
-      imports.forEach(module => {
-        const symbolInfo = module.symbols && module.symbols.length > 0 
-          ? ` { ${module.symbols.join(", ")} }`
-          : "";
+      imports.forEach((module) => {
+        const symbolInfo =
+          module.symbols && module.symbols.length > 0
+            ? ` { ${module.symbols.join(", ")} }`
+            : "";
         lines.push(`  - ${module.path}${symbolInfo}`);
       });
       lines.push("");
@@ -64,10 +67,11 @@ export const getRelatedModulesTool: ToolDef<Params, Params> = {
     // Show imported by
     if (importedBy.length > 0) {
       lines.push(`📤 Imported By (${importedBy.length}):`);
-      importedBy.forEach(module => {
-        const symbolInfo = module.symbols && module.symbols.length > 0 
-          ? ` { ${module.symbols.join(", ")} }`
-          : "";
+      importedBy.forEach((module) => {
+        const symbolInfo =
+          module.symbols && module.symbols.length > 0
+            ? ` { ${module.symbols.join(", ")} }`
+            : "";
         lines.push(`  - ${module.path}${symbolInfo}`);
       });
       lines.push("");
@@ -76,10 +80,11 @@ export const getRelatedModulesTool: ToolDef<Params, Params> = {
     // Show re-exports
     if (reExports.length > 0) {
       lines.push(`🔄 Re-exports From (${reExports.length}):`);
-      reExports.forEach(module => {
-        const symbolInfo = module.symbols && module.symbols.length > 0 
-          ? ` { ${module.symbols.join(", ")} }`
-          : "";
+      reExports.forEach((module) => {
+        const symbolInfo =
+          module.symbols && module.symbols.length > 0
+            ? ` { ${module.symbols.join(", ")} }`
+            : "";
         lines.push(`  - ${module.path}${symbolInfo}`);
       });
       lines.push("");
@@ -88,10 +93,11 @@ export const getRelatedModulesTool: ToolDef<Params, Params> = {
     // Show re-exported by
     if (reExportedBy.length > 0) {
       lines.push(`🔄 Re-exported By (${reExportedBy.length}):`);
-      reExportedBy.forEach(module => {
-        const symbolInfo = module.symbols && module.symbols.length > 0 
-          ? ` { ${module.symbols.join(", ")} }`
-          : "";
+      reExportedBy.forEach((module) => {
+        const symbolInfo =
+          module.symbols && module.symbols.length > 0
+            ? ` { ${module.symbols.join(", ")} }`
+            : "";
         lines.push(`  - ${module.path}${symbolInfo}`);
       });
       lines.push("");
@@ -109,21 +115,21 @@ export const getRelatedModulesTool: ToolDef<Params, Params> = {
     lines.push("📊 Dependency Graph:");
     lines.push("```mermaid");
     lines.push("graph TD");
-    
+
     // Create node IDs
     const createNodeId = (path: string) => {
-      return path.replace(/[^\w]/g, '_').replace(/__+/g, '_');
+      return path.replace(/[^\w]/g, "_").replace(/__+/g, "_");
     };
-    
+
     // Add central node
     const targetId = createNodeId(targetFile);
     lines.push(`    ${targetId}["${targetFile}"]:::target`);
-    
+
     // Add related nodes and edges
-    relatedModules.forEach(module => {
+    relatedModules.forEach((module) => {
       const moduleId = createNodeId(module.path);
       lines.push(`    ${moduleId}["${module.path}"]`);
-      
+
       switch (module.relationship) {
         case "imports":
           lines.push(`    ${targetId} --> ${moduleId}`);
@@ -139,10 +145,10 @@ export const getRelatedModulesTool: ToolDef<Params, Params> = {
           break;
       }
     });
-    
+
     // Style the target node
     lines.push(`    classDef target fill:#f9f,stroke:#333,stroke-width:4px;`);
-    
+
     lines.push("```");
 
     return lines.join("\n");

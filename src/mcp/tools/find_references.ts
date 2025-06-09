@@ -20,9 +20,7 @@ const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
 });
 
-type Params = z.infer<typeof schema>;
-
-export const findReferencesTool: ToolDef<Params, Params> = {
+export const findReferencesTool: ToolDef<typeof schema> = {
   name: "find_references",
   description:
     "Find all references to a TypeScript/JavaScript symbol across the codebase",

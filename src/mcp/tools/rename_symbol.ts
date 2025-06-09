@@ -20,9 +20,7 @@ const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
 });
 
-type Params = z.infer<typeof schema>;
-
-export const renameSymbolTool: ToolDef<Params, Params> = {
+export const renameSymbolTool: ToolDef<typeof schema> = {
   name: "rename_symbol",
   description:
     "Rename a TypeScript/JavaScript symbol (variable, function, class, etc.) across the codebase",

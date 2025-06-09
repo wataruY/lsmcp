@@ -15,9 +15,7 @@ const schema = z.object({
     .describe("Context file for resolving relative imports"),
 });
 
-type Params = z.infer<typeof schema>;
-
-export const getModuleSymbolsTool: ToolDef<Params, Params> = {
+export const getModuleSymbolsTool: ToolDef<typeof schema> = {
   name: "get_module_symbols",
   description:
     "Get all exported symbols from a TypeScript/JavaScript module without detailed signatures",

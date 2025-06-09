@@ -68,7 +68,7 @@ export interface GetTypeSignatureSuccess {
  */
 function simplifyTypeName(typeName: string): string {
   // Remove import("...") wrapper and get just the type name
-  return typeName.replace(/import\("[^"]+"\)\./g, '');
+  return typeName.replace(/import\("[^"]+"\)\./g, "");
 }
 
 /**
@@ -80,55 +80,66 @@ function findRelatedTypes(
 ): Definition[] {
   const relatedTypes: Definition[] = [];
   const processedTypes = new Set<string>();
-  
+
   // Helper to find type info from the source file
   const findTypeInfo = (typeName: string): Definition | undefined => {
     if (processedTypes.has(typeName)) return;
     processedTypes.add(typeName);
-    
+
     // Look for imports in the source file
     const imports = sourceFile.getImportDeclarations();
     for (const imp of imports) {
       const namedImports = imp.getNamedImports();
       for (const named of namedImports) {
-        if (named.getName() === typeName || named.getAliasNode()?.getText() === typeName) {
+        if (
+          named.getName() === typeName ||
+          named.getAliasNode()?.getText() === typeName
+        ) {
           const moduleSpecifier = imp.getModuleSpecifierValue();
-          
+
           // Try to resolve the actual type definition
           const project = sourceFile.getProject();
           let targetFile: Node["getSourceFile"]["prototype"] | undefined;
-          
-          if (moduleSpecifier.startsWith('.')) {
+
+          if (moduleSpecifier.startsWith(".")) {
             // Resolve relative import
             const currentDir = sourceFile.getDirectoryPath();
-            const resolvedPath = moduleSpecifier.replace(/^\.\//, currentDir + '/');
-            targetFile = project.getSourceFile(resolvedPath + '.ts') || 
-                        project.getSourceFile(resolvedPath + '.tsx') ||
-                        project.getSourceFile(resolvedPath + '/index.ts');
+            const resolvedPath = moduleSpecifier.replace(
+              /^\.\//,
+              currentDir + "/"
+            );
+            targetFile =
+              project.getSourceFile(resolvedPath + ".ts") ||
+              project.getSourceFile(resolvedPath + ".tsx") ||
+              project.getSourceFile(resolvedPath + "/index.ts");
           }
-          
+
           if (targetFile) {
             // Find the type declaration in the target file
             const typeAlias = targetFile.getTypeAlias(typeName);
             const interfaceDecl = targetFile.getInterface(typeName);
             const classDecl = targetFile.getClass(typeName);
-            
+
             const decl = typeAlias || interfaceDecl || classDecl;
             if (decl) {
               const start = decl.getStart();
               const { line, column } = targetFile.getLineAndColumnAtPos(start);
-              
+
               return {
                 filePath: targetFile.getFilePath(),
                 line,
                 column,
-                kind: typeAlias ? "Type alias" : interfaceDecl ? "Interface" : "Class",
+                kind: typeAlias
+                  ? "Type alias"
+                  : interfaceDecl
+                  ? "Interface"
+                  : "Class",
                 name: typeName,
-                importedFrom: moduleSpecifier
+                importedFrom: moduleSpecifier,
               };
             }
           }
-          
+
           // Even if we can't resolve the file, record the import
           return {
             filePath: moduleSpecifier,
@@ -136,73 +147,90 @@ function findRelatedTypes(
             column: 1,
             kind: "Import",
             name: typeName,
-            importedFrom: moduleSpecifier
+            importedFrom: moduleSpecifier,
           };
         }
       }
     }
-    
+
     return undefined;
   };
-  
+
   // Extract type names from signature
   const typeNames = new Set<string>();
-  
+
   // Process function signatures
   if (signature.functionSignatures) {
     for (const funcSig of signature.functionSignatures) {
       // Extract from return type
-      const returnTypeMatch = funcSig.returnType.match(/\b([A-Z][a-zA-Z0-9]*)\b/g);
+      const returnTypeMatch = funcSig.returnType.match(
+        /\b([A-Z][a-zA-Z0-9]*)\b/g
+      );
       if (returnTypeMatch) {
-        returnTypeMatch.forEach(t => typeNames.add(t));
+        returnTypeMatch.forEach((t) => typeNames.add(t));
       }
-      
+
       // Extract from parameters
       for (const param of funcSig.parameters) {
         const paramTypeMatch = param.type.match(/\b([A-Z][a-zA-Z0-9]*)\b/g);
         if (paramTypeMatch) {
-          paramTypeMatch.forEach(t => typeNames.add(t));
+          paramTypeMatch.forEach((t) => typeNames.add(t));
         }
       }
     }
   }
-  
+
   // Process type names
   for (const typeName of typeNames) {
     // Skip built-in types
-    if (['String', 'Number', 'Boolean', 'Array', 'Object', 'Promise', 'Date', 'Error', 'Function'].includes(typeName)) {
+    if (
+      [
+        "String",
+        "Number",
+        "Boolean",
+        "Array",
+        "Object",
+        "Promise",
+        "Date",
+        "Error",
+        "Function",
+      ].includes(typeName)
+    ) {
       continue;
     }
-    
+
     const typeInfo = findTypeInfo(typeName);
     if (typeInfo) {
       relatedTypes.push(typeInfo);
     }
   }
-  
+
   return relatedTypes;
 }
 
 /**
  * Extract definitions from a symbol, including aliases
  */
-function extractDefinitions(symbol: Node["getSymbol"]["prototype"], requestedName?: string): Definition[] {
+function extractDefinitions(
+  symbol: Node["getSymbol"]["prototype"],
+  requestedName?: string
+): Definition[] {
   const definitions: Definition[] = [];
-  
+
   // Get the original symbol (not aliased)
   const actualSymbol = symbol.getAliasedSymbol() || symbol;
   const originalName = actualSymbol.getName();
-  
+
   // Add definitions from the actual symbol
   const declarations = actualSymbol.getDeclarations();
   for (const decl of declarations) {
     const sourceFile = decl.getSourceFile();
     const start = decl.getStart();
     const { line, column } = sourceFile.getLineAndColumnAtPos(start);
-    
+
     let kind = "Unknown";
     let name = originalName;
-    
+
     if (Node.isFunctionDeclaration(decl)) {
       kind = "Function";
       name = decl.getName() || originalName;
@@ -241,33 +269,33 @@ function extractDefinitions(symbol: Node["getSymbol"]["prototype"], requestedNam
       kind = "Import";
       name = decl.getName();
     }
-    
+
     definitions.push({
       filePath: sourceFile.getFilePath(),
       line,
       column,
       kind,
-      name
+      name,
     });
   }
-  
+
   // If this is an alias, also add the alias declaration (but skip temporary files)
   if (symbol.getAliasedSymbol() && symbol !== actualSymbol) {
     const aliasDeclarations = symbol.getDeclarations();
     const aliasName = symbol.getName();
-    
+
     for (const decl of aliasDeclarations) {
       const sourceFile = decl.getSourceFile();
       const filePath = sourceFile.getFilePath();
-      
+
       // Skip temporary analysis files
-      if (filePath.includes('temp_type_analysis.ts')) continue;
-      
+      if (filePath.includes("temp_type_analysis.ts")) continue;
+
       const start = decl.getStart();
       const { line, column } = sourceFile.getLineAndColumnAtPos(start);
-      
+
       let declName = aliasName;
-      
+
       // Get the actual name from the declaration if possible
       if (Node.isExportSpecifier(decl)) {
         // For aliased exports, get the alias name if it exists
@@ -288,25 +316,25 @@ function extractDefinitions(symbol: Node["getSymbol"]["prototype"], requestedNam
       } else if (Node.isTypeAliasDeclaration(decl)) {
         declName = decl.getName() || aliasName;
       }
-      
+
       definitions.push({
         filePath,
         line,
         column,
         kind: "Alias",
         name: declName,
-        originalName: originalName
+        originalName: originalName,
       });
     }
   }
-  
+
   // Also check if this symbol is re-exported with different names
   // This is important for cases like: export { User as BaseUser }
   if (requestedName && requestedName !== originalName) {
     // Find all export declarations that might export this symbol
     for (const decl of actualSymbol.getDeclarations()) {
       const sourceFile = decl.getSourceFile();
-      
+
       // Look for export declarations in the same file
       const exportDeclarations = sourceFile.getExportDeclarations();
       for (const exportDecl of exportDeclarations) {
@@ -319,14 +347,14 @@ function extractDefinitions(symbol: Node["getSymbol"]["prototype"], requestedNam
               // Found an export that aliases our symbol with the requested name
               const start = namedExport.getStart();
               const { line, column } = sourceFile.getLineAndColumnAtPos(start);
-              
+
               definitions.push({
                 filePath: sourceFile.getFilePath(),
                 line,
                 column,
                 kind: "Alias",
                 name: requestedName,
-                originalName: originalName
+                originalName: originalName,
               });
             }
           }
@@ -334,168 +362,195 @@ function extractDefinitions(symbol: Node["getSymbol"]["prototype"], requestedNam
       }
     }
   }
-  
+
   return definitions;
 }
 
 /**
  * Extract function signatures
  */
-function extractFunctionSignatures(type: Node["getType"]["prototype"], contextNode: Node): FunctionSignature[] {
+function extractFunctionSignatures(
+  type: Node["getType"]["prototype"],
+  contextNode: Node
+): FunctionSignature[] {
   const signatures: FunctionSignature[] = [];
   const callSignatures = type.getCallSignatures();
-  
+
   for (const sig of callSignatures) {
     // Get parameters
-    const parameters: ParameterInfo[] = sig.getParameters().map((param: any) => {
-      const paramDeclarations = param.getDeclarations();
-      
-      let isOptional = false;
-      let defaultValue: string | undefined;
-      let paramTypeText = "unknown";
-      
-      // Check if parameter declaration has optional or default value
-      if (paramDeclarations && paramDeclarations.length > 0) {
-        const firstDecl = paramDeclarations[0];
-        if (Node.isParameterDeclaration(firstDecl)) {
-          const paramDecl = firstDecl;
-          isOptional = paramDecl.hasQuestionToken() || paramDecl.hasInitializer();
-          
-          const initializer = paramDecl.getInitializer();
-          if (initializer) {
-            defaultValue = initializer.getText();
-          }
-          
-          // Get type from parameter
-          const typeNode = paramDecl.getTypeNode();
-          if (typeNode) {
-            paramTypeText = typeNode.getText();
+    const parameters: ParameterInfo[] = sig
+      .getParameters()
+      .map((param: any) => {
+        const paramDeclarations = param.getDeclarations();
+
+        let isOptional = false;
+        let defaultValue: string | undefined;
+        let paramTypeText = "unknown";
+
+        // Check if parameter declaration has optional or default value
+        if (paramDeclarations && paramDeclarations.length > 0) {
+          const firstDecl = paramDeclarations[0];
+          if (Node.isParameterDeclaration(firstDecl)) {
+            const paramDecl = firstDecl;
+            isOptional =
+              paramDecl.hasQuestionToken() || paramDecl.hasInitializer();
+
+            const initializer = paramDecl.getInitializer();
+            if (initializer) {
+              defaultValue = initializer.getText();
+            }
+
+            // Get type from parameter
+            const typeNode = paramDecl.getTypeNode();
+            if (typeNode) {
+              paramTypeText = typeNode.getText();
+            } else {
+              paramTypeText = paramDecl.getType().getText();
+            }
           } else {
-            paramTypeText = paramDecl.getType().getText();
+            // For non-parameter declarations, use the declaration's type
+            const declType = firstDecl.getType();
+            paramTypeText = declType.getText();
           }
         } else {
-          // For non-parameter declarations, use the declaration's type
-          const declType = firstDecl.getType();
-          paramTypeText = declType.getText();
+          // Fallback to checking symbol flags
+          const symbol = param.compilerSymbol;
+          isOptional = (symbol.flags & ts.SymbolFlags.Optional) !== 0;
+
+          // Try to get type text from the type checker
+          const paramType = param.getTypeAtLocation(contextNode);
+          paramTypeText = paramType.getText();
         }
-      } else {
-        // Fallback to checking symbol flags
-        const symbol = param.compilerSymbol;
-        isOptional = (symbol.flags & ts.SymbolFlags.Optional) !== 0;
-        
-        // Try to get type text from the type checker
-        const paramType = param.getTypeAtLocation(contextNode);
-        paramTypeText = paramType.getText();
-      }
-      
-      return {
-        name: param.getName(),
-        type: simplifyTypeName(paramTypeText),
-        optional: isOptional,
-        defaultValue
-      };
-    });
-    
+
+        return {
+          name: param.getName(),
+          type: simplifyTypeName(paramTypeText),
+          optional: isOptional,
+          defaultValue,
+        };
+      });
+
     // Get return type
     const returnType = sig.getReturnType();
-    
+
     // Get type parameters
     const typeParams = sig.getTypeParameters();
-    const typeParamStrings = typeParams && typeParams.length > 0 
-      ? typeParams.map((t: any) => {
-          const constraint = t.getConstraint();
-          if (constraint) {
+    const typeParamStrings =
+      typeParams && typeParams.length > 0
+        ? typeParams.map((t: any) => {
+            const constraint = t.getConstraint();
+            if (constraint) {
+              const symbol = t.getSymbol();
+              const name = symbol ? symbol.getName() : "T";
+              return `${name} extends ${simplifyTypeName(
+                constraint.getText()
+              )}`;
+            }
             const symbol = t.getSymbol();
-            const name = symbol ? symbol.getName() : 'T';
-            return `${name} extends ${simplifyTypeName(constraint.getText())}`;
-          }
-          const symbol = t.getSymbol();
-          return symbol ? symbol.getName() : 'T';
-        })
-      : undefined;
-    
+            return symbol ? symbol.getName() : "T";
+          })
+        : undefined;
+
     signatures.push({
       parameters,
       returnType: simplifyTypeName(returnType.getText()),
-      typeParameters: typeParamStrings
+      typeParameters: typeParamStrings,
     });
   }
-  
+
   return signatures;
 }
 
 /**
  * Extract properties from a type
  */
-function extractProperties(type: Node["getType"]["prototype"], contextNode: Node): PropertyInfo[] {
+function extractProperties(
+  type: Node["getType"]["prototype"],
+  contextNode: Node
+): PropertyInfo[] {
   const properties: PropertyInfo[] = [];
   const allProperties = type.getProperties();
-  
+
   for (const prop of allProperties) {
     const propName = prop.getName();
-    
+
     // Skip private properties and constructor
-    if (propName.startsWith("_") || propName.startsWith("#") || propName === "constructor") continue;
-    
+    if (
+      propName.startsWith("_") ||
+      propName.startsWith("#") ||
+      propName === "constructor"
+    )
+      continue;
+
     const propDeclarations = prop.getDeclarations();
     if (!propDeclarations || propDeclarations.length === 0) {
       // For interfaces and types, we might not have declarations
       // Try to get the type directly
       const propType = prop.getTypeAtLocation(contextNode);
       const callSignatures = propType.getCallSignatures();
-      
+
       // Skip if it's a method
       if (callSignatures.length > 0) continue;
-      
-      const isOptional = (prop.compilerSymbol.flags & ts.SymbolFlags.Optional) !== 0;
-      
+
+      const isOptional =
+        (prop.compilerSymbol.flags & ts.SymbolFlags.Optional) !== 0;
+
       properties.push({
         name: propName,
         type: simplifyTypeName(propType.getText()),
         optional: isOptional,
-        readonly: false
+        readonly: false,
       });
       continue;
     }
-    
+
     const firstDecl = propDeclarations[0];
     const propType = prop.getTypeAtLocation(firstDecl);
     const callSignatures = propType.getCallSignatures();
-    
+
     // Skip if it's a method
     if (callSignatures.length > 0) continue;
-    
-    const isOptional = (prop.compilerSymbol.flags & ts.SymbolFlags.Optional) !== 0;
+
+    const isOptional =
+      (prop.compilerSymbol.flags & ts.SymbolFlags.Optional) !== 0;
     const isReadonly = false; // ts-morph doesn't expose readonly flag easily
-    
+
     properties.push({
       name: propName,
       type: simplifyTypeName(propType.getText()),
       optional: isOptional,
-      readonly: isReadonly
+      readonly: isReadonly,
     });
   }
-  
+
   return properties;
 }
 
 /**
  * Extract methods from a type
  */
-function extractMethods(type: Node["getType"]["prototype"], contextNode: Node): MethodInfo[] {
+function extractMethods(
+  type: Node["getType"]["prototype"],
+  contextNode: Node
+): MethodInfo[] {
   const methods: MethodInfo[] = [];
   const allProperties = type.getProperties();
-  
+
   for (const prop of allProperties) {
     const propName = prop.getName();
-    
+
     // Skip private properties and constructor
-    if (propName.startsWith("_") || propName.startsWith("#") || propName === "constructor") continue;
-    
+    if (
+      propName.startsWith("_") ||
+      propName.startsWith("#") ||
+      propName === "constructor"
+    )
+      continue;
+
     const propDeclarations = prop.getDeclarations();
     let propType;
     let nodeForSignature = contextNode;
-    
+
     if (!propDeclarations || propDeclarations.length === 0) {
       // For interfaces and types, we might not have declarations
       propType = prop.getTypeAtLocation(contextNode);
@@ -504,19 +559,19 @@ function extractMethods(type: Node["getType"]["prototype"], contextNode: Node): 
       propType = prop.getTypeAtLocation(firstDecl);
       nodeForSignature = firstDecl;
     }
-    
+
     const callSignatures = propType.getCallSignatures();
-    
+
     // Only include if it's a method
     if (callSignatures.length > 0) {
       const signatures = extractFunctionSignatures(propType, nodeForSignature);
       methods.push({
         name: propName,
-        signatures
+        signatures,
       });
     }
   }
-  
+
   return methods;
 }
 
@@ -529,86 +584,100 @@ export function getTypeSignature(
 ): Result<GetTypeSignatureSuccess, string> {
   try {
     // For relative imports, ensure the source file is fresh
-    if (request.moduleName.startsWith('.') && request.filePath) {
+    if (request.moduleName.startsWith(".") && request.filePath) {
       const contextFile = project.getSourceFile(request.filePath);
       if (contextFile) {
         contextFile.refreshFromFileSystem();
         contextFile.forgetDescendants();
       }
-      
+
       // Also refresh the target module file
-      const contextDir = request.filePath.substring(0, request.filePath.lastIndexOf('/'));
-      const modulePath = request.moduleName.replace(/^\.\//, '');
-      const resolvedPath = contextDir + '/' + modulePath;
-      const targetFile = project.getSourceFile(resolvedPath) || project.getSourceFile(resolvedPath + '.ts');
+      const contextDir = request.filePath.substring(
+        0,
+        request.filePath.lastIndexOf("/")
+      );
+      const modulePath = request.moduleName.replace(/^\.\//, "");
+      const resolvedPath = contextDir + "/" + modulePath;
+      const targetFile =
+        project.getSourceFile(resolvedPath) ||
+        project.getSourceFile(resolvedPath + ".ts");
       if (targetFile) {
         targetFile.refreshFromFileSystem();
         targetFile.forgetDescendants();
       }
     }
-    
+
     // Create a temporary source file that imports the module
     const importPath = `import { ${request.typeName} } from "${request.moduleName}";`;
-    
-    const tempFileName = request.filePath ? 
-      request.filePath.replace(/\.[^.]+$/, '_temp_type_analysis.ts') :
-      'temp_type_analysis.ts';
-    
+
+    const tempFileName = request.filePath
+      ? request.filePath.replace(/\.[^.]+$/, "_temp_type_analysis.ts")
+      : "temp_type_analysis.ts";
+
     let sourceFile;
     try {
-      sourceFile = project.createSourceFile(
-        tempFileName,
-        importPath,
-        { overwrite: true }
-      );
+      sourceFile = project.createSourceFile(tempFileName, importPath, {
+        overwrite: true,
+      });
     } catch (error) {
-      return err(`Failed to create source file: ${error instanceof Error ? error.message : String(error)}`);
+      return err(
+        `Failed to create source file: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
     }
-    
+
     // Get the import declaration
     const importDecl = sourceFile.getImportDeclaration(request.moduleName);
     if (!importDecl) {
       sourceFile.delete();
       return err(`Failed to import module: ${request.moduleName}`);
     }
-    
+
     // Get the named import
     const namedImports = importDecl.getNamedImports();
-    const typeImport = namedImports.find(i => i.getName() === request.typeName);
-    
+    const typeImport = namedImports.find(
+      (i) => i.getName() === request.typeName
+    );
+
     if (!typeImport) {
       sourceFile.delete();
-      return err(`Type "${request.typeName}" not found in module "${request.moduleName}"`);
+      return err(
+        `Type "${request.typeName}" not found in module "${request.moduleName}"`
+      );
     }
-    
+
     const symbol = typeImport.getSymbol();
     if (!symbol) {
       sourceFile.delete();
       return err(`Failed to get symbol for type: ${request.typeName}`);
     }
-    
+
     const actualSymbol = symbol.getAliasedSymbol() || symbol;
-    
+
     // Get the declarations
     const declarations = actualSymbol.getDeclarations();
     if (declarations.length === 0) {
       sourceFile.delete();
       return err(`No declarations found for type: ${request.typeName}`);
     }
-    
+
     // Extract definitions including aliases
     const definitions = extractDefinitions(symbol, request.typeName);
-    
+
     // Also look for the export in the source module that exports this with the requested name
     let moduleFile = project.getSourceFile(request.moduleName);
     if (!moduleFile && request.filePath) {
       // Try to resolve relative import
-      const contextDir = request.filePath.substring(0, request.filePath.lastIndexOf('/'));
-      const modulePath = request.moduleName.replace(/^\.\//, '');
-      const resolvedPath = contextDir + '/' + modulePath;
+      const contextDir = request.filePath.substring(
+        0,
+        request.filePath.lastIndexOf("/")
+      );
+      const modulePath = request.moduleName.replace(/^\.\//, "");
+      const resolvedPath = contextDir + "/" + modulePath;
       moduleFile = project.getSourceFile(resolvedPath);
     }
-    
+
     if (moduleFile) {
       // Look for export declarations
       const exportDecls = moduleFile.getExportDeclarations();
@@ -620,48 +689,55 @@ export function getTypeSignature(
             // This is the export we're looking for
             const start = namedExport.getStart();
             const { line, column } = moduleFile.getLineAndColumnAtPos(start);
-            
+
             definitions.push({
               filePath: moduleFile.getFilePath(),
               line,
               column,
               kind: "Alias",
               name: request.typeName,
-              originalName: namedExport.getName()
+              originalName: namedExport.getName(),
             });
           }
         }
       }
     }
-    
+
     const firstDecl = declarations[0];
     const type = actualSymbol.getTypeAtLocation(firstDecl);
-    
+
     // Determine the kind and extract appropriate information
     let signature: TypeSignature;
-    
+
     // Check if it's a function
     const callSignatures = type.getCallSignatures();
-    if (callSignatures.length > 0 && !Node.isClassDeclaration(firstDecl) && !Node.isInterfaceDeclaration(firstDecl)) {
+    if (
+      callSignatures.length > 0 &&
+      !Node.isClassDeclaration(firstDecl) &&
+      !Node.isInterfaceDeclaration(firstDecl)
+    ) {
       // It's a function or function-like
       signature = {
         kind: "function",
         functionSignatures: extractFunctionSignatures(type, firstDecl),
-        definitions
+        definitions,
       };
     }
     // Check if it's a class
     else if (Node.isClassDeclaration(firstDecl)) {
       const typeParams = firstDecl.getTypeParameters();
-      const typeParamStrings = typeParams.length > 0
-        ? typeParams.map(p => {
-            const constraint = p.getConstraint();
-            return constraint 
-              ? `${p.getName()} extends ${simplifyTypeName(constraint.getText())}`
-              : p.getName();
-          })
-        : undefined;
-      
+      const typeParamStrings =
+        typeParams.length > 0
+          ? typeParams.map((p) => {
+              const constraint = p.getConstraint();
+              return constraint
+                ? `${p.getName()} extends ${simplifyTypeName(
+                    constraint.getText()
+                  )}`
+                : p.getName();
+            })
+          : undefined;
+
       // For classes, get the instance type
       let instanceType = type;
       // If we have a constructor type, get the instance type
@@ -669,55 +745,61 @@ export function getTypeSignature(
       if (constructSignatures.length > 0) {
         instanceType = constructSignatures[0].getReturnType();
       }
-      
+
       signature = {
         kind: "class",
         properties: extractProperties(instanceType, firstDecl),
         methods: extractMethods(instanceType, firstDecl),
         typeParameters: typeParamStrings,
-        definitions
+        definitions,
       };
     }
     // Check if it's an interface
     else if (Node.isInterfaceDeclaration(firstDecl)) {
       const typeParams = firstDecl.getTypeParameters();
-      const typeParamStrings = typeParams.length > 0
-        ? typeParams.map(p => {
-            const constraint = p.getConstraint();
-            return constraint 
-              ? `${p.getName()} extends ${simplifyTypeName(constraint.getText())}`
-              : p.getName();
-          })
-        : undefined;
-      
+      const typeParamStrings =
+        typeParams.length > 0
+          ? typeParams.map((p) => {
+              const constraint = p.getConstraint();
+              return constraint
+                ? `${p.getName()} extends ${simplifyTypeName(
+                    constraint.getText()
+                  )}`
+                : p.getName();
+            })
+          : undefined;
+
       // For interfaces, use the declaration's type directly
       const interfaceType = firstDecl.getType();
-      
+
       signature = {
         kind: "interface",
         properties: extractProperties(interfaceType, firstDecl),
         methods: extractMethods(interfaceType, firstDecl),
         typeParameters: typeParamStrings,
-        definitions
+        definitions,
       };
     }
     // Check if it's a type alias
     else if (Node.isTypeAliasDeclaration(firstDecl)) {
       const typeParams = firstDecl.getTypeParameters();
-      const typeParamStrings = typeParams.length > 0
-        ? typeParams.map(p => {
-            const constraint = p.getConstraint();
-            return constraint 
-              ? `${p.getName()} extends ${simplifyTypeName(constraint.getText())}`
-              : p.getName();
-          })
-        : undefined;
-      
+      const typeParamStrings =
+        typeParams.length > 0
+          ? typeParams.map((p) => {
+              const constraint = p.getConstraint();
+              return constraint
+                ? `${p.getName()} extends ${simplifyTypeName(
+                    constraint.getText()
+                  )}`
+                : p.getName();
+            })
+          : undefined;
+
       signature = {
         kind: "type",
         typeDefinition: simplifyTypeName(firstDecl.getType().getText()),
         typeParameters: typeParamStrings,
-        definitions
+        definitions,
       };
     }
     // Otherwise it's a variable
@@ -725,29 +807,30 @@ export function getTypeSignature(
       signature = {
         kind: "variable",
         typeDefinition: simplifyTypeName(type.getText()),
-        definitions
+        definitions,
       };
     }
-    
+
     // Get documentation
     const jsDocs = actualSymbol.getJsDocTags();
-    const documentation = jsDocs.length > 0
-      ? jsDocs.map(tag => `@${tag.getName()} ${tag.getText()}`).join('\n')
-      : undefined;
-    
+    const documentation =
+      jsDocs.length > 0
+        ? jsDocs.map((tag) => `@${tag.getName()} ${tag.getText()}`).join("\n")
+        : undefined;
+
     // Clean up temporary file
     sourceFile.delete();
-    
+
     // Find related types - use the source file where the type is actually declared
     const declSourceFile = firstDecl.getSourceFile();
     const relatedTypes = findRelatedTypes(declSourceFile, signature);
-    
+
     return ok({
       message: `Found signature for ${signature.kind} "${request.typeName}"`,
       typeName: request.typeName,
       signature,
       documentation,
-      relatedTypes: relatedTypes.length > 0 ? relatedTypes : undefined
+      relatedTypes: relatedTypes.length > 0 ? relatedTypes : undefined,
     });
   } catch (error) {
     return err(error instanceof Error ? error.message : String(error));

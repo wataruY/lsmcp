@@ -28,9 +28,7 @@ const schema = z.object({
     .describe("Number of lines to show after the definition"),
 });
 
-type Params = z.infer<typeof schema>;
-
-export const getDefinitionsTool: ToolDef<Params, Params> = {
+export const getDefinitionsTool: ToolDef<typeof schema> = {
   name: "get_definitions",
   description: "Get the definition(s) of a TypeScript/JavaScript symbol",
   schema,

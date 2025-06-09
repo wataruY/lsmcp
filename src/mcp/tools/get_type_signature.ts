@@ -17,9 +17,7 @@ const schema = z.object({
     .describe("Context file for resolving relative imports"),
 });
 
-type Params = z.infer<typeof schema>;
-
-export const getTypeSignatureTool: ToolDef<Params, Params> = {
+export const getTypeSignatureTool: ToolDef<typeof schema> = {
   name: "get_type_signature",
   description:
     "Get detailed signature information for a specific type (function, class, interface, type alias, etc.)",

@@ -15,9 +15,7 @@ const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
 });
 
-type Params = z.infer<typeof schema>;
-
-export const getDiagnosticsTool: ToolDef<Params, Params> = {
+export const getDiagnosticsTool: ToolDef<typeof schema> = {
   name: "get_diagnostics",
   description:
     "Get TypeScript diagnostics (errors, warnings) for a single file",
