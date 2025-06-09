@@ -17,14 +17,14 @@ const schema = z.object({
     .describe("Context file for resolving relative imports"),
 });
 
-export type GetTypeSignatureResult = FormatTypeSignatureInput;
+export type GetTypeInModuleResult = FormatTypeSignatureInput;
 
-export async function handleGetTypeSignature({
+export async function handleGetTypeInModule({
   root,
   moduleName,
   typeName,
   filePath,
-}: z.infer<typeof schema>): Promise<GetTypeSignatureResult> {
+}: z.infer<typeof schema>): Promise<GetTypeInModuleResult> {
   const project = await findProjectForFile(
     filePath ? path.join(root, filePath) : root
   );
@@ -51,15 +51,15 @@ export async function handleGetTypeSignature({
   };
 }
 
-export { formatTypeSignature as formatGetTypeSignatureResult };
+export { formatTypeSignature as formatGetTypeInModuleResult };
 
-export const getTypeSignatureTool: ToolDef<typeof schema> = {
-  name: "get_type_signature",
+export const getTypeInModuleTool: ToolDef<typeof schema> = {
+  name: "get_type_in_module",
   description:
-    "Get detailed signature information for a specific type (function, class, interface, type alias, etc.)",
+    "Get detailed signature information for a specific type (function, class, interface, type alias, etc.) from a module",
   schema,
   handler: async (args) => {
-    const result = await handleGetTypeSignature(args);
+    const result = await handleGetTypeInModule(args);
     return formatTypeSignature(result);
   },
 };

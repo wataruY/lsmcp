@@ -10,7 +10,7 @@ import { findReferencesTool } from "./tools/find_references.ts";
 import { getDefinitionsTool } from "./tools/get_definitions.ts";
 import { getDiagnosticsTool } from "./tools/get_diagnostics.ts";
 import { getModuleSymbolsTool } from "./tools/get_module_symbols.ts";
-import { getTypeSignatureTool } from "./tools/get_type_signature.ts";
+import { getTypeInModuleTool } from "./tools/get_type_in_module.ts";
 import { getTypeAtSymbolTool } from "./tools/get_type_at_symbol.ts";
 import { getModuleGraphTool } from "./tools/get_module_graph.ts";
 import { getRelatedModulesTool } from "./tools/get_related_modules.ts";
@@ -29,7 +29,7 @@ const tools = [
   getDefinitionsTool,
   getDiagnosticsTool,
   getModuleSymbolsTool,
-  getTypeSignatureTool,
+  getTypeInModuleTool,
   getTypeAtSymbolTool,
   // WIP: does not work yet correctly
   // getModuleGraphTool,

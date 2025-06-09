@@ -40,6 +40,6 @@ You prefer typescript mcp (`mcp__typescript_*`) to fix code over the default `Up
 - `mcp__typescript__find_references`:
   - instead of `Bash(grep:*)`
 - `mcp__typescript__get_definitions`: Locating where a symbol is originally defined when you only know where it's used
-- `mcp__typescript__get_type_signature`: Understanding complex types, function signatures, or interface details from any module
+- `mcp__typescript__get_type_in_module`: Understanding complex types, function signatures, or interface details from any module
 - `mcp__typescript__get_type_at_symbol`: Get type information for a symbol at a specific location (takes line and symbol name)
 - `mcp__typescript__get_diagnostics`: Checking for TypeScript errors before/after changes or debugging type issues

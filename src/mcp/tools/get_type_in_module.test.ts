@@ -1,10 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { formatGetTypeSignatureResult } from "./get_type_signature.ts";
-import type { GetTypeSignatureResult } from "./get_type_signature.ts";
+import { formatGetTypeInModuleResult } from "./get_type_in_module";
+import type { GetTypeInModuleResult } from "./get_type_in_module";
 import type { TypeSignature } from "../../navigations/get_type_signature.ts";
 
-describe("get_type_signature", () => {
-  describe("formatGetTypeSignatureResult", () => {
+describe("get_type_in_module", () => {
+  describe("formatGetTypeInModuleResult", () => {
     it("should format function signature", () => {
       const signature: TypeSignature = {
         kind: "function",
@@ -19,13 +19,13 @@ describe("get_type_signature", () => {
         ],
       };
 
-      const result: GetTypeSignatureResult = {
+      const result: GetTypeInModuleResult = {
         message: "Found type 'add' in module 'math-utils'",
         signature,
         root: "/project",
       };
 
-      expect(formatGetTypeSignatureResult(result)).toMatchInlineSnapshot(`
+      expect(formatGetTypeInModuleResult(result)).toMatchInlineSnapshot(`
         "Found type 'add' in module 'math-utils'
 
         📝 Function Signatures:
@@ -48,13 +48,13 @@ describe("get_type_signature", () => {
         ],
       };
 
-      const result: GetTypeSignatureResult = {
+      const result: GetTypeInModuleResult = {
         message: "Found type 'identity' in module 'utils'",
         signature,
         root: "/project",
       };
 
-      expect(formatGetTypeSignatureResult(result)).toMatchInlineSnapshot(`
+      expect(formatGetTypeInModuleResult(result)).toMatchInlineSnapshot(`
         "Found type 'identity' in module 'utils'
 
         📝 Function Signatures:
@@ -73,13 +73,13 @@ describe("get_type_signature", () => {
         typeDefinition: "string | number | boolean",
       };
 
-      const result: GetTypeSignatureResult = {
+      const result: GetTypeInModuleResult = {
         message: "Found type 'Primitive' in module 'types'",
         signature,
         root: "/project",
       };
 
-      expect(formatGetTypeSignatureResult(result)).toMatchInlineSnapshot(`
+      expect(formatGetTypeInModuleResult(result)).toMatchInlineSnapshot(`
         "Found type 'Primitive' in module 'types'
 
         📋 Type Definition:
@@ -97,13 +97,13 @@ describe("get_type_signature", () => {
         ],
       };
 
-      const result: GetTypeSignatureResult = {
+      const result: GetTypeInModuleResult = {
         message: "Found type 'User' in module 'models'",
         signature,
         root: "/project",
       };
 
-      expect(formatGetTypeSignatureResult(result)).toMatchInlineSnapshot(`
+      expect(formatGetTypeInModuleResult(result)).toMatchInlineSnapshot(`
         "Found type 'User' in module 'models'
 
         📐 Interface Definition:
@@ -143,13 +143,13 @@ describe("get_type_signature", () => {
         ],
       };
 
-      const result: GetTypeSignatureResult = {
+      const result: GetTypeInModuleResult = {
         message: "Found type 'Person' in module 'entities'",
         signature,
         root: "/project",
       };
 
-      expect(formatGetTypeSignatureResult(result)).toMatchInlineSnapshot(`
+      expect(formatGetTypeInModuleResult(result)).toMatchInlineSnapshot(`
         "Found type 'Person' in module 'entities'
 
         🏗️ Class Definition:
@@ -176,14 +176,14 @@ describe("get_type_signature", () => {
         ],
       };
 
-      const result: GetTypeSignatureResult = {
+      const result: GetTypeInModuleResult = {
         message: "Found type 'capitalize' in module 'string-utils'",
         signature,
         documentation: "Capitalizes the first letter of a string",
         root: "/project",
       };
 
-      expect(formatGetTypeSignatureResult(result)).toMatchInlineSnapshot(`
+      expect(formatGetTypeInModuleResult(result)).toMatchInlineSnapshot(`
         "Found type 'capitalize' in module 'string-utils'
 
         📖 Documentation:
