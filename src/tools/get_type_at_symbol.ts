@@ -7,7 +7,7 @@ import {
 } from "../utils/project_cache";
 import { resolveLineParameter, findSymbolInLine } from "../mcp/line_utils";
 import type { ToolDef } from "../mcp/types";
-import { ts } from "ts-morph";
+import { ts, type SourceFile, type Node, type Symbol } from "ts-morph";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -39,6 +39,81 @@ export interface GetTypeAtSymbolResult {
   };
 }
 
+const symbolFlagToKind: Array<[number, string]> = [
+  [ts.SymbolFlags.Function, "function"],
+  [ts.SymbolFlags.Method, "method"],
+  [ts.SymbolFlags.Class, "class"],
+  [ts.SymbolFlags.Interface, "interface"],
+  [ts.SymbolFlags.TypeAlias, "type alias"],
+  [ts.SymbolFlags.Variable, "variable"],
+  [ts.SymbolFlags.Property, "property"],
+  [ts.SymbolFlags.BlockScopedVariable, "variable"],
+  [ts.SymbolFlags.FunctionScopedVariable, "variable"],
+  [ts.SymbolFlags.Enum, "enum"],
+  [ts.SymbolFlags.EnumMember, "enum member"],
+];
+
+function getSymbolKind(flags: ts.SymbolFlags): string {
+  const match = symbolFlagToKind.find(([flag]) => flags & flag);
+  return match ? match[1] : "unknown";
+}
+
+function getSymbolDocumentation(symbol: Symbol): string | undefined {
+  const jsDocTags = symbol.getJsDocTags();
+  if (jsDocTags.length === 0) return undefined;
+  
+  return jsDocTags.map(tag => {
+    const tagName = tag.getName();
+    const tagTextParts = tag.getText();
+    // getText() returns SymbolDisplayPart[] which we need to join
+    const textContent = tagTextParts.map(part => part.text).join('').trim();
+    return textContent ? `@${tagName} ${textContent}` : `@${tagName}`;
+  }).join('\n');
+}
+
+async function validateAndGetSourceFile(root: string, filePath: string): Promise<{
+  absolutePath: string;
+  sourceFile: SourceFile;
+}> {
+  const absolutePath = path.join(root, filePath);
+  await fs.access(absolutePath);
+  findProjectForFile(absolutePath);
+  return {
+    absolutePath,
+    sourceFile: getOrCreateSourceFileWithRefresh(absolutePath)
+  };
+}
+
+function getNodeAtPosition(
+  sourceFile: SourceFile,
+  line: number,
+  column: number
+): Node {
+  const position = sourceFile.compilerNode.getPositionOfLineAndCharacter(
+    line - 1,  // Convert to 0-based
+    column - 1 // Convert to 0-based
+  );
+
+  const node = sourceFile.getDescendantAtPos(position);
+  if (!node) {
+    throw new Error(`No node found at position ${String(line)}:${String(column)}`);
+  }
+  return node;
+}
+
+function getSymbolFromNode(
+  node: Node,
+  symbolName: string,
+  line: number,
+  column: number
+): Symbol {
+  const symbol = node.getSymbol();
+  if (!symbol) {
+    throw new Error(`No symbol found for "${symbolName}" at ${String(line)}:${String(column)}`);
+  }
+  return symbol;
+}
+
 export async function handleGetTypeAtSymbol({
   root,
   filePath,
@@ -46,16 +121,8 @@ export async function handleGetTypeAtSymbol({
   symbolName,
   symbolIndex = 0,
 }: z.infer<typeof schema>): Promise<GetTypeAtSymbolResult> {
-  // Always treat paths as relative to root
-  const absolutePath = path.join(root, filePath);
-
-  // Check if file exists
-  await fs.access(absolutePath);
-
-  findProjectForFile(absolutePath);
-
-  // Get the source file to find the symbol position with fresh content
-  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
+  // Validate file and get source file
+  const { absolutePath, sourceFile } = await validateAndGetSourceFile(root, filePath);
 
   // Resolve line parameter
   const resolvedLine = resolveLineParameter(sourceFile, line);
@@ -63,49 +130,19 @@ export async function handleGetTypeAtSymbol({
   // Find the symbol in the line and get column position
   const { column } = findSymbolInLine(sourceFile, resolvedLine, symbolName, symbolIndex);
 
-  // Convert line/column to position
-  const position = sourceFile.compilerNode.getPositionOfLineAndCharacter(
-    resolvedLine - 1,  // Convert to 0-based
-    column - 1         // Convert to 0-based
-  );
-
-  // Get the node at this position
-  const node = sourceFile.getDescendantAtPos(position);
-  if (!node) {
-    throw new Error(`No node found at position ${String(resolvedLine)}:${String(column)}`);
-  }
+  // Get the node at the position
+  const node = getNodeAtPosition(sourceFile, resolvedLine, column);
 
   // Get symbol information
-  const symbol = node.getSymbol();
-  if (!symbol) {
-    throw new Error(`No symbol found for "${symbolName}" at ${String(resolvedLine)}:${String(column)}`);
-  }
+  const symbol = getSymbolFromNode(node, symbolName, resolvedLine, column);
 
   // Get type information
   const type = node.getType();
   const typeText = type.getText(node);
 
-  // Get documentation if available
-  const jsDocTags = symbol.getJsDocTags();
-  const documentation = jsDocTags.length > 0
-    ? jsDocTags.map(tag => `@${tag.getName()} ${tag.getText()}`).join('\n')
-    : undefined;
-
-  // Get symbol kind
-  const symbolFlags = symbol.getFlags();
-  let kind = "unknown";
-  
-  if (symbolFlags & ts.SymbolFlags.Function) kind = "function";
-  else if (symbolFlags & ts.SymbolFlags.Method) kind = "method";
-  else if (symbolFlags & ts.SymbolFlags.Class) kind = "class";
-  else if (symbolFlags & ts.SymbolFlags.Interface) kind = "interface";
-  else if (symbolFlags & ts.SymbolFlags.TypeAlias) kind = "type alias";
-  else if (symbolFlags & ts.SymbolFlags.Variable) kind = "variable";
-  else if (symbolFlags & ts.SymbolFlags.Property) kind = "property";
-  else if (symbolFlags & ts.SymbolFlags.BlockScopedVariable) kind = "variable";
-  else if (symbolFlags & ts.SymbolFlags.FunctionScopedVariable) kind = "variable";
-  else if (symbolFlags & ts.SymbolFlags.Enum) kind = "enum";
-  else if (symbolFlags & ts.SymbolFlags.EnumMember) kind = "enum member";
+  // Get documentation and kind
+  const documentation = getSymbolDocumentation(symbol);
+  const kind = getSymbolKind(symbol.compilerSymbol.flags);
 
   return {
     symbol: {

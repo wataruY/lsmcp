@@ -19,6 +19,7 @@ let defaultProject: Project | null = null;
 async function findTsConfig(startPath: string): Promise<string | null> {
   let currentPath = resolve(startPath);
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     const tsconfigPath = join(currentPath, "tsconfig.json");
     try {
@@ -131,20 +132,21 @@ function getOrCreateDefaultProjectSync(): Project {
  */
 export function findProjectForFile(filePath: string): Project {
   const absolutePath = resolve(filePath);
-  
+
   // For synchronous access, we'll check if there's already a cached project
   // by checking common tsconfig locations
   let currentPath = absolutePath;
   const directory = dirname(absolutePath);
   currentPath = directory;
-  
+
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     const tsconfigPath = join(currentPath, "tsconfig.json");
     const cachedProject = projectCache.get(tsconfigPath);
     if (cachedProject) {
       return cachedProject;
     }
-    
+
     const parentPath = dirname(currentPath);
     if (parentPath === currentPath) {
       // Reached root directory
@@ -152,13 +154,13 @@ export function findProjectForFile(filePath: string): Project {
     }
     currentPath = parentPath;
   }
-  
+
   // Check if we have a default project cached
   const defaultCached = projectCache.get("$$default$$");
   if (defaultCached) {
     return defaultCached;
   }
-  
+
   // If no cached project found, create a default one synchronously
   return getOrCreateDefaultProjectSync();
 }
@@ -186,10 +188,10 @@ export function getOrCreateSourceFileWithRefresh(
   filePath: string
 ): import("ts-morph").SourceFile {
   const project = findProjectForFile(filePath);
-  
+
   // Try to get existing source file
   let sourceFile = project.getSourceFile(filePath);
-  
+
   if (sourceFile) {
     // Refresh from file system to get latest content
     void sourceFile.refreshFromFileSystem();
@@ -199,6 +201,6 @@ export function getOrCreateSourceFileWithRefresh(
     // Add the file if it doesn't exist
     sourceFile = project.addSourceFileAtPath(filePath);
   }
-  
+
   return sourceFile;
 }

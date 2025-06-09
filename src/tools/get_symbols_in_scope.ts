@@ -75,24 +75,26 @@ export interface GetSymbolsInScopeResult {
   totalCount: number;
 }
 
+const symbolFlagToKind: Array<[number, string]> = [
+  [ts.SymbolFlags.Class, "class"],
+  [ts.SymbolFlags.Interface, "interface"],
+  [ts.SymbolFlags.TypeAlias, "type alias"],
+  [ts.SymbolFlags.Enum, "enum"],
+  [ts.SymbolFlags.Function, "function"],
+  [ts.SymbolFlags.Method, "method"],
+  [ts.SymbolFlags.Property, "property"],
+  [ts.SymbolFlags.Variable, "variable"],
+  [ts.SymbolFlags.BlockScopedVariable, "variable"],
+  [ts.SymbolFlags.FunctionScopedVariable, "variable"],
+  [ts.SymbolFlags.Module, "module"],
+  [ts.SymbolFlags.Namespace, "namespace"],
+  [ts.SymbolFlags.EnumMember, "enum member"],
+];
+
 function getSymbolKind(symbol: ts.Symbol): string {
   const flags = symbol.flags;
-  
-  if (flags & ts.SymbolFlags.Class) return "class";
-  if (flags & ts.SymbolFlags.Interface) return "interface";
-  if (flags & ts.SymbolFlags.TypeAlias) return "type alias";
-  if (flags & ts.SymbolFlags.Enum) return "enum";
-  if (flags & ts.SymbolFlags.Function) return "function";
-  if (flags & ts.SymbolFlags.Method) return "method";
-  if (flags & ts.SymbolFlags.Property) return "property";
-  if (flags & ts.SymbolFlags.Variable) return "variable";
-  if (flags & ts.SymbolFlags.BlockScopedVariable) return "variable";
-  if (flags & ts.SymbolFlags.FunctionScopedVariable) return "variable";
-  if (flags & ts.SymbolFlags.Module) return "module";
-  if (flags & ts.SymbolFlags.Namespace) return "namespace";
-  if (flags & ts.SymbolFlags.EnumMember) return "enum member";
-  
-  return "unknown";
+  const match = symbolFlagToKind.find(([flag]) => flags & flag);
+  return match ? match[1] : "unknown";
 }
 
 // Common built-in symbols that should be included even without declarations
@@ -130,10 +132,64 @@ function shouldIncludeSymbol(symbol: ts.Symbol): boolean {
   const declarations = symbol.getDeclarations();
   if (!declarations || declarations.length === 0) {
     // Keep common built-ins
-    return COMMON_BUILTINS.includes(name as any);
+    return COMMON_BUILTINS.includes(name as typeof COMMON_BUILTINS[number]);
   }
   
   return true;
+}
+
+function getTypeText(
+  symbol: ts.Symbol,
+  typeChecker: ts.TypeChecker,
+  node: ts.Node
+): string | undefined {
+  try {
+    const type = typeChecker.getTypeOfSymbolAtLocation(symbol, node);
+    const typeText = typeChecker.typeToString(type);
+    // Simplify long type names
+    return typeText.length > 100 ? typeText.substring(0, 97) + "..." : typeText;
+  } catch {
+    // Type resolution might fail for some symbols
+    return undefined;
+  }
+}
+
+function getDeclarationInfo(
+  symbol: ts.Symbol
+): { filePath: string; line: number } | undefined {
+  const declarations = symbol.getDeclarations();
+  if (!declarations || declarations.length === 0) return undefined;
+  
+  const firstDecl = declarations[0];
+  const declSourceFile = firstDecl.getSourceFile();
+  const startPos = firstDecl.getStart();
+  const lineAndChar = declSourceFile.getLineAndCharacterOfPosition(startPos);
+  
+  return {
+    filePath: declSourceFile.fileName,
+    line: lineAndChar.line + 1, // Convert to 1-based
+  };
+}
+
+function createSymbolInfo(
+  symbol: ts.Symbol,
+  typeChecker: import("ts-morph").TypeChecker,
+  node: import("ts-morph").Node
+): SymbolInfo {
+  const name = symbol.getName();
+  const kind = getSymbolKind(symbol);
+  const typeText = getTypeText(symbol, typeChecker.compilerObject, node.compilerNode);
+  const declaration = getDeclarationInfo(symbol);
+  const isExported = (symbol.flags & ts.SymbolFlags.ExportValue) !== 0 || 
+                    (symbol.flags & ts.SymbolFlags.Alias) !== 0;
+  
+  return {
+    name,
+    kind,
+    ...(typeText && { type: typeText }),
+    exported: isExported,
+    ...(declaration && { declaration }),
+  };
 }
 
 export async function handleGetSymbolsInScope({
@@ -173,9 +229,6 @@ export async function handleGetSymbolsInScope({
 
   // Get the symbol flags for the requested meaning
   const symbolFlags = meaningMap[meaning];
-  if (symbolFlags === undefined) {
-    throw new Error(`Invalid meaning: ${meaning}. Valid values are: ${Object.values(SymbolMeaning).join(", ")}`);
-  }
 
   // Get symbols in scope
   const symbols = typeChecker.compilerObject.getSymbolsInScope(
@@ -183,68 +236,21 @@ export async function handleGetSymbolsInScope({
     symbolFlags
   );
 
-  // Process and categorize symbols
-  const symbolsByKind: Record<string, SymbolInfo[]> = {};
+  // Process symbols into SymbolInfo objects
+  const processedSymbols = symbols
+    .filter(shouldIncludeSymbol)
+    .map(symbol => createSymbolInfo(symbol, typeChecker, node));
   
-  for (const symbol of symbols) {
-    if (!shouldIncludeSymbol(symbol)) continue;
-    
-    const name = symbol.getName();
-    const kind = getSymbolKind(symbol);
-    
-    // Get type information if available
-    let typeText: string | undefined;
-    try {
-      const type = typeChecker.compilerObject.getTypeOfSymbolAtLocation(symbol, node.compilerNode);
-      if (type) {
-        typeText = typeChecker.compilerObject.typeToString(type);
-        // Simplify long type names
-        if (typeText && typeText.length > 100) {
-          typeText = typeText.substring(0, 97) + "...";
-        }
-      }
-    } catch {
-      // Type resolution might fail for some symbols
-    }
-    
-    // Get declaration location if available
-    let declaration: { filePath: string; line: number } | undefined;
-    const declarations = symbol.getDeclarations();
-    if (declarations && declarations.length > 0) {
-      const firstDecl = declarations[0];
-      const declSourceFile = firstDecl.getSourceFile();
-      const startPos = firstDecl.getStart ? firstDecl.getStart() : firstDecl.pos;
-      const lineAndChar = declSourceFile.getLineAndCharacterOfPosition(startPos);
-      declaration = {
-        filePath: declSourceFile.fileName,
-        line: lineAndChar.line + 1, // Convert to 1-based
-      };
-    }
-    
-    // Check if symbol is exported
-    const isExported = (symbol.flags & ts.SymbolFlags.ExportValue) !== 0 || 
-                      (symbol.flags & ts.SymbolFlags.Alias) !== 0;
-    
-    const symbolInfo: SymbolInfo = {
-      name,
-      kind,
-      ...(typeText && { type: typeText }),
-      exported: isExported,
-      ...(declaration && { declaration }),
-    };
-    
-    // Group by kind
-    const categoryKey = getSymbolCategory(kind);
-    if (!symbolsByKind[categoryKey]) {
-      symbolsByKind[categoryKey] = [];
-    }
-    symbolsByKind[categoryKey].push(symbolInfo);
-  }
+  // Group symbols by category
+  const symbolsByKind = Object.groupBy(
+    processedSymbols,
+    symbolInfo => getSymbolCategory(symbolInfo.kind)
+  ) as Record<string, SymbolInfo[]>;
   
   // Sort symbols within each category
-  for (const category of Object.keys(symbolsByKind)) {
+  Object.keys(symbolsByKind).forEach(category => {
     symbolsByKind[category].sort((a, b) => a.name.localeCompare(b.name));
-  }
+  });
   
   // Count total symbols
   const totalCount = Object.values(symbolsByKind).reduce(
@@ -263,27 +269,40 @@ export async function handleGetSymbolsInScope({
   };
 }
 
+const kindToCategory: Record<string, string> = {
+  "variable": "Variables & Functions",
+  "function": "Variables & Functions",
+  "method": "Variables & Functions",
+  "property": "Variables & Functions",
+  "class": "Classes",
+  "interface": "Types & Interfaces",
+  "type alias": "Types & Interfaces",
+  "enum": "Enums",
+  "enum member": "Enums",
+  "module": "Namespaces & Modules",
+  "namespace": "Namespaces & Modules",
+};
+
 function getSymbolCategory(kind: string): string {
-  switch (kind) {
-    case "variable":
-    case "function":
-    case "method":
-    case "property":
-      return "Variables & Functions";
-    case "class":
-      return "Classes";
-    case "interface":
-    case "type alias":
-      return "Types & Interfaces";
-    case "enum":
-    case "enum member":
-      return "Enums";
-    case "module":
-    case "namespace":
-      return "Namespaces & Modules";
-    default:
-      return "Other";
+  return kindToCategory[kind] || "Other";
+}
+
+function formatSymbolLine(symbol: SymbolInfo): string {
+  let line = `  - ${symbol.name}`;
+  
+  if (symbol.kind !== "variable" && symbol.kind !== "function") {
+    line += ` (${symbol.kind})`;
   }
+  
+  if (symbol.type) {
+    line += `: ${symbol.type}`;
+  }
+  
+  if (symbol.exported) {
+    line += " [exported]";
+  }
+  
+  return line;
 }
 
 export function formatGetSymbolsInScopeResult(
@@ -293,45 +312,25 @@ export function formatGetSymbolsInScopeResult(
   const { location, meaning, symbolsByKind, totalCount } = result;
   const relativePath = path.relative(root, location.filePath);
 
-  const output = [
+  const header = [
     `Symbols in scope at ${relativePath}:${location.line}`,
     `Meaning: ${meaning}`,
     "",
   ];
 
-  // Sort categories for consistent output
-  const sortedCategories = Object.keys(symbolsByKind).sort();
+  // Sort categories and format each one
+  const categoryBlocks = Object.entries(symbolsByKind)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .filter(([, symbols]) => symbols.length > 0)
+    .flatMap(([category, symbols]) => [
+      `${category} (${symbols.length}):`,
+      ...symbols.map(formatSymbolLine),
+      ""
+    ]);
 
-  for (const category of sortedCategories) {
-    const symbols = symbolsByKind[category];
-    if (symbols.length === 0) continue;
+  const footer = [`Total: ${totalCount} symbols`];
 
-    output.push(`${category} (${symbols.length}):`);
-    
-    for (const symbol of symbols) {
-      let line = `  - ${symbol.name}`;
-      
-      if (symbol.kind !== "variable" && symbol.kind !== "function") {
-        line += ` (${symbol.kind})`;
-      }
-      
-      if (symbol.type) {
-        line += `: ${symbol.type}`;
-      }
-      
-      if (symbol.exported) {
-        line += " [exported]";
-      }
-      
-      output.push(line);
-    }
-    
-    output.push("");
-  }
-
-  output.push(`Total: ${totalCount} symbols`);
-
-  return output.join("\n");
+  return [...header, ...categoryBlocks, ...footer].join("\n");
 }
 
 export const getSymbolsInScopeTool: ToolDef<typeof schema> = {
