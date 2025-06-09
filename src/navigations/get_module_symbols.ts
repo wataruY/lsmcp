@@ -1,5 +1,5 @@
-import { Project, Node, ts, Symbol } from "ts-morph";
-import { Result, ok, err } from "neverthrow";
+import { type Project, Node, ts, type Symbol } from "ts-morph";
+import { type Result, ok, err } from "neverthrow";
 
 export interface GetModuleSymbolsRequest {
   moduleName: string;
@@ -37,7 +37,7 @@ export function getModuleSymbols(
     if (request.moduleName.startsWith('.') && request.filePath) {
       const contextFile = project.getSourceFile(request.filePath);
       if (contextFile) {
-        contextFile.refreshFromFileSystem();
+        void contextFile.refreshFromFileSystem();
         contextFile.forgetDescendants();
       }
       
@@ -47,7 +47,7 @@ export function getModuleSymbols(
       const resolvedPath = contextDir + '/' + modulePath;
       const targetFile = project.getSourceFile(resolvedPath) || project.getSourceFile(resolvedPath + '.ts');
       if (targetFile) {
-        targetFile.refreshFromFileSystem();
+        void targetFile.refreshFromFileSystem();
         targetFile.forgetDescendants();
       }
     }

@@ -10,6 +10,9 @@ import { access } from "fs/promises";
 // Cache for projects by tsconfig path
 const projectCache = new Map<string, Project>();
 
+// Cache for default project (synchronous access)
+let defaultProject: Project | null = null;
+
 /**
  * Find the nearest tsconfig.json file starting from the given directory
  */
@@ -95,13 +98,69 @@ export async function getOrCreateProject(
 }
 
 /**
- * Find the appropriate project for a given file path
+ * Get or create default project synchronously
+ * This is used when we need synchronous access to a project
  */
-export async function findProjectForFile(filePath: string): Promise<Project> {
-  const absolutePath = resolve(filePath);
-  const directory = dirname(absolutePath);
+function getOrCreateDefaultProjectSync(): Project {
+  if (!defaultProject) {
+    defaultProject = new Project({
+      skipFileDependencyResolution: true,
+      manipulationSettings: {
+        usePrefixAndSuffixTextForRename: true,
+      },
+      compilerOptions: {
+        allowJs: true,
+        target: ScriptTarget.ESNext,
+        module: ModuleKind.ESNext,
+        moduleResolution: ModuleResolutionKind.Bundler,
+        esModuleInterop: true,
+        noEmit: true,
+        skipLibCheck: true,
+        strict: true,
+      },
+    });
+    // Also cache it in the main cache
+    projectCache.set("$$default$$", defaultProject);
+  }
+  return defaultProject;
+}
 
-  return getOrCreateProject(directory);
+/**
+ * Find the appropriate project for a given file path (synchronous)
+ * This assumes the project has already been created or uses a default project
+ */
+export function findProjectForFile(filePath: string): Project {
+  const absolutePath = resolve(filePath);
+  
+  // For synchronous access, we'll check if there's already a cached project
+  // by checking common tsconfig locations
+  let currentPath = absolutePath;
+  const directory = dirname(absolutePath);
+  currentPath = directory;
+  
+  while (true) {
+    const tsconfigPath = join(currentPath, "tsconfig.json");
+    const cachedProject = projectCache.get(tsconfigPath);
+    if (cachedProject) {
+      return cachedProject;
+    }
+    
+    const parentPath = dirname(currentPath);
+    if (parentPath === currentPath) {
+      // Reached root directory
+      break;
+    }
+    currentPath = parentPath;
+  }
+  
+  // Check if we have a default project cached
+  const defaultCached = projectCache.get("$$default$$");
+  if (defaultCached) {
+    return defaultCached;
+  }
+  
+  // If no cached project found, create a default one synchronously
+  return getOrCreateDefaultProjectSync();
 }
 
 /**
@@ -109,6 +168,7 @@ export async function findProjectForFile(filePath: string): Promise<Project> {
  */
 export function clearProjectCache(): void {
   projectCache.clear();
+  defaultProject = null;
 }
 
 /**
@@ -125,14 +185,14 @@ export function getProjectCacheSize(): number {
 export async function getOrCreateSourceFileWithRefresh(
   filePath: string
 ): Promise<import("ts-morph").SourceFile> {
-  const project = await findProjectForFile(filePath);
+  const project = findProjectForFile(filePath);
   
   // Try to get existing source file
   let sourceFile = project.getSourceFile(filePath);
   
   if (sourceFile) {
     // Refresh from file system to get latest content
-    sourceFile.refreshFromFileSystem();
+    void sourceFile.refreshFromFileSystem();
     // Clear cached descendants to ensure fresh analysis
     sourceFile.forgetDescendants();
   } else {

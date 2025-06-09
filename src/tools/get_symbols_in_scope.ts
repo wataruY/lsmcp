@@ -148,7 +148,7 @@ export async function handleGetSymbolsInScope({
   // Check if file exists
   await fs.access(absolutePath);
 
-  const project = await findProjectForFile(absolutePath);
+  const project = findProjectForFile(absolutePath);
 
   // Get the source file with fresh content
   const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);

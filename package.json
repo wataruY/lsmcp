@@ -3,8 +3,18 @@
   "version": "0.0.4",
   "type": "module",
   "license": "MIT",
+    "scripts": {
+    "prepublishOnly": "pnpm build",
+    "build": "tsdown",
+    "test": "vitest --run",
+    "typecheck": "tsc -p . --noEmit",
+    "lint": "eslint . --quiet",
+    "lint:refactor": "eslint .",
+    "mcp-server": "node dist/mcp.js",
+    "run:mcp": "pnpm build && node dist/mcp.js"
+  },
   "bin": {
-    "tsmcp": "./dist/mcp.js"
+    "typescript-mcp": "./dist/mcp.js"
   },
   "dependencies": {
     "@mizchi/readability": "^0.5.8",
@@ -15,17 +25,14 @@
     "zod": "^3.25.56"
   },
   "devDependencies": {
+    "@eslint/js": "^9.28.0",
     "@types/node": "^22.15.30",
+    "@typescript-eslint/utils": "^8.33.1",
+    "eslint": "^9.28.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
     "tsdown": "^0.12.7",
     "typescript": "^5.7.3",
+    "typescript-eslint": "^8.33.1",
     "vitest": "^3.2.2"
-  },
-  "scripts": {
-    "prepublishOnly": "pnpm build",
-    "build": "tsdown",
-    "test": "vitest --run",
-    "typecheck": "tsc -p . --noEmit",
-    "mcp-server": "node dist/mcp.js",
-    "run:mcp": "pnpm build && node dist/mcp.js"
   }
 }

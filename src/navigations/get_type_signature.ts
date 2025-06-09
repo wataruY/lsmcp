@@ -1,5 +1,5 @@
-import { Project, Node, ts } from "ts-morph";
-import { Result, ok, err } from "neverthrow";
+import { type Project, Node, ts } from "ts-morph";
+import { type Result, ok, err } from "neverthrow";
 
 export interface GetTypeSignatureRequest {
   moduleName: string;
@@ -587,7 +587,7 @@ export function getTypeSignature(
     if (request.moduleName.startsWith(".") && request.filePath) {
       const contextFile = project.getSourceFile(request.filePath);
       if (contextFile) {
-        contextFile.refreshFromFileSystem();
+        void contextFile.refreshFromFileSystem();
         contextFile.forgetDescendants();
       }
 
@@ -602,7 +602,7 @@ export function getTypeSignature(
         project.getSourceFile(resolvedPath) ||
         project.getSourceFile(resolvedPath + ".ts");
       if (targetFile) {
-        targetFile.refreshFromFileSystem();
+        void targetFile.refreshFromFileSystem();
         targetFile.forgetDescendants();
       }
     }

@@ -66,7 +66,9 @@ describe("project_cache", () => {
   describe("findProjectForFile", () => {
     it("should find project for a file path", async () => {
       const filePath = join(process.cwd(), "src/utils/project_cache.ts");
-      const project = await findProjectForFile(filePath);
+      // Pre-create project to ensure it's cached
+      await getOrCreateProject(process.cwd());
+      const project = findProjectForFile(filePath);
 
       expect(project).toBeDefined();
       expect(getProjectCacheSize()).toBe(1);
@@ -76,8 +78,10 @@ describe("project_cache", () => {
       const file1 = join(process.cwd(), "src/commands/move_file.ts");
       const file2 = join(process.cwd(), "src/commands/rename_symbol.ts");
 
-      const project1 = await findProjectForFile(file1);
-      const project2 = await findProjectForFile(file2);
+      // Pre-create project to ensure it's cached
+      await getOrCreateProject(process.cwd());
+      const project1 = findProjectForFile(file1);
+      const project2 = findProjectForFile(file2);
 
       expect(project1).toBe(project2);
       expect(getProjectCacheSize()).toBe(1);
@@ -87,10 +91,20 @@ describe("project_cache", () => {
       const relativePath = "src/utils/project_cache.ts";
       const absolutePath = join(process.cwd(), relativePath);
 
-      const project1 = await findProjectForFile(relativePath);
-      const project2 = await findProjectForFile(absolutePath);
+      // Pre-create project to ensure it's cached
+      await getOrCreateProject(process.cwd());
+      const project1 = findProjectForFile(relativePath);
+      const project2 = findProjectForFile(absolutePath);
 
       expect(project1).toBe(project2);
+      expect(getProjectCacheSize()).toBe(1);
+    });
+
+    it("should create default project when no cached project exists", () => {
+      const filePath = "/some/random/path/file.ts";
+      const project = findProjectForFile(filePath);
+
+      expect(project).toBeDefined();
       expect(getProjectCacheSize()).toBe(1);
     });
   });

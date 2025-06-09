@@ -1,11 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolDef } from "./types.ts";
-import { z } from "zod";
+import { type z } from "zod";
 
-type ToolResult = {
-  content: Array<{ type: "text"; text: string }>;
+interface ToolResult {
+  content: { type: "text"; text: string }[];
   isError?: boolean;
-};
+}
 
 /**
  * Convert a string-returning handler to MCP response format with error handling

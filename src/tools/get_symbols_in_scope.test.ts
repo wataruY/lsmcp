@@ -68,7 +68,7 @@ enum Status {
     await testFile.save();
 
     // Mock the project cache functions
-    vi.mocked(projectCache.findProjectForFile).mockResolvedValue(project);
+    vi.mocked(projectCache.findProjectForFile).mockReturnValue(project);
     vi.mocked(projectCache.getOrCreateSourceFileWithRefresh).mockResolvedValue(testFile);
 
     const result = await handleGetSymbolsInScope({
@@ -133,7 +133,7 @@ type Port = number;
     await testFile.save();
 
     // Mock the project cache functions
-    vi.mocked(projectCache.findProjectForFile).mockResolvedValue(project);
+    vi.mocked(projectCache.findProjectForFile).mockReturnValue(project);
     vi.mocked(projectCache.getOrCreateSourceFileWithRefresh).mockResolvedValue(testFile);
 
     // Get only types
@@ -192,7 +192,7 @@ function outer() {
     await testFile.save();
 
     // Mock the project cache functions
-    vi.mocked(projectCache.findProjectForFile).mockResolvedValue(project);
+    vi.mocked(projectCache.findProjectForFile).mockReturnValue(project);
     vi.mocked(projectCache.getOrCreateSourceFileWithRefresh).mockResolvedValue(testFile);
 
     // Check inner scope
@@ -281,7 +281,7 @@ const c = 3;
     await testFile.save();
 
     // Mock the project cache functions
-    vi.mocked(projectCache.findProjectForFile).mockResolvedValue(project);
+    vi.mocked(projectCache.findProjectForFile).mockReturnValue(project);
     vi.mocked(projectCache.getOrCreateSourceFileWithRefresh).mockResolvedValue(testFile);
 
     const result = await handleGetSymbolsInScope({

@@ -1,5 +1,5 @@
-import { Project } from "ts-morph";
-import { Result, ok, err } from "neverthrow";
+import { type Project } from "ts-morph";
+import { type Result, ok, err } from "neverthrow";
 
 export interface MoveFileResult {
   message: string;

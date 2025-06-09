@@ -1,5 +1,5 @@
-import { Project, Node, ts } from "ts-morph";
-import { Result, ok, err } from "neverthrow";
+import { type Project, Node, ts } from "ts-morph";
+import { type Result, ok, err } from "neverthrow";
 
 export interface FindReferencesRequest {
   filePath: string;

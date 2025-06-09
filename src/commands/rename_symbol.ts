@@ -1,10 +1,10 @@
 import {
   Project,
-  SourceFile,
+  type SourceFile,
   Node,
   getCompilerOptionsFromTsConfig,
 } from "ts-morph";
-import { Result, ok, err } from "neverthrow";
+import { type Result, ok, err } from "neverthrow";
 
 export interface RenameRequest {
   filePath: string;
@@ -17,15 +17,15 @@ export interface RenameRequest {
 
 export interface RenameSuccess {
   message: string;
-  changedFiles: Array<{
+  changedFiles: {
     filePath: string;
-    changes: Array<{
+    changes: {
       line: number;
       column: number;
       oldText: string;
       newText: string;
-    }>;
-  }>;
+    }[];
+  }[];
 }
 
 /**
@@ -249,13 +249,13 @@ function diffTexts(
   _sourceFile: SourceFile,
   beforeText: string,
   afterText: string
-): Array<{ line: number; column: number; oldText: string; newText: string }> {
-  const changes: Array<{
+): { line: number; column: number; oldText: string; newText: string }[] {
+  const changes: {
     line: number;
     column: number;
     oldText: string;
     newText: string;
-  }> = [];
+  }[] = [];
 
   const beforeLines = beforeText.split("\n");
   const afterLines = afterText.split("\n");

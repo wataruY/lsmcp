@@ -1,3 +1,4 @@
 {
-  "deno.enablePaths": [".claude/deno-server.ts"]
+  "deno.enablePaths": [".claude/deno-server.ts"],
+  "eslint.enable": true
 }

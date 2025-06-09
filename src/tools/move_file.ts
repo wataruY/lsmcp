@@ -36,12 +36,12 @@ export async function handleMoveFile({
   const absoluteOldPath = path.join(root, oldPath);
   const absoluteNewPath = path.join(root, newPath);
 
-  const project = await findProjectForFile(absoluteOldPath);
+  const project = findProjectForFile(absoluteOldPath);
 
   // Ensure the source file is loaded in the project with fresh content
   try {
     await getOrCreateSourceFileWithRefresh(absoluteOldPath);
-  } catch (error) {
+  } catch {
     throw new Error(`File not found: ${absoluteOldPath}`);
   }
 
@@ -136,7 +136,7 @@ export async function formatMoveFileResult(
         // If we couldn't detect specific changes, show a generic message
         output.push(`    Import statements updated`);
       }
-    } catch (error) {
+    } catch {
       // Fallback to simple format if file reading fails
       output.push(`    Import statements updated`);
     }

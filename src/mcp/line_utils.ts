@@ -1,4 +1,4 @@
-import { SourceFile } from "ts-morph";
+import { type SourceFile } from "ts-morph";
 
 /**
  * Resolves a line parameter that can be either a line number or a string to match
@@ -56,7 +56,7 @@ export function findSymbolInLine(
   sourceFile: SourceFile,
   lineNumber: number,
   symbolName: string,
-  index: number = 0
+  index = 0
 ): { lineText: string; column: number } {
   const fullText = sourceFile.getFullText();
   const lines = fullText.split("\n");

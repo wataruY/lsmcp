@@ -29,7 +29,7 @@ export async function handleGetDiagnostics({
   // Check if file exists
   await fs.access(absolutePath);
 
-  const project = await findProjectForFile(absolutePath);
+  const project = findProjectForFile(absolutePath);
 
   // Ensure the source file is loaded in the project with fresh content
   await getOrCreateSourceFileWithRefresh(absolutePath);

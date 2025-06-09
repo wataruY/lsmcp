@@ -26,12 +26,12 @@ export interface FindReferencesResult {
     name: string;
     kind: string;
   };
-  references: Array<{
+  references: {
     filePath: string;
     line: number;
     column: number;
     lineText: string;
-  }>;
+  }[];
 }
 
 export async function handleFindReferences({
@@ -46,7 +46,7 @@ export async function handleFindReferences({
   // Check if file exists
   await fs.access(absolutePath);
 
-  const project = await findProjectForFile(absolutePath);
+  const project = findProjectForFile(absolutePath);
 
   // Ensure the source file is loaded in the project with fresh content
   const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);

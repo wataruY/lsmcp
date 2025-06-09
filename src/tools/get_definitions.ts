@@ -34,12 +34,12 @@ export interface GetDefinitionsResult {
     name: string;
     kind: string;
   };
-  definitions: Array<{
+  definitions: {
     filePath: string;
     line: number;
     column: number;
     lineText: string;
-  }>;
+  }[];
 }
 
 export async function handleGetDefinitions({
@@ -54,7 +54,7 @@ export async function handleGetDefinitions({
   // Check if file exists
   await fs.access(absolutePath);
 
-  const project = await findProjectForFile(absolutePath);
+  const project = findProjectForFile(absolutePath);
 
   // Get the source file to find the column position with fresh content
   const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);

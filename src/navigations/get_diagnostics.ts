@@ -1,5 +1,5 @@
-import { Project, DiagnosticCategory } from "ts-morph";
-import { Result, ok, err } from "neverthrow";
+import { type Project, DiagnosticCategory } from "ts-morph";
+import { type Result, ok, err } from "neverthrow";
 
 export interface GetDiagnosticsRequest {
   filePaths: string[];

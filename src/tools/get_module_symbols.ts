@@ -37,7 +37,7 @@ export async function handleGetModuleSymbols({
   moduleName,
   filePath,
 }: z.infer<typeof schema>): Promise<GetModuleSymbolsResult> {
-  const project = await findProjectForFile(
+  const project = findProjectForFile(
     filePath ? path.join(root, filePath) : root
   );
 

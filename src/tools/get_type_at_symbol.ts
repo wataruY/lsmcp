@@ -52,7 +52,7 @@ export async function handleGetTypeAtSymbol({
   // Check if file exists
   await fs.access(absolutePath);
 
-  await findProjectForFile(absolutePath);
+  findProjectForFile(absolutePath);
 
   // Get the source file to find the symbol position with fresh content
   const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);

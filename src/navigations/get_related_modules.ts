@@ -1,5 +1,5 @@
-import { Project, SourceFile } from "ts-morph";
-import { Result, ok, err } from "neverthrow";
+import { type Project } from "ts-morph";
+import { type Result, ok, err } from "neverthrow";
 import { isAbsolute, resolve, relative, dirname, join } from "path";
 
 export interface GetRelatedModulesRequest {
@@ -161,7 +161,7 @@ function resolveModulePath(
   }
 
   const fromDir = dirname(fromFile);
-  let resolvedPath = resolve(fromDir, moduleSpecifier);
+  const resolvedPath = resolve(fromDir, moduleSpecifier);
 
   // Try with TypeScript extensions
   const extensions = ['.ts', '.tsx', '.d.ts', '.js', '.jsx'];
@@ -177,7 +177,7 @@ function resolveModulePath(
           // Use addSourceFileAtPath which handles tsconfig exclusions better
           sourceFile = project.addSourceFileAtPath(filePath);
         }
-      } catch (e) {
+      } catch {
         // Ignore errors - file might be excluded by tsconfig
       }
     }

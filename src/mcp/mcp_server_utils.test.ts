@@ -3,7 +3,7 @@ import { toMcpToolHandler } from "./mcp_server_utils.ts";
 
 describe("toMcpHandler", () => {
   it("should convert string to MCP format when no error occurs", async () => {
-    const handler = toMcpToolHandler(async () => {
+    const handler = toMcpToolHandler(() => {
       return "Success message";
     });
 
@@ -14,7 +14,7 @@ describe("toMcpHandler", () => {
   });
 
   it("should catch and format errors", async () => {
-    const handler = toMcpToolHandler(async () => {
+    const handler = toMcpToolHandler(() => {
       throw new Error("Test error message");
     });
 
@@ -26,7 +26,8 @@ describe("toMcpHandler", () => {
   });
 
   it("should handle non-Error thrown values", async () => {
-    const handler = toMcpToolHandler(async () => {
+    const handler = toMcpToolHandler(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw "String error";
     });
 

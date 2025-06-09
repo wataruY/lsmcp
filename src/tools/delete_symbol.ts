@@ -37,7 +37,6 @@ export async function handleDeleteSymbol({
   filePath,
   line,
   symbolName,
-  removeReferences, // TODO: Implement reference removal logic when supported
 }: z.infer<typeof schema>): Promise<DeleteSymbolResult> {
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);
@@ -45,7 +44,7 @@ export async function handleDeleteSymbol({
   // Check if file exists
   await fs.access(absolutePath);
 
-  const project = await findProjectForFile(absolutePath);
+  const project = findProjectForFile(absolutePath);
 
   // Ensure the source file is loaded in the project with fresh content
   const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);

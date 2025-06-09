@@ -23,15 +23,15 @@ const schema = z.object({
 
 export interface RenameSymbolResult {
   message: string;
-  changedFiles: Array<{
+  changedFiles: {
     filePath: string;
-    changes: Array<{
+    changes: {
       line: number;
       column: number;
       oldText: string;
       newText: string;
-    }>;
-  }>;
+    }[];
+  }[];
 }
 
 export async function handleRenameSymbol({
@@ -44,7 +44,7 @@ export async function handleRenameSymbol({
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);
   // Check if file exists
-  const project = await findProjectForFile(absolutePath);
+  const project = findProjectForFile(absolutePath);
 
   // Ensure the source file is loaded in the project with fresh content
   const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
@@ -106,7 +106,7 @@ export async function formatRenameSymbolResult(result: RenameSymbolResult, root:
       for (const [lineNum, lineChanges] of changesByLine) {
         const lineIndex = lineNum - 1; // Convert to 0-based
         if (lineIndex >= 0 && lineIndex < lines.length) {
-          let oldLine = lines[lineIndex];
+          const oldLine = lines[lineIndex];
           let newLine = oldLine;
           
           // Sort changes by column in reverse order to avoid position shifts
@@ -124,7 +124,7 @@ export async function formatRenameSymbolResult(result: RenameSymbolResult, root:
           output.push(`    + ${newLine}`);
         }
       }
-    } catch (error) {
+    } catch {
       // Fallback to simple format if file reading fails
       for (const change of file.changes) {
         output.push(`    Line ${change.line}: "${change.oldText}" → "${change.newText}"`);

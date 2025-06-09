@@ -71,7 +71,7 @@ export const getModuleGraphTool: ToolDef<typeof paramsSchema> = {
     const visited = new Set<string>();
     const sorted: string[] = [];
 
-    function visit(filePath: string, level: number = 0): void {
+    function visit(filePath: string, level = 0): void {
       if (visited.has(filePath)) return;
       visited.add(filePath);
 

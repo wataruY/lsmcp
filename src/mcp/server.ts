@@ -14,8 +14,6 @@ import { getModuleSymbolsTool } from "../tools/get_module_symbols";
 import { getTypeInModuleTool } from "../tools/get_type_in_module";
 import { getTypeAtSymbolTool } from "../tools/get_type_at_symbol";
 import { getSymbolsInScopeTool } from "../tools/get_symbols_in_scope";
-import { getModuleGraphTool } from "../tools/get_module_graph";
-import { getRelatedModulesTool } from "../tools/get_related_modules";
 
 const server = new McpServer({
   name: "typescript",
@@ -56,4 +54,4 @@ async function main() {
   }
 }
 
-main();
+void main();

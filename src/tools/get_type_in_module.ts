@@ -25,7 +25,7 @@ export async function handleGetTypeInModule({
   typeName,
   filePath,
 }: z.infer<typeof schema>): Promise<GetTypeInModuleResult> {
-  const project = await findProjectForFile(
+  const project = findProjectForFile(
     filePath ? path.join(root, filePath) : root
   );
 
