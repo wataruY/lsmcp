@@ -65,9 +65,6 @@ Add permissions in `.claude/settings.json`:
 {
   "permissions": {
     "allow": [
-      "mcp__typescript__move_file",
-      "mcp__typescript__rename_symbol",
-      "mcp__typescript__delete_symbol",
       "mcp__typescript__find_references",
       "mcp__typescript__get_definitions",
       "mcp__typescript__get_diagnostics",
@@ -80,9 +77,65 @@ Add permissions in `.claude/settings.json`:
 }
 ```
 
+## Usage Examples
+
+```bash
+# start with config
+$ claude --mcp-config=./claude/mcp_settings.json
+
+# Rename symbol
+> examples/scratch.ts foo to bar
+● typescript:rename_symbol (MCP)(root: "~/sandbox/cla
+                                ude-mcp", filePath:
+                                "examples/scratch.ts", line: 6,
+                                oldName: "foo", newName: "bar")
+  ⎿ Successfully renamed symbol "foo" to "bar" in 1 file(s) with
+     2 change(s).
+
+    Changes:
+      examples/scratch.ts:
+
+# Rename file
+● typescript:move_file (MCP)(root: "~/s
+                            andbox/claude-mcp",
+                            oldPath: "examples/oth
+                            er-types.ts", newPath:
+                             "examples/types.ts")
+  ⎿ Successfully moved file from "~/san
+    dbox/claude-mcp/examples/other-types.ts" to
+    "~/sandbox/claude-mcp/examples/type
+    s.ts". Updated imports in 2 file(s).
+
+    Changes:
+      File moved: examples/other-types.ts →
+    examples/types.ts
+
+## Get definitions
+> get toMcpHandler definitions
+● typescript:get_definitions (MCP)(root: "/home/mi
+                                  zchi/sandbox/cla
+                                  ude-mcp",
+                                  filePath: "src/m
+                                  cp/mcp_server_ut
+                                  ils.test.ts",
+                                  line: 2,
+                                  symbolName: "toM
+                                  cpToolHandler")
+
+  ⎿ Found 1 definition for symbol
+    "toMcpToolHandler"
+    Symbol: toMcpToolHandler (Identifier)
+
+    Definitions:
+      src/mcp/mcp_server_utils.ts:15:1 - export
+    function toMcpToolHandler<T>(
+
+```
+
 ## MCP Tool Commands
 
-- `mcp__typescript__move_file` - Move TypeScript/JavaScript files
+- `mcp__typescript__move_file` - Move file
+- `mcp__typescript__move_directory` - Move directory
 - `mcp__typescript__rename_symbol` - Rename symbols across the project
 - `mcp__typescript__delete_symbol` - Delete symbols and their references
 - `mcp__typescript__find_references` - Find all references to a symbol

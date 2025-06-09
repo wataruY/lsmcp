@@ -1,11 +1,11 @@
-import { Value } from "./other-types.ts";
+import { Value } from "./types";
 
 /**
  * debug file for MCP server testing
  */
-const foo = 1;
+const bar = 1;
 
-console.log(foo);
+console.log(bar);
 
 export const x = 42;
 

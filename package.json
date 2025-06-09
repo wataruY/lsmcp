@@ -3,14 +3,13 @@
   "version": "0.0.4",
   "type": "module",
   "license": "MIT",
-    "scripts": {
+  "scripts": {
     "prepublishOnly": "pnpm build",
     "build": "tsdown",
     "test": "vitest --run",
     "typecheck": "tsc -p . --noEmit",
     "lint": "eslint . --quiet",
     "lint:refactor": "eslint .",
-    "mcp-server": "node dist/mcp.js",
     "run:mcp": "pnpm build && node dist/mcp.js"
   },
   "bin": {
@@ -34,5 +33,8 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.33.1",
     "vitest": "^3.2.2"
+  },
+  "peerDependencies": {
+    "typescript": "*"
   }
 }
