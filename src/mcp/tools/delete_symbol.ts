@@ -27,40 +27,61 @@ const schemaShape = {
 
 const schema = z.object(schemaShape);
 
+export interface DeleteSymbolResult {
+  message: string;
+  removedFromFiles: string[];
+}
+
+export async function handleDeleteSymbol({
+  filePath,
+  line,
+  symbolName,
+  root,
+  removeReferences, // TODO: Implement reference removal logic when supported
+}: z.infer<typeof schema>): Promise<DeleteSymbolResult> {
+  // Always treat paths as relative to root
+  const absolutePath = path.join(root, filePath);
+
+  // Check if file exists
+  await fs.access(absolutePath);
+
+  const project = await findProjectForFile(absolutePath);
+
+  // Ensure the source file is loaded in the project with fresh content
+  const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
+
+  // Resolve line parameter
+  const resolvedLine = resolveLineParameter(sourceFile, line);
+
+  // Perform the removal
+  const result = await deleteSymbol(project, {
+    filePath: absolutePath,
+    line: resolvedLine,
+    symbolName,
+  });
+
+  if (result.isErr()) {
+    throw new Error(result.error);
+  }
+
+  // Save all changes
+  await project.save();
+  
+  return result.value;
+}
+
+export function formatDeleteSymbolResult(result: DeleteSymbolResult): string {
+  const { message, removedFromFiles } = result;
+  return `${message} from ${removedFromFiles.length} file(s).`;
+}
+
 export const deleteSymbolTool: ToolDef<typeof schema> = {
   name: "delete_symbol",
   description:
-    "Delete a TypeScript symbol (variable, function, class, etc.) and all its references",
+    "Delete a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
   schema,
-  handler: async ({ filePath, line, symbolName, root, removeReferences }) => {
-    // Always treat paths as relative to root
-    const absolutePath = path.join(root, filePath);
-
-    // Check if file exists
-    await fs.access(absolutePath);
-
-    const project = await findProjectForFile(absolutePath);
-
-    // Ensure the source file is loaded in the project with fresh content
-    const sourceFile = await getOrCreateSourceFileWithRefresh(absolutePath);
-
-    // Resolve line parameter
-    const resolvedLine = resolveLineParameter(sourceFile, line);
-
-    // Perform the removal
-    const result = await deleteSymbol(project, {
-      filePath: absolutePath,
-      line: resolvedLine,
-      symbolName,
-    });
-
-    if (result.isErr()) {
-      throw new Error(result.error);
-    }
-
-    // Save all changes
-    await project.save();
-    const { message, removedFromFiles } = result.value;
-    return `${message} from ${removedFromFiles.length} file(s).`;
+  handler: async (args) => {
+    const result = await handleDeleteSymbol(args);
+    return formatDeleteSymbolResult(result);
   },
 };

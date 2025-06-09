@@ -45,7 +45,7 @@ export const config = {
 
     const result = getModuleGraph(project, {
       rootDir: "/project",
-      entryPoints: ["/project/src/a.ts"],  // Start from one file in the cycle
+      entryPoints: ["/project/src/index.ts"],
     });
 
     expect(result.isOk()).toBe(true);
