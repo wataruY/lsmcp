@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerTool } from "./mcp_server_utils.ts";
 import { moveFileTool } from "./tools/move_file.ts";
+import { move_directory } from "./tools/move_directory.ts";
 import { renameSymbolTool } from "./tools/rename_symbol.ts";
 import { deleteSymbolTool } from "./tools/delete_symbol.ts";
 import { findReferencesTool } from "./tools/find_references.ts";
@@ -24,6 +25,7 @@ const server = new McpServer({
 // Register all tools
 const tools = [
   moveFileTool,
+  move_directory,
   renameSymbolTool,
   deleteSymbolTool,
   findReferencesTool,
