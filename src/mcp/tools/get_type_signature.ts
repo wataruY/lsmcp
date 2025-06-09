@@ -6,11 +6,11 @@ import { formatTypeSignature, type FormatTypeSignatureInput } from "../signature
 import type { ToolDef } from "../types.ts";
 
 const schema = z.object({
+  root: z.string().describe("Root directory for resolving relative paths"),
   moduleName: z
     .string()
     .describe("The module containing the type (e.g., 'neverthrow', './utils')"),
   typeName: z.string().describe("The name of the type to analyze"),
-  root: z.string().describe("Root directory for resolving relative paths"),
   filePath: z
     .string()
     .optional()
@@ -20,9 +20,9 @@ const schema = z.object({
 export type GetTypeSignatureResult = FormatTypeSignatureInput;
 
 export async function handleGetTypeSignature({
+  root,
   moduleName,
   typeName,
-  root,
   filePath,
 }: z.infer<typeof schema>): Promise<GetTypeSignatureResult> {
   const project = await findProjectForFile(

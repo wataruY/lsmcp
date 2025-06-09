@@ -9,9 +9,9 @@ import {
 import type { ToolDef } from "../types.ts";
 
 const schemaShape = {
+  root: z.string().describe("Root directory for resolving relative paths"),
   oldPath: z.string().describe("Current file path (relative to root)"),
   newPath: z.string().describe("New file path (relative to root)"),
-  root: z.string().describe("Root directory for resolving relative paths"),
   overwrite: z
     .boolean()
     .optional()
@@ -27,9 +27,9 @@ export interface MoveFileResult {
 }
 
 export async function handleMoveFile({
+  root,
   oldPath,
   newPath,
-  root,
   overwrite,
 }: z.infer<typeof schema>): Promise<MoveFileResult> {
   // Always treat paths as relative to root

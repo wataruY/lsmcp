@@ -10,6 +10,7 @@ import { resolveLineParameter } from "../line_utils.ts";
 import type { ToolDef } from "../types.ts";
 
 const schema = z.object({
+  root: z.string().describe("Root directory for resolving relative paths"),
   filePath: z
     .string()
     .describe("File path containing the symbol (relative to root)"),
@@ -18,7 +19,6 @@ const schema = z.object({
     .describe("Line number (1-based) or string to match in the line"),
   oldName: z.string().describe("Current name of the symbol"),
   newName: z.string().describe("New name for the symbol"),
-  root: z.string().describe("Root directory for resolving relative paths"),
 });
 
 export interface RenameSymbolResult {
@@ -35,11 +35,11 @@ export interface RenameSymbolResult {
 }
 
 export async function handleRenameSymbol({
+  root,
   filePath,
   line,
   oldName,
   newName,
-  root,
 }: z.infer<typeof schema>): Promise<RenameSymbolResult> {
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);

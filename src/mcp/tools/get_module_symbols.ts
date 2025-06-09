@@ -5,10 +5,10 @@ import { findProjectForFile } from "../../utils/project_cache.ts";
 import type { ToolDef } from "../types.ts";
 
 const schema = z.object({
+  root: z.string().describe("Root directory for resolving relative paths"),
   moduleName: z
     .string()
     .describe("The module to analyze (e.g., 'neverthrow', './local-module')"),
-  root: z.string().describe("Root directory for resolving relative paths"),
   filePath: z
     .string()
     .optional()
@@ -33,8 +33,8 @@ export interface GetModuleSymbolsResult {
 }
 
 export async function handleGetModuleSymbols({
-  moduleName,
   root,
+  moduleName,
   filePath,
 }: z.infer<typeof schema>): Promise<GetModuleSymbolsResult> {
   const project = await findProjectForFile(

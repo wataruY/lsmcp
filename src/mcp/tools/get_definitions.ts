@@ -6,10 +6,11 @@ import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
 } from "../../utils/project_cache.ts";
-import { resolveLineParameter } from "../line_utils.ts";
+import { resolveLineParameter, findSymbolInLine } from "../line_utils.ts";
 import type { ToolDef } from "../types.ts";
 
 const schema = z.object({
+  root: z.string().describe("Root directory for resolving relative paths"),
   filePath: z
     .string()
     .describe("File path containing the symbol (relative to root)"),
@@ -17,7 +18,6 @@ const schema = z.object({
     .union([z.number(), z.string()])
     .describe("Line number (1-based) or string to match in the line"),
   symbolName: z.string().describe("Name of the symbol to get definitions for"),
-  root: z.string().describe("Root directory for resolving relative paths"),
   before: z
     .number()
     .optional()
@@ -43,10 +43,10 @@ export interface GetDefinitionsResult {
 }
 
 export async function handleGetDefinitions({
+  root,
   filePath,
   line,
   symbolName,
-  root,
 }: z.infer<typeof schema>): Promise<GetDefinitionsResult> {
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);
@@ -62,25 +62,8 @@ export async function handleGetDefinitions({
   // Resolve line parameter
   const resolvedLine = resolveLineParameter(sourceFile, line);
 
-  // Get the line text
-  const fullText = sourceFile.getFullText();
-  const lines = fullText.split("\n");
-  const lineText = lines[resolvedLine - 1];
-
-  if (!lineText) {
-    throw new Error(`Invalid line number: ${resolvedLine}`);
-  }
-
-  // Find the column position of the symbol in the line
-  const symbolIndex = lineText.indexOf(symbolName);
-  if (symbolIndex === -1) {
-    throw new Error(
-      `Symbol "${symbolName}" not found on line ${resolvedLine}`
-    );
-  }
-
-  // Convert to 1-based column (symbolIndex is 0-based)
-  const column = symbolIndex + 1;
+  // Find the symbol in the line and get column position
+  const { column } = findSymbolInLine(sourceFile, resolvedLine, symbolName);
 
   // Find definition using the column position
   const result = goToDefinition(project, {
@@ -153,14 +136,14 @@ export async function formatGetDefinitionsResult(
 
 export const getDefinitionsTool: ToolDef<typeof schema> = {
   name: "get_definitions",
-  description: "Get the definition(s) of a TypeScript/JavaScript symbol",
+  description: "Get the definition(s) of a TypeScript symbol",
   schema,
-  handler: async ({ filePath, line, symbolName, root, before, after }) => {
+  handler: async ({ root, filePath, line, symbolName, before, after }) => {
     const result = await handleGetDefinitions({
+      root,
       filePath,
       line,
       symbolName,
-      root,
     });
     return formatGetDefinitionsResult(result, root, { before, after });
   },

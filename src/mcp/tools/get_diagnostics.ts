@@ -9,10 +9,10 @@ import {
 import type { ToolDef } from "../types.ts";
 
 const schema = z.object({
+  root: z.string().describe("Root directory for resolving relative paths"),
   filePath: z
     .string()
     .describe("File path to check for diagnostics (relative to root)"),
-  root: z.string().describe("Root directory for resolving relative paths"),
 });
 
 export interface GetDiagnosticsResult {
@@ -20,8 +20,8 @@ export interface GetDiagnosticsResult {
 }
 
 export async function handleGetDiagnostics({
-  filePath,
   root,
+  filePath,
 }: z.infer<typeof schema>): Promise<GetDiagnosticsResult> {
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);

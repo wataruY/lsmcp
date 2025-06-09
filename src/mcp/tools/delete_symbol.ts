@@ -10,6 +10,7 @@ import { resolveLineParameter } from "../line_utils.ts";
 import type { ToolDef } from "../types.ts";
 
 const schemaShape = {
+  root: z.string().describe("Root directory for resolving relative paths"),
   filePath: z
     .string()
     .describe("File path containing the symbol (relative to root)"),
@@ -22,7 +23,6 @@ const schemaShape = {
     .optional()
     .default(true)
     .describe("Also delete all references to the symbol"),
-  root: z.string().describe("Root directory for resolving relative paths"),
 };
 
 const schema = z.object(schemaShape);
@@ -33,10 +33,10 @@ export interface DeleteSymbolResult {
 }
 
 export async function handleDeleteSymbol({
+  root,
   filePath,
   line,
   symbolName,
-  root,
   removeReferences, // TODO: Implement reference removal logic when supported
 }: z.infer<typeof schema>): Promise<DeleteSymbolResult> {
   // Always treat paths as relative to root
