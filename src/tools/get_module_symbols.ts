@@ -1,8 +1,8 @@
 import { z } from "zod";
 import path from "path";
-import { getModuleSymbols } from "../../navigations/get_module_symbols.ts";
-import { findProjectForFile } from "../../utils/project_cache.ts";
-import type { ToolDef } from "../types.ts";
+import { getModuleSymbols } from "../navigations/get_module_symbols";
+import { findProjectForFile } from "../utils/project_cache";
+import type { ToolDef } from "../mcp/types";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),

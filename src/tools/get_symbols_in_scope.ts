@@ -4,10 +4,25 @@ import fs from "fs/promises";
 import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
-} from "../../utils/project_cache.ts";
-import { resolveLineParameter } from "../line_utils.ts";
-import type { ToolDef } from "../types.ts";
+} from "../utils/project_cache";
+import { resolveLineParameter } from "../mcp/line_utils";
+import type { ToolDef } from "../mcp/types";
 import { ts } from "ts-morph";
+
+// Define the meaning enum
+export enum SymbolMeaning {
+  Value = "Value",
+  Type = "Type",
+  Namespace = "Namespace",
+  All = "All",
+  Variable = "Variable",
+  Function = "Function",
+  Class = "Class",
+  Interface = "Interface",
+  TypeAlias = "TypeAlias",
+  Enum = "Enum",
+  Module = "Module",
+}
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -18,25 +33,25 @@ const schema = z.object({
     .union([z.number(), z.string()])
     .describe("Line number (1-based) or string to match in the line"),
   meaning: z
-    .string()
+    .nativeEnum(SymbolMeaning)
     .optional()
-    .default("All")
-    .describe("Symbol types to include: 'Value', 'Type', 'Namespace', 'Variable', 'Function', 'Class', 'Interface', 'TypeAlias', or 'All'"),
+    .default(SymbolMeaning.All)
+    .describe("Symbol types to include"),
 });
 
-// Map string meanings to TypeScript SymbolFlags
-const meaningMap: Record<string, ts.SymbolFlags> = {
-  "Value": ts.SymbolFlags.Value,
-  "Type": ts.SymbolFlags.Type,
-  "Namespace": ts.SymbolFlags.Namespace,
-  "All": ts.SymbolFlags.Value | ts.SymbolFlags.Type | ts.SymbolFlags.Namespace,
-  "Variable": ts.SymbolFlags.Variable | ts.SymbolFlags.BlockScopedVariable | ts.SymbolFlags.FunctionScopedVariable,
-  "Function": ts.SymbolFlags.Function,
-  "Class": ts.SymbolFlags.Class,
-  "Interface": ts.SymbolFlags.Interface,
-  "TypeAlias": ts.SymbolFlags.TypeAlias,
-  "Enum": ts.SymbolFlags.Enum,
-  "Module": ts.SymbolFlags.Module,
+// Map enum values to TypeScript SymbolFlags
+const meaningMap: Record<SymbolMeaning, ts.SymbolFlags> = {
+  [SymbolMeaning.Value]: ts.SymbolFlags.Value,
+  [SymbolMeaning.Type]: ts.SymbolFlags.Type,
+  [SymbolMeaning.Namespace]: ts.SymbolFlags.Namespace,
+  [SymbolMeaning.All]: ts.SymbolFlags.Value | ts.SymbolFlags.Type | ts.SymbolFlags.Namespace,
+  [SymbolMeaning.Variable]: ts.SymbolFlags.Variable | ts.SymbolFlags.BlockScopedVariable | ts.SymbolFlags.FunctionScopedVariable,
+  [SymbolMeaning.Function]: ts.SymbolFlags.Function,
+  [SymbolMeaning.Class]: ts.SymbolFlags.Class,
+  [SymbolMeaning.Interface]: ts.SymbolFlags.Interface,
+  [SymbolMeaning.TypeAlias]: ts.SymbolFlags.TypeAlias,
+  [SymbolMeaning.Enum]: ts.SymbolFlags.Enum,
+  [SymbolMeaning.Module]: ts.SymbolFlags.Module,
 };
 
 export interface SymbolInfo {
@@ -55,7 +70,7 @@ export interface GetSymbolsInScopeResult {
     filePath: string;
     line: number;
   };
-  meaning: string;
+  meaning: SymbolMeaning;
   symbolsByKind: Record<string, SymbolInfo[]>;
   totalCount: number;
 }
@@ -80,6 +95,30 @@ function getSymbolKind(symbol: ts.Symbol): string {
   return "unknown";
 }
 
+// Common built-in symbols that should be included even without declarations
+const COMMON_BUILTINS = [
+  "console",
+  "process",
+  "global",
+  "Buffer",
+  "Promise",
+  "Array",
+  "Object",
+  "String",
+  "Number",
+  "Boolean",
+  "Date",
+  "RegExp",
+  "Error",
+  "Map",
+  "Set",
+  "WeakMap",
+  "WeakSet",
+  "Symbol",
+  "JSON",
+  "Math",
+] as const;
+
 function shouldIncludeSymbol(symbol: ts.Symbol): boolean {
   const name = symbol.getName();
   
@@ -91,9 +130,7 @@ function shouldIncludeSymbol(symbol: ts.Symbol): boolean {
   const declarations = symbol.getDeclarations();
   if (!declarations || declarations.length === 0) {
     // Keep common built-ins
-    return ["console", "process", "global", "Buffer", "Promise", "Array", "Object", 
-            "String", "Number", "Boolean", "Date", "RegExp", "Error", "Map", "Set",
-            "WeakMap", "WeakSet", "Symbol", "JSON", "Math"].includes(name);
+    return COMMON_BUILTINS.includes(name as any);
   }
   
   return true;
@@ -103,7 +140,7 @@ export async function handleGetSymbolsInScope({
   root,
   filePath,
   line,
-  meaning = "All",
+  meaning = SymbolMeaning.All,
 }: z.infer<typeof schema>): Promise<GetSymbolsInScopeResult> {
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);
@@ -137,7 +174,7 @@ export async function handleGetSymbolsInScope({
   // Get the symbol flags for the requested meaning
   const symbolFlags = meaningMap[meaning];
   if (symbolFlags === undefined) {
-    throw new Error(`Invalid meaning: ${meaning}. Valid values are: ${Object.keys(meaningMap).join(", ")}`);
+    throw new Error(`Invalid meaning: ${meaning}. Valid values are: ${Object.values(SymbolMeaning).join(", ")}`);
   }
 
   // Get symbols in scope

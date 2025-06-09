@@ -1,12 +1,12 @@
 import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
-import { getDiagnostics } from "../../navigations/get_diagnostics.ts";
+import { getDiagnostics } from "../navigations/get_diagnostics";
 import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
-} from "../../utils/project_cache.ts";
-import type { ToolDef } from "../types.ts";
+} from "../utils/project_cache";
+import type { ToolDef } from "../mcp/types";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),

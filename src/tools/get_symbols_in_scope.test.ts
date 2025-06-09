@@ -3,11 +3,12 @@ import { Project } from "ts-morph";
 import { 
   handleGetSymbolsInScope,
   formatGetSymbolsInScopeResult,
+  SymbolMeaning,
 } from "./get_symbols_in_scope.ts";
-import * as projectCache from "../../utils/project_cache.ts";
+import * as projectCache from "../utils/project_cache.ts";
 
 // Mock the project cache module
-vi.mock("../../utils/project_cache.ts", () => ({
+vi.mock("../utils/project_cache.ts", () => ({
   findProjectForFile: vi.fn(),
   getOrCreateSourceFileWithRefresh: vi.fn(),
 }));
@@ -74,7 +75,7 @@ enum Status {
       root: "/project",
       filePath: "test.ts",
       line: 16, // Inside processUser function
-      meaning: "All",
+      meaning: SymbolMeaning.All,
     });
 
     // Check that we have symbols in different categories
@@ -140,7 +141,7 @@ type Port = number;
       root: "/project",
       filePath: "test.ts",
       line: 8, // Inside getPort function
-      meaning: "Type",
+      meaning: SymbolMeaning.Type,
     });
 
     // Should have types but not variables
@@ -152,7 +153,7 @@ type Port = number;
       root: "/project",
       filePath: "test.ts",
       line: 8,
-      meaning: "Value",
+      meaning: SymbolMeaning.Value,
     });
 
     // Should have variables but not types - although some global types might leak through
@@ -199,7 +200,7 @@ function outer() {
       root: "/project",
       filePath: "test.ts",
       line: 8,
-      meaning: "Variable",
+      meaning: SymbolMeaning.Variable,
     });
 
     const innerVars = innerResult.symbolsByKind["Variables & Functions"];
@@ -214,7 +215,7 @@ function outer() {
       root: "/project",
       filePath: "test.ts",
       line: 12,
-      meaning: "Variable",
+      meaning: SymbolMeaning.Variable,
     });
 
     const outerVars = outerResult.symbolsByKind["Variables & Functions"];
@@ -231,7 +232,7 @@ function outer() {
         filePath: "/project/src/test.ts",
         line: 10,
       },
-      meaning: "All",
+      meaning: SymbolMeaning.All,
       symbolsByKind: {
         "Variables & Functions": [
           { name: "console", kind: "variable", type: "Console", exported: false },
@@ -287,7 +288,7 @@ const c = 3;
       root: "/project",
       filePath: "test.ts",
       line: "Special marker", // Should match line 3
-      meaning: "Variable",
+      meaning: SymbolMeaning.Variable,
     });
 
     expect(result.location.line).toBe(3);

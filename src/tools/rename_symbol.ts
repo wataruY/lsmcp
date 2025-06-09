@@ -1,13 +1,13 @@
 import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
-import { renameSymbol } from "../../commands/rename_symbol.ts";
+import { renameSymbol } from "../commands/rename_symbol";
 import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
-} from "../../utils/project_cache.ts";
-import { resolveLineParameter } from "../line_utils.ts";
-import type { ToolDef } from "../types.ts";
+} from "../utils/project_cache";
+import { resolveLineParameter } from "../mcp/line_utils";
+import type { ToolDef } from "../mcp/types";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),

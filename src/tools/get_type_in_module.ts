@@ -1,9 +1,9 @@
 import { z } from "zod";
 import path from "path";
-import { getTypeSignature } from "../../navigations/get_type_signature.ts";
-import { findProjectForFile } from "../../utils/project_cache.ts";
-import { formatTypeSignature, type FormatTypeSignatureInput } from "../signature_formatter.ts";
-import type { ToolDef } from "../types.ts";
+import { getTypeSignature } from "../navigations/get_type_signature";
+import { findProjectForFile } from "../utils/project_cache";
+import { formatTypeSignature, type FormatTypeSignatureInput } from "../mcp/signature_formatter";
+import type { ToolDef } from "../mcp/types";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),

@@ -1,7 +1,7 @@
 import { z } from "zod";
-import type { ToolDef } from "../types.ts";
+import type { ToolDef } from "../mcp/types";
 import { Project } from "ts-morph";
-import { getModuleGraph } from "../../navigations/get_module_graph.ts";
+import { getModuleGraph } from "../navigations/get_module_graph";
 
 const paramsSchema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),

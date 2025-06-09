@@ -1,6 +1,6 @@
 import { z } from "zod";
-import type { ToolDef } from "../types.ts";
-import { moveDirectory } from "../../commands/move_directory.ts";
+import type { ToolDef } from "../mcp/types";
+import { moveDirectory } from "../commands/move_directory";
 import { resolve } from "node:path";
 
 const schema = z.object({

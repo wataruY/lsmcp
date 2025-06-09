@@ -4,9 +4,9 @@ import fs from "fs/promises";
 import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
-} from "../../utils/project_cache.ts";
-import { resolveLineParameter, findSymbolInLine } from "../line_utils.ts";
-import type { ToolDef } from "../types.ts";
+} from "../utils/project_cache";
+import { resolveLineParameter, findSymbolInLine } from "../mcp/line_utils";
+import type { ToolDef } from "../mcp/types";
 import { ts } from "ts-morph";
 
 const schema = z.object({

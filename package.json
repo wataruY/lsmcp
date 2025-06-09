@@ -21,9 +21,11 @@
     "vitest": "^3.2.2"
   },
   "scripts": {
+    "prepublishOnly": "pnpm build",
     "build": "tsdown",
     "test": "vitest --run",
     "typecheck": "tsc -p . --noEmit",
-    "mcp-server": "node dist/mcp.js"
+    "mcp-server": "node dist/mcp.js",
+    "run:mcp": "pnpm build && node dist/mcp.js"
   }
 }
