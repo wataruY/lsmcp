@@ -13,6 +13,10 @@ const schema = z.object({
   filePath: z
     .string()
     .describe("File path to check for diagnostics (relative to root)"),
+  virtualContent: z
+    .string()
+    .optional()
+    .describe("Virtual content to use for diagnostics instead of file content"),
 });
 
 export interface GetDiagnosticsResult {
@@ -22,6 +26,7 @@ export interface GetDiagnosticsResult {
 export async function handleGetDiagnostics({
   root,
   filePath,
+  virtualContent,
 }: z.infer<typeof schema>): Promise<GetDiagnosticsResult> {
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);
@@ -32,18 +37,33 @@ export async function handleGetDiagnostics({
   const project = findProjectForFile(absolutePath);
 
   // Ensure the source file is loaded in the project with fresh content
-  getOrCreateSourceFileWithRefresh(absolutePath);
+  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
 
-  // Get diagnostics
-  const result = getDiagnostics(project, {
-    filePaths: [absolutePath],
-  });
+  let originalContent: string | undefined;
 
-  if (result.isErr()) {
-    throw new Error(result.error);
+  try {
+    // If virtual content is provided, temporarily replace the file content
+    if (virtualContent !== undefined) {
+      originalContent = sourceFile.getFullText();
+      sourceFile.replaceWithText(virtualContent);
+    }
+
+    // Get diagnostics
+    const result = getDiagnostics(project, {
+      filePaths: [absolutePath],
+    });
+
+    if (result.isErr()) {
+      throw new Error(result.error);
+    }
+
+    return result.value;
+  } finally {
+    // Restore original content if it was replaced
+    if (originalContent !== undefined) {
+      sourceFile.replaceWithText(originalContent);
+    }
   }
-
-  return result.value;
 }
 
 export function formatGetDiagnosticsResult(
