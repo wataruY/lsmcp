@@ -12,6 +12,7 @@ import { getDiagnosticsTool } from "./tools/get_diagnostics.ts";
 import { getModuleSymbolsTool } from "./tools/get_module_symbols.ts";
 import { getTypeInModuleTool } from "./tools/get_type_in_module.ts";
 import { getTypeAtSymbolTool } from "./tools/get_type_at_symbol.ts";
+import { getSymbolsInScopeTool } from "./tools/get_symbols_in_scope.ts";
 import { getModuleGraphTool } from "./tools/get_module_graph.ts";
 import { getRelatedModulesTool } from "./tools/get_related_modules.ts";
 
@@ -31,6 +32,7 @@ const tools = [
   getModuleSymbolsTool,
   getTypeInModuleTool,
   getTypeAtSymbolTool,
+  getSymbolsInScopeTool,
   // WIP: does not work yet correctly
   // getModuleGraphTool,
   // getRelatedModulesTool,
