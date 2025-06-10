@@ -15,8 +15,10 @@ interface MoveDirectoryResult {
 describe("move_directory", () => {
   const testDir = join(process.cwd(), "test-tmp-move-dir");
   let project: Project;
+  let originalCwd: string;
   
   beforeEach(async () => {
+    originalCwd = process.cwd();
     await mkdir(testDir, { recursive: true });
     await mkdir(join(testDir, "src", "components"), { recursive: true });
     await mkdir(join(testDir, "src", "utils"), { recursive: true });
@@ -58,6 +60,8 @@ export const useButton = () => Button();`
   });
   
   afterEach(async () => {
+    // Restore original working directory first
+    process.chdir(originalCwd);
     await rm(testDir, { recursive: true, force: true });
     clearProjectCache();
   });
