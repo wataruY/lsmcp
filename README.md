@@ -2,7 +2,7 @@
 
 > ⚠️ **This project is under active development.** APIs and features may change without notice.
 
-TypeScirpt specialized MCP server, providing advanced code manipulation and analysis capabilities.
+TypeScript specialized MCP server, providing advanced code manipulation and analysis capabilities.
 
 ## Motivation
 
@@ -18,14 +18,14 @@ The easiest way to set up typescript-mcp in your project:
 
 ```bash
 npx typescript-mcp@latest --init=claude
-# write .claude/mcp_servers.json
-# write .claude/settings.json
+# Creates/updates .mcp.json with typescript-mcp configuration
+# Creates/updates .claude/settings.json with permissions
 ```
 
 After initialization, use Claude with:
 
 ```bash
-claude --mcp-config=.claude/mcp_servers.json
+claude --mcp-config=.mcp.json
 ```
 
 ### Optional: Prompt
@@ -34,6 +34,7 @@ claude --mcp-config=.claude/mcp_servers.json
 You prefer typescript mcp (`mcp__typescript_*`) to fix code over the default `Update` and `Write` tool.
 
 - `mcp__typescript__move_file` - Semantic file move
+- `mcp__typescript__move_directory` - Move directory with automatic import updates
 - `mcp__typescript__rename_symbol` - Rename symbols across the project
 - `mcp__typescript__delete_symbol` - Delete symbols and their references
 - `mcp__typescript__find_references` - Find all references to a symbol
@@ -42,11 +43,12 @@ You prefer typescript mcp (`mcp__typescript_*`) to fix code over the default `Up
 - `mcp__typescript__get_module_symbols` - List module exports
 - `mcp__typescript__get_type_in_module` - Get detailed type signatures from modules
 - `mcp__typescript__get_type_at_symbol` - Get type information at specific symbol
+- `mcp__typescript__get_symbols_in_scope` - Get all symbols visible at a location
 ```
 
 ### Manual Setup
 
-If you prefer to configure manually, add to your mcp settings:
+If you prefer to configure manually, add to your `.mcp.json`:
 
 ```json
 {
@@ -65,12 +67,17 @@ Add permissions in `.claude/settings.json`:
 {
   "permissions": {
     "allow": [
+      "mcp__typescript__move_file",
+      "mcp__typescript__move_directory",
+      "mcp__typescript__rename_symbol",
+      "mcp__typescript__delete_symbol",
       "mcp__typescript__find_references",
       "mcp__typescript__get_definitions",
       "mcp__typescript__get_diagnostics",
       "mcp__typescript__get_module_symbols",
       "mcp__typescript__get_type_in_module",
-      "mcp__typescript__get_type_at_symbol"
+      "mcp__typescript__get_type_at_symbol",
+      "mcp__typescript__get_symbols_in_scope"
     ],
     "deny": []
   }
@@ -81,7 +88,7 @@ Add permissions in `.claude/settings.json`:
 
 ```bash
 # start with config
-$ claude --mcp-config=./claude/mcp_settings.json
+$ claude --mcp-config=.mcp.json
 
 # Rename symbol
 > examples/scratch.ts foo to bar
@@ -134,8 +141,8 @@ $ claude --mcp-config=./claude/mcp_settings.json
 
 ## MCP Tool Commands
 
-- `mcp__typescript__move_file` - Move file
-- `mcp__typescript__move_directory` - Move directory
+- `mcp__typescript__move_file` - Move file with automatic import updates
+- `mcp__typescript__move_directory` - Move directory with automatic import updates
 - `mcp__typescript__rename_symbol` - Rename symbols across the project
 - `mcp__typescript__delete_symbol` - Delete symbols and their references
 - `mcp__typescript__find_references` - Find all references to a symbol
@@ -144,6 +151,7 @@ $ claude --mcp-config=./claude/mcp_settings.json
 - `mcp__typescript__get_module_symbols` - List module exports
 - `mcp__typescript__get_type_in_module` - Get detailed type signatures from modules
 - `mcp__typescript__get_type_at_symbol` - Get type information at specific symbol location
+- `mcp__typescript__get_symbols_in_scope` - Get all symbols visible at a specific location
 
 ## Develop
 
