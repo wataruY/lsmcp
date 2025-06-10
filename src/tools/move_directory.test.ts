@@ -4,6 +4,7 @@ import { move_directory } from "./move_directory.ts";
 import { mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
+import { clearProjectCache } from "../utils/project_cache.ts";
 
 interface MoveDirectoryResult {
   success: boolean;
@@ -58,6 +59,7 @@ export const useButton = () => Button();`
   
   afterEach(async () => {
     await rm(testDir, { recursive: true, force: true });
+    clearProjectCache();
   });
   
   it("should move directory and update imports", async () => {
