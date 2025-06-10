@@ -118,6 +118,7 @@ function getOrCreateDefaultProjectSync(): Project {
         noEmit: true,
         skipLibCheck: true,
         strict: true,
+        allowImportingTsExtensions: true,
       },
     });
     // Also cache it in the main cache

@@ -50,10 +50,13 @@ for (const tool of tools) {
 }
 
 interface McpConfig {
-  mcpServers?: Record<string, {
-    command: string;
-    args: string[];
-  }>;
+  mcpServers?: Record<
+    string,
+    {
+      command: string;
+      args: string[];
+    }
+  >;
 }
 
 interface ClaudeSettings {
@@ -67,7 +70,7 @@ function readJsonFile(filePath: string): unknown {
   if (!fs.existsSync(filePath)) {
     return null;
   }
-  
+
   const content = fs.readFileSync(filePath, "utf-8");
   try {
     return JSON.parse(content);
@@ -81,8 +84,13 @@ function writeJsonFile(filePath: string, data: unknown): void {
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
 }
 
-function mergePermissions(existing: string[] = [], additions: string[] = []): string[] {
-  return [...existing, ...additions].filter((v, i, arr) => arr.indexOf(v) === i);
+function mergePermissions(
+  existing: string[] = [],
+  additions: string[] = []
+): string[] {
+  return [...existing, ...additions].filter(
+    (v, i, arr) => arr.indexOf(v) === i
+  );
 }
 
 function getTypescriptPermissions(): string[] {
@@ -97,42 +105,93 @@ function getTypescriptPermissions(): string[] {
     "mcp__typescript__get_module_symbols",
     "mcp__typescript__get_type_in_module",
     "mcp__typescript__get_type_at_symbol",
-    "mcp__typescript__get_symbols_in_scope"
+    "mcp__typescript__get_symbols_in_scope",
   ];
 }
 
-function getTypescriptMcpConfig(): McpConfig {
+function getTypescriptInfo(): {
+  version: string;
+  path: string;
+} | null {
+  try {
+    // Resolve TypeScript module path
+    const tsPath = import.meta.resolve("typescript");
+    const tsUrl = new URL(tsPath);
+    const tsFilePath = tsUrl.pathname;
+
+    // Find the package.json for TypeScript
+    let currentPath = path.dirname(tsFilePath);
+    while (currentPath !== path.dirname(currentPath)) {
+      const packageJsonPath = path.join(currentPath, "package.json");
+      if (fs.existsSync(packageJsonPath)) {
+        const packageContent = fs.readFileSync(packageJsonPath, "utf-8");
+        const packageJson = JSON.parse(packageContent) as {
+          name?: string;
+          version?: string;
+        };
+        if (packageJson.name === "typescript" && packageJson.version) {
+          return {
+            version: packageJson.version,
+            path: currentPath,
+          };
+        }
+      }
+      currentPath = path.dirname(currentPath);
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function getTypescriptMcpConfig(isGlobal: boolean = false): McpConfig {
+  if (isGlobal) {
+    return {
+      mcpServers: {
+        typescript: {
+          command: "npx",
+          args: ["-y", "typescript-mcp@latest"],
+        },
+      },
+    };
+  }
   return {
     mcpServers: {
       typescript: {
         command: "npx",
-        args: ["-y", "typescript-mcp@latest"]
-      }
-    }
+        args: ["typescript-mcp"],
+      },
+    },
   };
 }
 
-function updateMcpConfig(mcpConfigPath: string): void {
+function updateMcpConfig(
+  mcpConfigPath: string,
+  isGlobal: boolean = false
+): void {
   const result = readJsonFile(mcpConfigPath);
   const existingConfig = result ? (result as McpConfig) : {};
-  const typescriptConfig = getTypescriptMcpConfig();
-  
+  const typescriptConfig = getTypescriptMcpConfig(isGlobal);
+
   const mergedConfig: McpConfig = {
     ...existingConfig,
     mcpServers: {
       ...existingConfig.mcpServers,
-      ...typescriptConfig.mcpServers
-    }
+      ...typescriptConfig.mcpServers,
+    },
   };
-  
+
   writeJsonFile(mcpConfigPath, mergedConfig);
 }
 
-function updateClaudeSettings(claudeDir: string, claudeSettingsPath: string): void {
+function updateClaudeSettings(
+  claudeDir: string,
+  claudeSettingsPath: string
+): void {
   if (!fs.existsSync(claudeDir)) {
     fs.mkdirSync(claudeDir, { recursive: true });
   }
-  
+
   const result = readJsonFile(claudeSettingsPath);
   const existingSettings = result ? (result as ClaudeSettings) : {};
   const mergedSettings: ClaudeSettings = {
@@ -142,17 +201,24 @@ function updateClaudeSettings(claudeDir: string, claudeSettingsPath: string): vo
         existingSettings.permissions?.allow,
         getTypescriptPermissions()
       ),
-      deny: existingSettings.permissions?.deny || []
-    }
+      deny: existingSettings.permissions?.deny || [],
+    },
   };
-  
+
   writeJsonFile(claudeSettingsPath, mergedSettings);
 }
 
 // Handle initialization
 function handleInit(target: string): void {
-  if (target !== "claude") {
-    console.error(`Unknown init target: ${target}. Only 'claude' is supported.`);
+  const validTargets = ["claude", "global"];
+
+  // Default to claude (local) if not specified
+  if (!target || target === "claude") {
+    target = "claude";
+  } else if (!validTargets.includes(target)) {
+    console.error(
+      `Unknown init target: ${target}. Supported: ${validTargets.join(", ")}`
+    );
     process.exit(1);
   }
 
@@ -160,16 +226,33 @@ function handleInit(target: string): void {
   const mcpConfigPath = path.join(cwd, ".mcp.json");
   const claudeDir = path.join(cwd, ".claude");
   const claudeSettingsPath = path.join(claudeDir, "settings.json");
+  const isGlobal = target === "global";
 
   try {
-    updateMcpConfig(mcpConfigPath);
+    updateMcpConfig(mcpConfigPath, isGlobal);
     updateClaudeSettings(claudeDir, claudeSettingsPath);
-    
-    console.log(`✓ Created/updated .mcp.json with typescript-mcp configuration`);
+
+    console.log(
+      `✓ Created/updated .mcp.json with typescript-mcp configuration`
+    );
     console.log(`✓ Created/updated .claude/settings.json with permissions`);
-    console.log(`\nTo use with Claude:`);
-    console.log(`  claude --mcp-config=.mcp.json`);
-    
+
+    // Display TypeScript information
+    const tsInfo = getTypescriptInfo();
+    if (tsInfo) {
+      console.log(`\nTypeScript detected:`);
+      console.log(`  Version: ${tsInfo.version}`);
+      console.log(`  Path: ${tsInfo.path}`);
+    } else {
+      console.log(`\n⚠️  TypeScript not found in current project`);
+    }
+
+    if (!isGlobal) {
+      console.log(`\nInstall typescript-mcp as a dev dependency:`);
+      console.log(`  npm install --save-dev typescript-mcp`);
+      console.log(`  # or`);
+      console.log(`  pnpm add -D typescript-mcp`);
+    }
   } catch (error) {
     console.error("Error during initialization:", error);
     process.exit(1);
@@ -201,6 +284,14 @@ async function main() {
     await server.connect(transport);
     console.error("TypeScript Refactoring MCP Server running on stdio");
     console.error(`Project root: ${projectRoot}`);
+    
+    // Display TypeScript information
+    const tsInfo = getTypescriptInfo();
+    if (tsInfo) {
+      console.error(`Detected typescript path: ${tsInfo.path} version: ${tsInfo.version}`);
+    } else {
+      console.error("Warning: TypeScript not detected in current project");
+    }
   } catch (error) {
     console.error("Error starting MCP server:", error);
     process.exit(1);

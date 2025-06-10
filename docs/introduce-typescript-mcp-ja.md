@@ -39,18 +39,18 @@ GitHub: [typescript-mcp](https://github.com/your-repo/typescript-mcp)
 
 ```bash
 # TypeScript プロジェクトを設定
-$ npm install typescript -D
+$ npm install typescript typescript-mcp -D
 $ npx tsc --init
 
 # 初期化コマンド
-$ npx -y typescript-mcp@latest --init=claude
+$ npx typescript-mcp@latest --init=claude
 # .claude/mcp_servers.json MCP 設定を生成
 # .claude/settings.json に MCP 設定を生成
 ## CLAUDE.md 用の追加プロンプト
 # You prefer typescript mcp (`mcp__typescript_*`) to fix code over the default `Update` and `Write` tool.
 
 # MCP サーバーと一緒に起動
-$ claude --mcp-config=.claude/mcp_servers.json
+$ claude
 
 # /mcp で起動してるかわかる
 ╭─────────────────────────────────────────────────────╮

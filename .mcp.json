@@ -2,11 +2,16 @@
   "mcpServers": {
     "typescript": {
       "command": "npx",
-      "args": ["tsx", "src/mcp/server.ts"]
+      "args": [
+        "-y",
+        "typescript-mcp@latest"
+      ]
     },
     "local": {
       "command": "node",
-      "args": [".claude/mcp-server.ts"]
+      "args": [
+        ".claude/mcp-server.ts"
+      ]
     }
   }
 }

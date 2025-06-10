@@ -12,12 +12,13 @@ We can provide the AI ​​with functionality equivalent to LSP. However, LLM i
 
 ## Installation
 
-### Quick Setup with --init
+### Quick Setup with --init=claude
 
 The easiest way to set up typescript-mcp in your project:
 
 ```bash
-npx typescript-mcp@latest --init=claude
+npm install typescript typescript-mcp -D
+npx typescript-mcp --init=claude
 # Creates/updates .mcp.json with typescript-mcp configuration
 # Creates/updates .claude/settings.json with permissions
 ```
@@ -25,7 +26,7 @@ npx typescript-mcp@latest --init=claude
 After initialization, use Claude with:
 
 ```bash
-claude --mcp-config=.mcp.json
+claude
 ```
 
 ### Optional: Prompt
@@ -55,7 +56,7 @@ If you prefer to configure manually, add to your `.mcp.json`:
   "mcpServers": {
     "typescript": {
       "command": "npx",
-      "args": ["-y", "typescript-mcp@latest"]
+      "args": ["typescript-mcp"]
     }
   }
 }
@@ -88,7 +89,7 @@ Add permissions in `.claude/settings.json`:
 
 ```bash
 # start with config
-$ claude --mcp-config=.mcp.json
+$ claude
 
 # Rename symbol
 > examples/scratch.ts foo to bar
