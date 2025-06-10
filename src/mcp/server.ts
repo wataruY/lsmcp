@@ -19,6 +19,9 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
 
+// Get project root from environment variable or use current directory
+const projectRoot = process.env.PROJECT_ROOT || process.cwd();
+
 const server = new McpServer({
   name: "typescript",
   version: "1.0.0",
@@ -43,7 +46,7 @@ const tools = [
 ];
 
 for (const tool of tools) {
-  registerTool(server, tool);
+  registerTool(server, tool, projectRoot);
 }
 
 interface McpConfig {
@@ -197,6 +200,7 @@ async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
     console.error("TypeScript Refactoring MCP Server running on stdio");
+    console.error(`Project root: ${projectRoot}`);
   } catch (error) {
     console.error("Error starting MCP server:", error);
     process.exit(1);

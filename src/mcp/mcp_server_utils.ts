@@ -46,14 +46,26 @@ export function toMcpToolHandler<T>(
 /**
  * Register a tool definition with the MCP server
  */
-export function registerTool(server: McpServer, tool: ToolDef<any>) {
+export function registerTool(server: McpServer, tool: ToolDef<any>, defaultRoot?: string) {
   // Extract the shape from the ZodObject schema
   const schemaShape = (tool.schema as z.ZodObject<any>).shape;
+  
+  // Create a wrapper handler that adds default root if not provided
+  const wrappedHandler = defaultRoot && schemaShape.root ? 
+    (args: any) => {
+      // If root is not provided in args, use the default
+      const argsWithRoot = {
+        ...args,
+        root: args.root || defaultRoot
+      };
+      return tool.handler(argsWithRoot);
+    } : 
+    tool.handler;
   
   server.tool(
     tool.name,
     tool.description,
     schemaShape,
-    toMcpToolHandler(tool.handler)
+    toMcpToolHandler(wrappedHandler)
   );
 }
