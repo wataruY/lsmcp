@@ -2,16 +2,11 @@
   "mcpServers": {
     "typescript": {
       "command": "npx",
-      "args": [
-        "-y",
-        "typescript-mcp@latest"
-      ]
+      "args": ["-y", "typescript-mcp@latest"]
     },
-    "local": {
-      "command": "node",
-      "args": [
-        ".claude/mcp-server.ts"
-      ]
+    "readability": {
+      "command": "npx",
+      "args": ["-y", "@mizchi/readability", "--mcp"]
     }
   }
 }
