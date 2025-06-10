@@ -3,8 +3,9 @@ import type { ToolDef } from "./types.ts";
 import { type z } from "zod";
 
 interface ToolResult {
-  content: { type: "text"; text: string }[];
+  content: { type: "text"; text: string; [x: string]: unknown }[];
   isError?: boolean;
+  [x: string]: unknown;
 }
 
 /**
