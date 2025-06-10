@@ -3,9 +3,9 @@ import { Value } from "./types";
 /**
  * debug file for MCP server testing
  */
-const bar = 1;
+const foo = 1;
 
-console.log(bar);
+console.log(foo);
 
 export const x = 42;
 

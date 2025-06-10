@@ -32,19 +32,19 @@ claude
 ### Optional: Prompt
 
 ```markdown
-You prefer typescript mcp (`mcp__typescript_*`) to fix code over the default `Update` and `Write` tool.
+## CRITICAL: Tool Usage Priority for Refactoring
 
-- `mcp__typescript__move_file` - Semantic file move
-- `mcp__typescript__move_directory` - Move directory with automatic import updates
-- `mcp__typescript__rename_symbol` - Rename symbols across the project
-- `mcp__typescript__delete_symbol` - Delete symbols and their references
-- `mcp__typescript__find_references` - Find all references to a symbol
-- `mcp__typescript__get_definitions` - Get symbol definitions
-- `mcp__typescript__get_diagnostics` - Get TypeScript diagnostics
-- `mcp__typescript__get_module_symbols` - List module exports
-- `mcp__typescript__get_type_in_module` - Get detailed type signatures from modules
-- `mcp__typescript__get_type_at_symbol` - Get type information at specific symbol
-- `mcp__typescript__get_symbols_in_scope` - Get all symbols visible at a location
+**When performing refactoring operations (rename, move, etc.) on TypeScript code, ALWAYS use typescript MCP tools (`mcp__typescript_*`) instead of the default Edit/Write tools.**
+
+Specifically for refactoring:
+
+- For renaming symbols: ALWAYS use `mcp__typescript__rename_symbol` instead of Edit/Write
+- For moving files: ALWAYS use `mcp__typescript__move_file` instead of Bash(mv) or Write
+- For moving directories: ALWAYS use `mcp__typescript__move_directory` instead of Bash(mv)
+- For finding references: ALWAYS use `mcp__typescript__find_references` instead of Grep/Bash(grep)
+- For type analysis: ALWAYS use `mcp__typescript__get_type_*` tools
+
+**NEVER use Edit, MultiEdit, or Write tools for TypeScript refactoring operations that have a corresponding mcp\__typescript_\* tool.**
 ```
 
 ### Manual Setup
