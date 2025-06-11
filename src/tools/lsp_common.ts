@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { LSPClient } from "../_experimental/lsp_client.ts";
+import { createLSPClient } from "../_experimental/lsp_client.ts";
 
 /**
  * Common request interface for LSP-based tools
@@ -22,6 +22,11 @@ export interface McpToolResult {
 }
 
 /**
+ * LSP Client type
+ */
+export type LSPClient = ReturnType<typeof createLSPClient>;
+
+/**
  * Parses a line number from either a number or a string match
  * @param lines Array of file lines
  * @param line Line number (1-based) or string to match
@@ -32,7 +37,7 @@ export function parseLineNumber(
   line: number | string
 ): { lineIndex: number } | { error: string } {
   if (typeof line === "string") {
-    const lineIndex = lines.findIndex(l => l.includes(line));
+    const lineIndex = lines.findIndex((l) => l.includes(line));
     if (lineIndex === -1) {
       return { error: `Line containing "${line}" not found` };
     }
@@ -56,19 +61,21 @@ export function findSymbolInLine(
 ): { characterIndex: number } | { error: string } {
   let currentIndex = -1;
   let foundCount = 0;
-  
+
   while (foundCount <= symbolIndex) {
     currentIndex = lineText.indexOf(symbolName, currentIndex + 1);
     if (currentIndex === -1) {
       if (foundCount === 0) {
         return { error: `Symbol "${symbolName}" not found` };
       } else {
-        return { error: `Symbol "${symbolName}" occurrence ${symbolIndex} not found (only ${foundCount} occurrences)` };
+        return {
+          error: `Symbol "${symbolName}" occurrence ${symbolIndex} not found (only ${foundCount} occurrences)`,
+        };
       }
     }
     foundCount++;
   }
-  
+
   return { characterIndex: currentIndex };
 }
 
@@ -88,17 +95,17 @@ export interface LSPSetupResult {
 export async function setupLSPRequest(
   request: LSPToolRequest
 ): Promise<{ setup: LSPSetupResult } | { error: string }> {
-  const client = new LSPClient(request.root);
-  
+  const client = createLSPClient(request.root);
+
   try {
     // Start LSP server
     await client.start();
-    
+
     // Read file content
     const absolutePath = resolve(request.root, request.filePath);
     const fileContent = readFileSync(absolutePath, "utf-8");
     const fileUri = `file://${absolutePath}`;
-    
+
     // Parse line number
     const lines = fileContent.split("\n");
     const lineResult = parseLineNumber(lines, request.line);
@@ -106,9 +113,9 @@ export async function setupLSPRequest(
       await client.stop().catch(() => {});
       return { error: `${lineResult.error} in ${request.filePath}` };
     }
-    
+
     const targetLine = lineResult.lineIndex;
-    
+
     // Find symbol position in line
     const lineText = lines[targetLine];
     const symbolResult = findSymbolInLine(lineText, request.symbolName);
@@ -116,13 +123,13 @@ export async function setupLSPRequest(
       await client.stop().catch(() => {});
       return { error: `${symbolResult.error} on line ${targetLine + 1}` };
     }
-    
+
     // Open document in LSP
-    await client.openDocument(fileUri, fileContent);
-    
+    client.openDocument(fileUri, fileContent);
+
     // Give LSP server time to process the document
-    await new Promise<void>(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+
     return {
       setup: {
         client,
@@ -131,7 +138,7 @@ export async function setupLSPRequest(
         lines,
         targetLine,
         symbolPosition: symbolResult.characterIndex,
-      }
+      },
     };
   } catch (error) {
     await client.stop().catch(() => {});
@@ -148,11 +155,11 @@ export function formatMcpResult(
 ): McpToolResult {
   if (success) {
     return {
-      content: messages.map(text => ({ type: "text", text })),
+      content: messages.map((text) => ({ type: "text", text })),
     };
   } else {
     return {
-      content: messages.map(text => ({ type: "text", text })),
+      content: messages.map((text) => ({ type: "text", text })),
       isError: true,
     };
   }

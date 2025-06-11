@@ -57,6 +57,12 @@ importers:
       vitest:
         specifier: ^3.2.2
         version: 3.2.2(@types/node@22.15.30)(jiti@2.4.2)
+      vscode-languageserver-protocol:
+        specifier: ^3.17.5
+        version: 3.17.5
+      vscode-languageserver-types:
+        specifier: ^3.17.5
+        version: 3.17.5
 
 packages:
 

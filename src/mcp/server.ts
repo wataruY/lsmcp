@@ -18,6 +18,7 @@ import { getSymbolsInScopeTool } from "../tools/get_symbols_in_scope.ts";
 import { experimentalGetHoverTool } from "../tools/experimental_get_hover.ts";
 import { experimentalFindReferencesTool } from "../tools/experimental_find_references.ts";
 import { experimentalGetDefinitionsTool } from "../tools/experimental_get_definitions.ts";
+import { experimentalGetDiagnosticsTool } from "../tools/experimental_get_diagnostics.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
@@ -52,26 +53,33 @@ for (const tool of tools) {
   registerTool(server, tool, projectRoot);
 }
 
-// Register experimental LSP tools directly
-const experimentalTools = [
-  experimentalGetHoverTool,
-  experimentalFindReferencesTool,
-  experimentalGetDefinitionsTool,
-];
+// Register experimental LSP tools if enabled via environment variable
+const enableExperimental = process.env.ENABLE_EXPERIMENTAL_TOOLS === 'true';
 
-for (const tool of experimentalTools) {
-  server.tool(
-    tool.name,
-    tool.description,
-    tool.inputSchema.properties,
-    async (args: any) => {
-      const result = await tool.handler({
-        ...args,
-        root: args.root || projectRoot,
-      });
-      return result;
-    }
-  );
+if (enableExperimental) {
+  const experimentalTools = [
+    experimentalGetHoverTool,
+    experimentalFindReferencesTool,
+    experimentalGetDefinitionsTool,
+    experimentalGetDiagnosticsTool,
+  ];
+
+  for (const tool of experimentalTools) {
+    server.tool(
+      tool.name,
+      tool.description,
+      tool.inputSchema.properties,
+      async (args: any) => {
+        const result = await tool.handler({
+          ...args,
+          root: args.root || projectRoot,
+        });
+        return result;
+      }
+    );
+  }
+  
+  console.error("Experimental LSP-based tools enabled");
 }
 
 interface McpConfig {
@@ -119,7 +127,7 @@ function mergePermissions(
 }
 
 function getTypescriptPermissions(): string[] {
-  return [
+  const basePermissions = [
     "mcp__typescript__move_file",
     "mcp__typescript__move_directory",
     "mcp__typescript__rename_symbol",
@@ -131,10 +139,19 @@ function getTypescriptPermissions(): string[] {
     "mcp__typescript__get_type_in_module",
     "mcp__typescript__get_type_at_symbol",
     "mcp__typescript__get_symbols_in_scope",
-    "mcp__typescript__experimental_get_hover",
-    "mcp__typescript__experimental_find_references",
-    "mcp__typescript__experimental_get_definitions",
   ];
+  
+  // Only include experimental permissions if enabled
+  if (process.env.ENABLE_EXPERIMENTAL_TOOLS === 'true') {
+    basePermissions.push(
+      "mcp__typescript__experimental_get_hover",
+      "mcp__typescript__experimental_find_references",
+      "mcp__typescript__experimental_get_definitions",
+      "mcp__typescript__experimental_get_diagnostics"
+    );
+  }
+  
+  return basePermissions;
 }
 
 function getTypescriptInfo(): {

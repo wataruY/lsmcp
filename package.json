@@ -33,7 +33,9 @@
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.33.1",
     "typescript-language-server": "^4.3.4",
-    "vitest": "^3.2.2"
+    "vitest": "^3.2.2",
+    "vscode-languageserver-protocol": "^3.17.5",
+    "vscode-languageserver-types": "^3.17.5"
   },
   "peerDependencies": {
     "typescript": "*"
