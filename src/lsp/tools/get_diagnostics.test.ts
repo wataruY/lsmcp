@@ -1,12 +1,27 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { lspGetDiagnosticsTool } from "./get_diagnostics.ts";
 import { resolve } from "path";
+import { spawn } from "child_process";
+import { initialize, shutdown } from "../lsp_client.ts";
 
 describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
   const root = resolve(__dirname, "../../..");
+  
+  beforeAll(async () => {
+    // Initialize LSP client for tests
+    const process = spawn("npx", ["typescript-language-server", "--stdio"], {
+      cwd: root,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    await initialize(root, process);
+  });
+  
+  afterAll(async () => {
+    await shutdown();
+  });
 
   it("should have correct tool definition", () => {
-    expect(lspGetDiagnosticsTool.name).toBe("experimental_get_diagnostics");
+    expect(lspGetDiagnosticsTool.name).toBe("lsp_get_diagnostics");
     expect(lspGetDiagnosticsTool.description).toContain("diagnostics");
   });
 

@@ -2,8 +2,7 @@ import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { spawn } from "child_process";
-import { createLSPClient } from "../lsp_client.ts";
+import { getActiveClient } from "../lsp_client.ts";
 import type { ToolDef } from "../../mcp/types.ts";
 
 const schema = z.object({
@@ -60,20 +59,8 @@ interface LSPDiagnostic {
 async function getDiagnosticsWithLSP(
   request: GetDiagnosticsRequest
 ): Promise<Result<GetDiagnosticsSuccess, string>> {
-  let client: ReturnType<typeof createLSPClient> | null = null;
-
   try {
-    // Start TypeScript Language Server
-    const process = spawn("npx", ["typescript-language-server", "--stdio"], {
-      cwd: request.root,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-
-    // Create client with process
-    client = createLSPClient({ rootPath: request.root, process });
-
-    // Start LSP server
-    await client.start();
+    const client = getActiveClient();
 
     // Read file content or use virtual content
     const absolutePath = resolve(request.root, request.filePath);
@@ -115,8 +102,6 @@ async function getDiagnosticsWithLSP(
       code: diag.code,
     }));
 
-    await client.stop();
-
     const errorCount = diagnostics.filter((d) => d.severity === "error").length;
     const warningCount = diagnostics.filter(
       (d) => d.severity === "warning"
@@ -131,7 +116,6 @@ async function getDiagnosticsWithLSP(
       diagnostics,
     });
   } catch (error) {
-    await client?.stop().catch(() => {});
     return err(error instanceof Error ? error.message : String(error));
   }
 }

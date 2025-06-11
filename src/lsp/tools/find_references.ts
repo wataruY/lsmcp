@@ -1,8 +1,9 @@
 import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
-import { relative } from "path";
-import { setupLSPRequest } from "../../ts/tools/lsp_common.ts";
+import { relative, resolve } from "path";
+import { getActiveClient } from "../lsp_client.ts";
+import { parseLineNumber, findSymbolInLine } from "../text_utils.ts";
 import type { ToolDef } from "../../mcp/types.ts";
 
 const schema = z.object({
@@ -37,15 +38,37 @@ interface FindReferencesSuccess {
 async function findReferencesWithLSP(
   request: FindReferencesRequest
 ): Promise<Result<FindReferencesSuccess, string>> {
-  const setupResult = await setupLSPRequest(request);
-  if ("error" in setupResult) {
-    return err(setupResult.error);
-  }
-
-  const { setup } = setupResult;
-  const { client, fileUri, targetLine, symbolPosition } = setup;
-
   try {
+    const client = getActiveClient();
+    
+    // Read file content
+    const absolutePath = resolve(request.root, request.filePath);
+    const fileContent = readFileSync(absolutePath, "utf-8");
+    const fileUri = `file://${absolutePath}`;
+    
+    // Parse line number
+    const lines = fileContent.split("\n");
+    const lineResult = parseLineNumber(lines, request.line);
+    if ("error" in lineResult) {
+      return err(`${lineResult.error} in ${request.filePath}`);
+    }
+    
+    const targetLine = lineResult.lineIndex;
+    
+    // Find symbol position in line
+    const lineText = lines[targetLine];
+    const symbolResult = findSymbolInLine(lineText, request.symbolName);
+    if ("error" in symbolResult) {
+      return err(`${symbolResult.error} on line ${targetLine + 1}`);
+    }
+    
+    const symbolPosition = symbolResult.characterIndex;
+    
+    // Open document in LSP
+    client.openDocument(fileUri, fileContent);
+    
+    // Give LSP server time to process the document
+    await new Promise<void>((resolve) => setTimeout(resolve, 1000));
     // Find references
     const locations = await client.findReferences(fileUri, {
       line: targetLine,
@@ -88,8 +111,6 @@ async function findReferencesWithLSP(
       });
     }
 
-    await client.stop();
-
     return ok({
       message: `Found ${references.length} reference${
         references.length === 1 ? "" : "s"
@@ -97,7 +118,6 @@ async function findReferencesWithLSP(
       references,
     });
   } catch (error) {
-    await client.stop().catch(() => {});
     return err(error instanceof Error ? error.message : String(error));
   }
 }

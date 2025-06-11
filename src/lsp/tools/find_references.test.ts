@@ -1,12 +1,27 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { lspFindReferencesTool } from "./find_references.ts";
 import { resolve } from "path";
+import { spawn } from "child_process";
+import { initialize, shutdown } from "../lsp_client.ts";
 
 describe("experimentalFindReferencesTool", () => {
   const root = resolve(__dirname, "../../..");
+  
+  beforeAll(async () => {
+    // Initialize LSP client for tests
+    const process = spawn("npx", ["typescript-language-server", "--stdio"], {
+      cwd: root,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    await initialize(root, process);
+  });
+  
+  afterAll(async () => {
+    await shutdown();
+  });
 
   it("should have correct tool definition", () => {
-    expect(lspFindReferencesTool.name).toBe("find_references");
+    expect(lspFindReferencesTool.name).toBe("lsp_find_references");
     expect(lspFindReferencesTool.description).toContain("references");
     expect(lspFindReferencesTool.schema.shape).toBeDefined();
     expect(lspFindReferencesTool.schema.shape.root).toBeDefined();

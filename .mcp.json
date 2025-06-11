@@ -2,9 +2,6 @@
   "mcpServers": {
     "typescript": {
       "command": "npx",
-      "env": {
-        "TSGO": "true"
-      },
       "args": ["tsx", "src/mcp/server.ts"]
     },
     "readability": {

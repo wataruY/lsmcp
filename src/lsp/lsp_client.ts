@@ -1,172 +1,89 @@
-import { ChildProcess } from "child_process";
 import { EventEmitter } from "events";
+import { Position, Location, Diagnostic } from "vscode-languageserver-types";
+import { ChildProcess } from "child_process";
 import {
-  Position,
-  Location,
-  Diagnostic,
-  Hover,
-  Definition,
-  DocumentUri,
-  integer,
-  MarkupContent,
-  MarkedString,
-} from "vscode-languageserver-types";
+  LSPMessage,
+  TextDocumentPositionParams,
+  PublishDiagnosticsParams,
+  ReferenceParams,
+  InitializeParams,
+  InitializeResult,
+  DidOpenTextDocumentParams,
+  DidChangeTextDocumentParams,
+  HoverResult,
+  DefinitionResult,
+  ReferencesResult,
+  HoverContents,
+  LSPClientState,
+  LSPClientConfig,
+  LSPClient,
+} from "./lsp_types.ts";
 
-// LSP Message types
-interface LSPMessage {
-  jsonrpc: "2.0";
-  id?: number | string;
-  method?: string;
-  params?: unknown;
-  result?: unknown;
-  error?: {
-    code: number;
-    message: string;
-    data?: unknown;
-  };
+// Re-export types for backward compatibility
+export type {
+  HoverResult,
+  DefinitionResult,
+  ReferencesResult,
+  HoverContents,
+  LSPClientConfig,
+  LSPClient,
+};
+
+// Global state for active client
+let activeClient: LSPClient | null = null;
+
+/**
+ * Initialize a global LSP client with the given process
+ * @param rootPath The root path of the project
+ * @param process The LSP server process
+ * @param languageId The language ID (default: "typescript")
+ * @returns The initialized LSP client
+ */
+export async function initialize(
+  rootPath: string,
+  process: ChildProcess,
+  languageId: string = "typescript"
+): Promise<LSPClient> {
+  // Stop existing client if any
+  if (activeClient) {
+    await activeClient.stop().catch(() => {});
+  }
+
+  // Create new client
+  activeClient = createLSPClient({
+    rootPath,
+    process,
+    languageId,
+  });
+
+  // Start the client
+  await activeClient.start();
+
+  return activeClient;
 }
 
-// LSP Protocol types
-interface TextDocumentIdentifier {
-  uri: DocumentUri;
+/**
+ * Get the active LSP client
+ * @throws Error if no client is initialized
+ * @returns The active LSP client
+ */
+export function getActiveClient(): LSPClient {
+  if (!activeClient) {
+    throw new Error("No active LSP client. Call initialize() first.");
+  }
+  return activeClient;
 }
 
-interface TextDocumentPositionParams {
-  textDocument: TextDocumentIdentifier;
-  position: Position;
+/**
+ * Shutdown and clear the active LSP client
+ */
+export async function shutdown(): Promise<void> {
+  if (activeClient) {
+    await activeClient.stop().catch(() => {});
+    activeClient = null;
+  }
 }
-
-interface PublishDiagnosticsParams {
-  uri: DocumentUri;
-  diagnostics: Diagnostic[];
-}
-
-interface ReferenceContext {
-  includeDeclaration: boolean;
-}
-
-interface ReferenceParams extends TextDocumentPositionParams {
-  context: ReferenceContext;
-}
-
-interface ClientCapabilities {
-  textDocument?: {
-    synchronization?: {
-      dynamicRegistration?: boolean;
-      willSave?: boolean;
-      willSaveWaitUntil?: boolean;
-      didSave?: boolean;
-    };
-    publishDiagnostics?: {
-      relatedInformation?: boolean;
-    };
-    definition?: {
-      linkSupport?: boolean;
-    };
-    references?: Record<string, unknown>;
-    hover?: {
-      contentFormat?: string[];
-    };
-  };
-}
-
-interface InitializeParams {
-  processId: number | null;
-  clientInfo?: {
-    name: string;
-    version?: string;
-  };
-  locale?: string;
-  rootPath?: string | null;
-  rootUri: DocumentUri | null;
-  capabilities: ClientCapabilities;
-}
-
-interface InitializeResult {
-  capabilities: {
-    textDocumentSync?: number;
-    hoverProvider?: boolean;
-    definitionProvider?: boolean;
-    referencesProvider?: boolean;
-    [key: string]: unknown;
-  };
-  serverInfo?: {
-    name: string;
-    version?: string;
-  };
-}
-
-interface TextDocumentItem {
-  uri: DocumentUri;
-  languageId: string;
-  version: integer;
-  text: string;
-}
-
-interface DidOpenTextDocumentParams {
-  textDocument: TextDocumentItem;
-}
-
-interface VersionedTextDocumentIdentifier extends TextDocumentIdentifier {
-  version: integer;
-}
-
-interface TextDocumentContentChangeEvent {
-  text: string;
-}
-
-interface DidChangeTextDocumentParams {
-  textDocument: VersionedTextDocumentIdentifier;
-  contentChanges: TextDocumentContentChangeEvent[];
-}
-
-// Type aliases
-export type HoverResult = Hover | null;
-export type DefinitionResult = Definition | Location | Location[] | null;
-export type ReferencesResult = Location[] | null;
-
-// Hover contents types
-export type HoverContents =
-  | string
-  | MarkedString
-  | MarkupContent
-  | (string | MarkedString | MarkupContent)[];
-
-interface LSPClientState {
-  process: ChildProcess | null;
-  messageId: number;
-  responseHandlers: Map<number | string, (response: LSPMessage) => void>;
-  buffer: string;
-  contentLength: number;
-  diagnostics: Map<string, Diagnostic[]>;
-  eventEmitter: EventEmitter;
-  rootPath: string;
-  languageId: string;
-}
-
-export interface LSPClientConfig {
-  rootPath: string;
-  process: ChildProcess;
-  languageId?: string; // Default: "typescript"
-  clientName?: string; // Default: "lsp-client"
-  clientVersion?: string; // Default: "0.1.0"
-}
-
-export function createLSPClient(config: LSPClientConfig): LSPClientState & {
-  start: () => Promise<void>;
-  stop: () => Promise<void>;
-  openDocument: (uri: string, text: string) => void;
-  updateDocument: (uri: string, text: string, version: number) => void;
-  findReferences: (uri: string, position: Position) => Promise<Location[]>;
-  getDefinition: (
-    uri: string,
-    position: Position
-  ) => Promise<Location | Location[]>;
-  getHover: (uri: string, position: Position) => Promise<HoverResult>;
-  getDiagnostics: (uri: string) => Diagnostic[];
-  on: (event: string, listener: (...args: unknown[]) => void) => void;
-  emit: (event: string, ...args: unknown[]) => boolean;
-} {
+export function createLSPClient(config: LSPClientConfig): LSPClient {
   const state: LSPClientState = {
     process: config.process,
     messageId: 0,

@@ -22,11 +22,48 @@ import { lspGetDiagnosticsTool } from "../lsp/tools/get_diagnostics.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
+import { spawn } from "child_process";
+import { createLSPClient } from "../lsp/index.ts";
+import type { LSPClient } from "../lsp/lsp_types.ts";
 
 // Get project root from environment variable or use current directory
 const projectRoot = process.env.PROJECT_ROOT || process.cwd();
 
 const USE_TSGO: boolean = process.env.TSGO != null;
+
+// Tsgo client management
+let _tsgoClient: LSPClient | null = null;
+
+/**
+ * Create a tsgo-specific LSP client
+ *
+ * @param rootPath - The root path of the project
+ * @returns An LSP client configured for tsgo
+ */
+function createTsgoLSPClient(rootPath: string): LSPClient {
+  if (_tsgoClient) {
+    return _tsgoClient;
+  }
+  // For @typescript/native-preview, we should use npx to run it
+  // as it's a npm package that provides the tsgo binary
+  const tsgoProcess = spawn(
+    "npx",
+    ["@typescript/native-preview", "-lsp", "-stdio"],
+    {
+      cwd: rootPath,
+      stdio: ["pipe", "pipe", "pipe"],
+    }
+  );
+
+  _tsgoClient = createLSPClient({
+    rootPath,
+    process: tsgoProcess,
+    languageId: "typescript", // tsgo is a TypeScript implementation
+    clientName: "tsgo-mcp-lsp-client",
+    clientVersion: "0.1.0",
+  });
+  return _tsgoClient;
+}
 
 const server = new McpServer({
   name: "typescript",
@@ -63,17 +100,6 @@ for (const tool of tools) {
 
 if (USE_TSGO) {
   console.log("[tsgo] Using experimental TypeScript MCP server tools");
-  // const resolved = import.meta.resolve("@typescript/native-preview");
-  // if (resolved) {
-  //   console.error(
-  //     "[tsgo] Using @typescript/native-preview for TypeScript MCP server",
-  //     resolved
-  //   );
-  // } else {
-  //   console.error(
-  //     "Error: @typescript/native-preview is not installed. Please run `npm install @typescript/native-preview`."
-  //   );
-  // }
 }
 
 interface McpConfig {
@@ -349,6 +375,3 @@ main().catch((error: unknown) => {
   console.error("Fatal error:", error);
   process.exit(1);
 });
-function checkTsgoInstalled() {
-  throw new Error("Function not implemented.");
-}

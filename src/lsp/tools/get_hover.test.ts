@@ -1,12 +1,27 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { lspGetHoverTool } from "./get_hover.ts";
 import { resolve } from "path";
+import { spawn } from "child_process";
+import { initialize, shutdown } from "../lsp_client.ts";
 
 describe("experimentalGetHoverTool", () => {
   const root = resolve(__dirname, "../../..");
+  
+  beforeAll(async () => {
+    // Initialize LSP client for tests
+    const process = spawn("npx", ["typescript-language-server", "--stdio"], {
+      cwd: root,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    await initialize(root, process);
+  });
+  
+  afterAll(async () => {
+    await shutdown();
+  });
 
   it("should have correct tool definition", () => {
-    expect(lspGetHoverTool.name).toBe("experimental_get_hover");
+    expect(lspGetHoverTool.name).toBe("lsp_get_hover");
     expect(lspGetHoverTool.description).toContain("hover information");
     expect(lspGetHoverTool.schema.shape).toBeDefined();
     expect(lspGetHoverTool.schema.shape.root).toBeDefined();

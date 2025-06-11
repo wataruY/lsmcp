@@ -1,21 +1,10 @@
 import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
-import {
-  setupLSPRequest,
-  findTargetInFile,
-} from "../../ts/tools/lsp_common.ts";
+import { getActiveClient } from "../lsp_client.ts";
+import { parseLineNumber, findSymbolInLine, findTargetInFile } from "../text_utils.ts";
 import type { ToolDef } from "../../mcp/types.ts";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { spawn } from "child_process";
-import { createLSPClient } from "../lsp_client.ts";
-
-/**
- * No-op function for catch handlers
- */
-function noop(): void {
-  // Intentionally empty
-}
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -66,20 +55,8 @@ interface GetHoverSuccess {
 async function getHoverWithoutLine(
   request: GetHoverRequest
 ): Promise<Result<GetHoverSuccess, string>> {
-  let client: ReturnType<typeof createLSPClient> | null = null;
-
   try {
-    // Start TypeScript Language Server
-    const process = spawn("npx", ["typescript-language-server", "--stdio"], {
-      cwd: request.root,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-
-    // Create client with process
-    client = createLSPClient({ rootPath: request.root, process });
-
-    // Start LSP server
-    await client.start();
+    const client = getActiveClient();
 
     // Read file content
     const absolutePath = resolve(request.root, request.filePath);
@@ -90,7 +67,6 @@ async function getHoverWithoutLine(
     // Find target text in file
     const targetResult = findTargetInFile(lines, request.target);
     if ("error" in targetResult) {
-      await client.stop().catch(noop);
       return err(`${targetResult.error} in ${request.filePath}`);
     }
 
@@ -107,11 +83,8 @@ async function getHoverWithoutLine(
       character: symbolPosition,
     })) as HoverResult | null;
 
-    await client.stop();
-
     return formatHoverResult(result, request, targetLine, symbolPosition);
   } catch (error) {
-    await client?.stop().catch(noop);
     return err(error instanceof Error ? error.message : String(error));
   }
 }
@@ -189,34 +162,45 @@ async function getHover(
     return getHoverWithoutLine(request);
   }
 
-  // Convert target to LSPToolRequest format
-  const lspRequest = {
-    root: request.root,
-    filePath: request.filePath,
-    line: request.line,
-    symbolName: request.target,
-  };
-
-  const setupResult = await setupLSPRequest(lspRequest);
-  if ("error" in setupResult) {
-    return err(setupResult.error);
-  }
-
-  const { setup } = setupResult;
-  const { client, fileUri, targetLine, symbolPosition } = setup;
-
   try {
+    const client = getActiveClient();
+    
+    // Read file content
+    const absolutePath = resolve(request.root, request.filePath);
+    const fileContent = readFileSync(absolutePath, "utf-8");
+    const fileUri = `file://${absolutePath}`;
+    
+    // Parse line number
+    const lines = fileContent.split("\n");
+    const lineResult = parseLineNumber(lines, request.line);
+    if ("error" in lineResult) {
+      return err(`${lineResult.error} in ${request.filePath}`);
+    }
+    
+    const targetLine = lineResult.lineIndex;
+    
+    // Find symbol position in line
+    const lineText = lines[targetLine];
+    const symbolResult = findSymbolInLine(lineText, request.target);
+    if ("error" in symbolResult) {
+      return err(`${symbolResult.error} on line ${targetLine + 1}`);
+    }
+    
+    const symbolPosition = symbolResult.characterIndex;
+    
+    // Open document in LSP
+    client.openDocument(fileUri, fileContent);
+    
+    // Give LSP server time to process the document
+    await new Promise<void>((resolve) => setTimeout(resolve, 1000));
     // Get hover info
     const result = (await client.getHover(fileUri, {
       line: targetLine,
       character: symbolPosition,
     })) as HoverResult | null;
 
-    await client.stop();
-
     return formatHoverResult(result, request, targetLine, symbolPosition);
   } catch (error) {
-    await client.stop().catch(noop);
     return err(error instanceof Error ? error.message : String(error));
   }
 }
