@@ -1,6 +1,6 @@
 {
   "name": "typescript-mcp",
-  "version": "0.0.8",
+  "version": "0.0.9-rc.0",
   "type": "module",
   "license": "MIT",
   "exports": {
