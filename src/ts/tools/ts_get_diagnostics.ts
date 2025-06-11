@@ -78,7 +78,7 @@ export const getDiagnosticsTool: ToolDef<typeof schema> = {
   description:
     "Get TypeScript diagnostics (errors, warnings) for a single file",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await handleGetDiagnostics(args);
     return formatGetDiagnosticsResult(result);
   },

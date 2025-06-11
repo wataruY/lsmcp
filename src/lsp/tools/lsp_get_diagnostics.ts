@@ -130,7 +130,7 @@ export const lspGetDiagnosticsTool: ToolDef<typeof schema> = {
   description:
     "Get TypeScript diagnostics (errors, warnings) for a file using LSP",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await getDiagnosticsWithLSP(args);
     if (result.isOk()) {
       const messages = [result.value.message];

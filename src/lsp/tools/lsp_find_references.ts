@@ -126,7 +126,7 @@ export const lspFindReferencesTool: ToolDef<typeof schema> = {
   name: "lsp_find_references",
   description: "Find all references to symbol across the codebase using LSP",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await findReferencesWithLSP(args);
     if (result.isOk()) {
       const messages = [result.value.message];

@@ -72,7 +72,7 @@ export const useButton = () => Button();`
     process.chdir(testDir);
 
     try {
-      const result = await move_directory.handler({
+      const result = await move_directory.execute({
         sourcePath: "src/components",
         targetPath: "src/ui/components",
         overwrite: false,
@@ -113,7 +113,7 @@ export const useButton = () => Button();`
 
     try {
       await expect(
-        move_directory.handler({
+        move_directory.execute({
           sourcePath: "src/nonexistent",
           targetPath: "src/moved",
         })
@@ -135,7 +135,7 @@ export const useButton = () => Button();`
     process.chdir(testDir);
 
     try {
-      const result = await move_directory.handler({
+      const result = await move_directory.execute({
         sourcePath: "src/components",
         targetPath: "src/ui/components",
         overwrite: true,

@@ -168,7 +168,7 @@ export const lspGetDefinitionsTool: ToolDef<typeof schema> = {
   name: "lsp_get_definitions",
   description: "Get the definition(s) of a TypeScript symbol using LSP",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await getDefinitionsWithLSP(args);
     if (result.isOk()) {
       const messages = [result.value.message];

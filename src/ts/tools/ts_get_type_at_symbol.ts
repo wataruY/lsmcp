@@ -211,7 +211,7 @@ export const getTypeAtSymbolTool: ToolDef<typeof schema> = {
   description:
     "Get type information for a TypeScript/JavaScript symbol at a specific location",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await handleGetTypeAtSymbol(args);
     return formatGetTypeAtSymbolResult(result, args.root);
   },

@@ -186,7 +186,7 @@ export const moveFileTool: ToolDef<typeof schema> = {
   description:
     "Move a TypeScript/JavaScript file to a new location and update all import statements",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await handleMoveFile(args);
     if (result.isErr()) {
       throw new Error(result.error);

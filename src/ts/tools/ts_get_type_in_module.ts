@@ -61,7 +61,7 @@ export const getTypeInModuleTool: ToolDef<typeof schema> = {
   description:
     "Get detailed signature information for a specific type (function, class, interface, type alias, etc.) from a module",
   schema,
-  handler: (args) => {
+  execute: (args) => {
     const result = handleGetTypeInModule(args);
     return Promise.resolve(formatTypeSignature(result));
   },

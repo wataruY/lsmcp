@@ -235,7 +235,7 @@ export const lspGetHoverTool: ToolDef<typeof schema> = {
   description:
     "Get hover information (type signature, documentation) for a TypeScript symbol using LSP",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await getHover(args);
     if (result.isOk()) {
       const messages = [result.value.message];

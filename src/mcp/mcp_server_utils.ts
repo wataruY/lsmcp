@@ -58,9 +58,9 @@ export function registerTool(server: McpServer, tool: ToolDef<any>, defaultRoot?
         ...args,
         root: args.root || defaultRoot
       };
-      return tool.handler(argsWithRoot);
+      return tool.execute(argsWithRoot);
     } : 
-    tool.handler;
+    tool.execute;
   
   server.tool(
     tool.name,

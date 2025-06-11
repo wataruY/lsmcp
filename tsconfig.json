@@ -11,5 +11,5 @@
     "allowImportingTsExtensions": true,
     "lib": ["esnext", "dom"]
   },
-  "exclude": ["tests/fixtures/**/*", "examples/**/*"]
+  "exclude": ["tests/fixtures/**/*", "playground/**/*"]
 }

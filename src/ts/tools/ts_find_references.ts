@@ -100,7 +100,7 @@ export const findReferencesTool: ToolDef<typeof schema> = {
   description:
     "Find all references to a TypeScript/JavaScript symbol across the codebase",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await handleFindReferences(args);
     return formatFindReferencesResult(result, args.root);
   },

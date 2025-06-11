@@ -96,7 +96,7 @@ export const getModuleSymbolsTool: ToolDef<typeof schema> = {
   description:
     "Get all exported symbols from a TypeScript/JavaScript module without detailed signatures",
   schema,
-  handler: (args) => {
+  execute: (args) => {
     const result = handleGetModuleSymbols(args);
     return Promise.resolve(formatGetModuleSymbolsResult(result));
   },

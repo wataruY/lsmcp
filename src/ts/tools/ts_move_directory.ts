@@ -17,7 +17,7 @@ export const move_directory: ToolDef<typeof schema> = {
   description:
     "Move a directory to a new location, updating all TypeScript imports and references automatically",
   schema,
-  handler: async (input) => {
+  execute: async (input) => {
     const rootPath = process.cwd();
     const source = resolve(rootPath, input.sourcePath);
     const target = resolve(rootPath, input.targetPath);

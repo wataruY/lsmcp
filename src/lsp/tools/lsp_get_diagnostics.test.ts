@@ -4,7 +4,7 @@ import { resolve } from "path";
 import { spawn } from "child_process";
 import { initialize, shutdown } from "../lsp_client.ts";
 
-describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
+describe("lspGetDiagnosticsTool", { timeout: 10000 }, () => {
   const root = resolve(__dirname, "../../..");
   
   beforeAll(async () => {
@@ -35,7 +35,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       }
     `;
 
-    const result = await lspGetDiagnosticsTool.handler({
+    const result = await lspGetDiagnosticsTool.execute({
       root,
       filePath: "test.ts",
       virtualContent,
@@ -56,7 +56,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       }
     `;
 
-    const result = await lspGetDiagnosticsTool.handler({
+    const result = await lspGetDiagnosticsTool.execute({
       root,
       filePath: "test.ts",
       virtualContent,
@@ -73,7 +73,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       const unused = 456; // This might generate a warning
     `;
 
-    const result = await lspGetDiagnosticsTool.handler({
+    const result = await lspGetDiagnosticsTool.execute({
       root,
       filePath: "test.js",
       virtualContent,
@@ -84,7 +84,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
 
   it("should handle non-existent file error", async () => {
     await expect(
-      lspGetDiagnosticsTool.handler({
+      lspGetDiagnosticsTool.execute({
         root,
         filePath: "non-existent-file-12345.ts",
       })
@@ -92,7 +92,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
   });
 
   it("should get diagnostics for actual file", async () => {
-    const result = await lspGetDiagnosticsTool.handler({
+    const result = await lspGetDiagnosticsTool.execute({
       root,
       filePath: "examples/scratch.ts",
     });

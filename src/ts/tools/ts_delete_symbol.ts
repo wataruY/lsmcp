@@ -79,7 +79,7 @@ export const deleteSymbolTool: ToolDef<typeof schema> = {
   description:
     "Delete a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await handleDeleteSymbol(args);
     return formatDeleteSymbolResult(result);
   },

@@ -346,7 +346,7 @@ export const getSymbolsInScopeTool: ToolDef<typeof schema> = {
   description:
     "Get all symbols (variables, types, functions, etc.) visible at a specific location in a TypeScript/JavaScript file",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await handleGetSymbolsInScope(args);
     return formatGetSymbolsInScopeResult(result, args.root);
   },

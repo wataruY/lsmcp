@@ -179,7 +179,7 @@ export const renameSymbolTool: ToolDef<typeof schema> = {
   description:
     "Rename a TypeScript symbol (variable, function, class, etc.) across the codebase",
   schema,
-  handler: async (args) => {
+  execute: async (args) => {
     const result = await handleRenameSymbol(args);
     if (result.isErr()) {
       throw new Error(result.error);

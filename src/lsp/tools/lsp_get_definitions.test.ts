@@ -4,7 +4,7 @@ import { resolve } from "path";
 import { spawn } from "child_process";
 import { initialize, shutdown } from "../lsp_client.ts";
 
-describe("experimentalGetDefinitionsTool", () => {
+describe("lspGetDefinitionsTool", () => {
   const root = resolve(__dirname, "../../..");
   
   beforeAll(async () => {
@@ -28,7 +28,7 @@ describe("experimentalGetDefinitionsTool", () => {
 
   it("should find definition of an exported symbol", async () => {
     // Using the example connected.ts file which imports from "./scratch"
-    const result = await lspGetDefinitionsTool.handler({
+    const result = await lspGetDefinitionsTool.execute({
       root,
       filePath: "examples/connected.ts",
       line: 1, // export line
@@ -41,7 +41,7 @@ describe("experimentalGetDefinitionsTool", () => {
 
   it.skip("should find definition of a type in the same project", async () => {
     // The types.ts file has Value type used in getValue function
-    const result = await lspGetDefinitionsTool.handler({
+    const result = await lspGetDefinitionsTool.execute({
       root,
       filePath: "examples/types.ts",
       line: 10, // getValue function that returns Value type
@@ -52,7 +52,7 @@ describe("experimentalGetDefinitionsTool", () => {
   });
 
   it.skip("should handle string line matching", async () => {
-    const result = await lspGetDefinitionsTool.handler({
+    const result = await lspGetDefinitionsTool.execute({
       root,
       filePath: "examples/types.ts",
       line: "ValueWithOptional",
@@ -64,7 +64,7 @@ describe("experimentalGetDefinitionsTool", () => {
 
   it("should handle symbol not found on line", async () => {
     await expect(
-      lspGetDefinitionsTool.handler({
+      lspGetDefinitionsTool.execute({
         root,
         filePath: "examples/types.ts",
         line: 1,
@@ -75,7 +75,7 @@ describe("experimentalGetDefinitionsTool", () => {
 
   it("should handle line not found", async () => {
     await expect(
-      lspGetDefinitionsTool.handler({
+      lspGetDefinitionsTool.execute({
         root,
         filePath: "examples/types.ts",
         line: "nonexistent line",
@@ -86,7 +86,7 @@ describe("experimentalGetDefinitionsTool", () => {
 
   it("should handle file not found", async () => {
     await expect(
-      lspGetDefinitionsTool.handler({
+      lspGetDefinitionsTool.execute({
         root,
         filePath: "nonexistent.ts",
         line: 1,
@@ -96,7 +96,7 @@ describe("experimentalGetDefinitionsTool", () => {
   });
 
   it.skip("should handle no definition found for built-in symbols", async () => {
-    const result = await lspGetDefinitionsTool.handler({
+    const result = await lspGetDefinitionsTool.execute({
       root,
       filePath: "examples/types.ts",
       line: 11, // The return statement line

@@ -136,7 +136,7 @@ export const getDefinitionsTool: ToolDef<typeof schema> = {
   name: "get_definitions",
   description: "Get the definition(s) of a TypeScript symbol",
   schema,
-  handler: async ({ root, filePath, line, symbolName, before, after }) => {
+  execute: async ({ root, filePath, line, symbolName, before, after }) => {
     const result = await handleGetDefinitions({
       root,
       filePath,

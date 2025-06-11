@@ -281,5 +281,5 @@ export const getModuleGraphTool: ToolDef<typeof paramsSchema> = {
   description:
     "Analyze the module dependency graph of a TypeScript/JavaScript project",
   schema: paramsSchema,
-  handler: handleGetModuleGraph,
+  execute: handleGetModuleGraph,
 };

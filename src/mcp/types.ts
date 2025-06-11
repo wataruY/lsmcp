@@ -4,5 +4,5 @@ export interface ToolDef<S extends ZodType> {
   name: string;
   description: string;
   schema: S;
-  handler: (args: S["_output"]) => Promise<string>;
+  execute: (args: S["_output"]) => Promise<string>;
 }
