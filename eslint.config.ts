@@ -106,6 +106,16 @@ export default tseslint.config(
       "@typescript-eslint/no-empty-function": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-deprecated": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          vars: "all",
+          varsIgnorePattern: "^_",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+        },
+      ],
+
       "@typescript-eslint/await-thenable": "warn",
       "@typescript-eslint/require-await": "warn",
       "@typescript-eslint/restrict-template-expressions": "off",

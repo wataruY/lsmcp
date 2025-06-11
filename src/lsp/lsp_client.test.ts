@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createLSPClient } from "./lsp_client.ts";
-import { type Hover } from "vscode-languageserver-types";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { spawn } from "child_process";
