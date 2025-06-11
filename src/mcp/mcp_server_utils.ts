@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolDef } from "./types.ts";
-import { type z } from "zod";
+import { type z, type ZodObject } from "zod";
 
 interface ToolResult {
   content: { type: "text"; text: string; [x: string]: unknown }[];
@@ -46,26 +46,38 @@ export function toMcpToolHandler<T>(
 /**
  * Register a tool definition with the MCP server
  */
-export function registerTool(server: McpServer, tool: ToolDef<any>, defaultRoot?: string) {
-  // Extract the shape from the ZodObject schema
-  const schemaShape = (tool.schema as z.ZodObject<any>).shape;
-  
-  // Create a wrapper handler that adds default root if not provided
-  const wrappedHandler = defaultRoot && schemaShape.root ? 
-    (args: any) => {
-      // If root is not provided in args, use the default
-      const argsWithRoot = {
-        ...args,
-        root: args.root || defaultRoot
-      };
-      return tool.execute(argsWithRoot);
-    } : 
-    tool.execute;
-  
-  server.tool(
-    tool.name,
-    tool.description,
-    schemaShape,
-    toMcpToolHandler(wrappedHandler)
-  );
+export function registerTool<S extends z.ZodType>(
+  server: McpServer,
+  tool: ToolDef<S>,
+  defaultRoot?: string
+) {
+  // Check if the schema is a ZodObject to extract shape
+  // @ts-expect-error - ZodObject is a specific type of ZodType
+  if (tool.schema instanceof ZodObject) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const schemaShape = tool.schema.shape;
+
+    // Create a wrapper handler that adds default root if not provided
+    const wrappedHandler =
+      defaultRoot && "root" in schemaShape
+        ? (args: z.infer<S>) => {
+            // If root is not provided in args, use the default
+            const argsWithRoot = {
+              ...args,
+              root: (args as Record<string, unknown>).root || defaultRoot,
+            } as z.infer<S>;
+            return tool.execute(argsWithRoot);
+          }
+        : tool.execute;
+
+    server.tool(
+      tool.name,
+      tool.description,
+      schemaShape,
+      toMcpToolHandler(wrappedHandler)
+    );
+  } else {
+    // For non-ZodObject schemas, register without shape
+    server.tool(tool.name, tool.description, toMcpToolHandler(tool.execute));
+  }
 }

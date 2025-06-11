@@ -43,9 +43,8 @@ src/
     commands/*.ts    # API with Side Effect
     navigations/*.ts # API for analyze
     tools/           # TypeScript specific implementation
-  tsgo/              # Next TypeScript Go implementation on LSP
   mcp/
-    server.ts    # MCP Server
+    typescript-mcp.ts # MCP Server
 ```
 
 ## TODO

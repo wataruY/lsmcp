@@ -88,7 +88,12 @@ export function getDiagnostics(
           filePath: diagSourceFile?.getFilePath() || filePath,
           line,
           column,
-          message: diagnostic.getMessageText().toString(),
+          message: (() => {
+            const messageText = diagnostic.getMessageText();
+            return typeof messageText === 'string' 
+              ? messageText
+              : messageText.getMessageText();
+          })(),
           category: categoryStr,
           code: diagnostic.getCode(),
           length,

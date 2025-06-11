@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { describe, expect, it } from "vitest";
 import { Project } from "ts-morph";
 import { getTypeSignature } from "./get_type_signature.ts";
@@ -20,12 +22,12 @@ describe("getTypeSignature", () => {
     expect(result.isOk()).toBe(true);
     if (result.isOk()) {
       const { typeName, signature } = result.value;
-      
+
       expect(typeName).toBe("ok");
       expect(signature.kind).toBe("function");
       expect(signature.functionSignatures).toBeDefined();
       expect(signature.functionSignatures!.length).toBeGreaterThan(0);
-      
+
       // Check that signatures have the expected structure
       for (const sig of signature.functionSignatures!) {
         expect(sig.parameters).toBeDefined();
@@ -91,31 +93,31 @@ describe("getTypeSignature", () => {
       expect(signature.kind).toBe("function");
       expect(signature.functionSignatures).toBeDefined();
       expect(signature.functionSignatures!).toHaveLength(1);
-      
+
       const sig = signature.functionSignatures![0];
       expect(sig.typeParameters).toBeDefined();
       expect(sig.typeParameters).toContainEqual("T extends string");
-      
+
       // Check parameters
       expect(sig.parameters).toHaveLength(4);
-      
+
       const [required, optional, withDefault, rest] = sig.parameters;
-      
+
       expect(required.name).toBe("required");
       expect(required.type).toBe("string");
       expect(required.optional).toBe(false);
-      
+
       expect(optional.name).toBe("optional");
       expect(optional.type).toBe("number");
       expect(optional.optional).toBe(true);
-      
+
       expect(withDefault.name).toBe("withDefault");
       expect(withDefault.type).toBe("boolean");
       expect(withDefault.defaultValue).toBe("true");
-      
+
       expect(rest.name).toBe("rest");
       expect(rest.type).toContain("T[]");
-      
+
       // Check return type
       expect(sig.returnType).toBe("{ result: string; count: number; }");
     }
@@ -133,7 +135,7 @@ describe("getTypeSignature", () => {
       expect(signature.kind).toBe("function");
       expect(signature.functionSignatures).toBeDefined();
       expect(signature.functionSignatures!).toHaveLength(1);
-      
+
       const sig = signature.functionSignatures![0];
       expect(sig.typeParameters).toBeDefined();
       expect(sig.typeParameters).toContainEqual("T");
@@ -174,23 +176,26 @@ describe("getTypeSignature", () => {
       const { signature } = result.value;
       expect(signature.kind).toBe("function");
       expect(signature.functionSignatures).toBeDefined();
-      
+
       // Should have 3 overload signatures (not the implementation)
       expect(signature.functionSignatures!.length).toBeGreaterThanOrEqual(3);
-      
+
       // Check each overload
-      const stringOverload = signature.functionSignatures!.find((s: any) => 
-        s.parameters[0]?.type === "string" && s.returnType === "string"
+      const stringOverload = signature.functionSignatures!.find(
+        (s: any) =>
+          s.parameters[0]?.type === "string" && s.returnType === "string"
       );
       expect(stringOverload).toBeDefined();
-      
-      const numberOverload = signature.functionSignatures!.find((s: any) => 
-        s.parameters[0]?.type === "number" && s.returnType === "number"
+
+      const numberOverload = signature.functionSignatures!.find(
+        (s: any) =>
+          s.parameters[0]?.type === "number" && s.returnType === "number"
       );
       expect(numberOverload).toBeDefined();
-      
-      const booleanOverload = signature.functionSignatures!.find((s: any) => 
-        s.parameters[0]?.type === "boolean" && s.returnType === "boolean"
+
+      const booleanOverload = signature.functionSignatures!.find(
+        (s: any) =>
+          s.parameters[0]?.type === "boolean" && s.returnType === "boolean"
       );
       expect(booleanOverload).toBeDefined();
     }
@@ -236,7 +241,7 @@ describe("getTypeSignature", () => {
       expect(signature.kind).toBe("type");
       expect(signature.definitions).toBeDefined();
       expect(signature.definitions!.length).toBeGreaterThan(0);
-      
+
       // Should have at least one definition
       const def = signature.definitions![0];
       expect(def.filePath).toContain("test-aliases.ts");
@@ -268,12 +273,12 @@ describe("getTypeSignature", () => {
       const { signature } = result.value;
       expect(signature.kind).toBe("function");
       expect(signature.functionSignatures).toBeDefined();
-      
+
       // Check that return types don't contain import paths
       for (const sig of signature.functionSignatures!) {
         expect(sig.returnType).not.toContain('import("');
         expect(sig.returnType).toContain("Ok<");
-        
+
         // Check parameters don't contain import paths
         for (const param of sig.parameters) {
           expect(param.type).not.toContain('import("');

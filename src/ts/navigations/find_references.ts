@@ -62,7 +62,7 @@ export function findReferences(
 
     const referencedSymbols = identifier.findReferences();
 
-    if (!referencedSymbols || referencedSymbols.length === 0) {
+    if (referencedSymbols.length === 0) {
       return ok({
         message: `No references found for symbol "${symbolName}"`,
         references: [],

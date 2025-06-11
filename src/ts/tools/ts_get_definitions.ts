@@ -103,27 +103,25 @@ export function formatGetDefinitionsResult(
     // Add context lines if requested
     if (options?.before || options?.after) {
       const defSourceFile = getOrCreateSourceFileWithRefresh(def.filePath);
-      if (defSourceFile) {
-        const fullText = defSourceFile.getFullText();
-        const lines = fullText.split("\n");
+      const fullText = defSourceFile.getFullText();
+      const lines = fullText.split("\n");
 
-        const startLine = Math.max(0, def.line - 1 - (options.before || 0));
-        const endLine = Math.min(lines.length, def.line + (options.after || 0));
+      const startLine = Math.max(0, def.line - 1 - (options.before || 0));
+      const endLine = Math.min(lines.length, def.line + (options.after || 0));
 
-        if (options.before && startLine < def.line - 1) {
-          output.push("");
-          for (let i = startLine; i < def.line - 1; i++) {
-            output.push(`    ${i + 1}: ${lines[i]}`);
-          }
+      if (options.before && startLine < def.line - 1) {
+        output.push("");
+        for (let i = startLine; i < def.line - 1; i++) {
+          output.push(`    ${i + 1}: ${lines[i]}`);
         }
+      }
 
-        // Show the definition line with arrow
-        output.push(`  → ${def.line}: ${lines[def.line - 1]}`);
+      // Show the definition line with arrow
+      output.push(`  → ${def.line}: ${lines[def.line - 1]}`);
 
-        if (options.after && def.line < endLine) {
-          for (let i = def.line; i < endLine; i++) {
-            output.push(`    ${i + 1}: ${lines[i]}`);
-          }
+      if (options.after && def.line < endLine) {
+        for (let i = def.line; i < endLine; i++) {
+          output.push(`    ${i + 1}: ${lines[i]}`);
         }
       }
     }

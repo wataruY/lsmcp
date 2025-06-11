@@ -1,5 +1,5 @@
 {
-  "deno.enablePaths": [".claude/deno-server.ts"],
   "eslint.enable": true,
-  "eslint.quiet": true
+  "eslint.quiet": true,
+  "typescript.experimental.useTsgo": true
 }

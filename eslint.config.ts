@@ -51,6 +51,8 @@ export default tseslint.config(
       ".claude/**",
       "examples/**",
       "tests/fixtures/**",
+      "playground/**",
+      "tmp/**",
     ],
   },
   eslint.configs.recommended,

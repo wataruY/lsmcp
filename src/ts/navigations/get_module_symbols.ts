@@ -168,7 +168,8 @@ function analyzeSymbol(name: string, symbol: Symbol): ModuleSymbol | null {
   const actualSymbol = symbol.getAliasedSymbol() || symbol;
   
   // Check symbol flags to determine the kind
-  const flags = (actualSymbol as any).getFlags?.() || (actualSymbol as any).flags;
+  const compilerSymbol = actualSymbol.compilerSymbol;
+  const flags = compilerSymbol.getFlags();
   
   if (flags) {
     if (flags & ts.SymbolFlags.TypeAlias) {

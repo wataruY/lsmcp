@@ -11,7 +11,8 @@
     "prepublishOnly": "pnpm build",
     "build": "tsdown",
     "test": "vitest --run",
-    "typecheck": "tsc -p . --noEmit",
+    "typecheck": "tsgo -p . --noEmit",
+    "typecheck:tsc": "tsc -p . --noEmit",
     "lint": "eslint . --quiet",
     "lint:refactor": "eslint .",
     "run:mcp": "pnpm build && node dist/mcp.js"

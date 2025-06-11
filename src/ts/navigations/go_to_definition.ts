@@ -63,7 +63,7 @@ export function goToDefinition(
     // Get definition nodes
     const definitionNodes = identifier.getDefinitionNodes();
 
-    if (!definitionNodes || definitionNodes.length === 0) {
+    if (definitionNodes.length === 0) {
       return ok({
         message: `No definitions found for symbol "${symbolName}"`,
         definitions: [],

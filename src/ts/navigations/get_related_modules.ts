@@ -1,6 +1,7 @@
 import { type Project } from "ts-morph";
 import { type Result, ok, err } from "neverthrow";
 import { isAbsolute, resolve, relative, dirname, join } from "path";
+import { existsSync } from "fs";
 
 export interface GetRelatedModulesRequest {
   filePath: string;
@@ -172,8 +173,7 @@ function resolveModulePath(
     if (!sourceFile) {
       // Try to add the file if it exists on disk
       try {
-        const fs = require('fs');
-        if (fs.existsSync(filePath)) {
+        if (existsSync(filePath)) {
           // Use addSourceFileAtPath which handles tsconfig exclusions better
           sourceFile = project.addSourceFileAtPath(filePath);
         }

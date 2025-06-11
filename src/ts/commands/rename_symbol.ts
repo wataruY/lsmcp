@@ -37,7 +37,12 @@ export function createProject(tsConfigPath?: string): Project {
     if (errors.length > 0) {
       throw new Error(
         `Failed to read tsconfig: ${errors
-          .map((e) => e.getMessageText())
+          .map((e) => {
+            const messageText = e.getMessageText();
+            return typeof messageText === "string"
+              ? messageText
+              : messageText.getMessageText();
+          })
           .join(", ")}`
       );
     }
@@ -73,9 +78,13 @@ export async function renameSymbol(
     } catch (error) {
       return err(error instanceof Error ? error.message : String(error));
     }
-    
+
     if (!node) {
-      return err(`Symbol "${request.symbolName}" not found at line ${String(request.line)}`);
+      return err(
+        `Symbol "${request.symbolName}" not found at line ${String(
+          request.line
+        )}`
+      );
     }
 
     // リネーム前の状態を記録
@@ -88,7 +97,13 @@ export async function renameSymbol(
         renameInStrings: request.renameInStrings || false,
       });
     } else if (hasRenameMethod(node)) {
-      (node as any).rename(request.newName, {
+      const renameableNode = node as Node & {
+        rename: (
+          newName: string,
+          options?: { renameInComments?: boolean; renameInStrings?: boolean }
+        ) => void;
+      };
+      renameableNode.rename(request.newName, {
         renameInComments: request.renameInComments || false,
         renameInStrings: request.renameInStrings || false,
       });
@@ -123,18 +138,19 @@ function findSymbolAtLine(
 
   sourceFile.forEachDescendant((node) => {
     const startLine = sourceFile.getLineAndColumnAtPos(node.getStart()).line;
-    
+
     // 指定された行から始まるノードのみをチェック
     if (line === startLine) {
       // 識別子の場合
       if (Node.isIdentifier(node) && node.getText() === symbolName) {
         // 親が名前付きノードの場合は、親ノードを優先
         const parent = node.getParent();
-        if (parent && hasGetNameMethod(parent)) {
+        if (hasGetNameMethod(parent)) {
           try {
-            if ((parent as any).getName() === symbolName) {
+            const namedParent = parent as Node & { getName: () => string };
+            if (namedParent.getName() === symbolName) {
               // 親ノードを使用（重複を避けるため）
-              if (!candidateNodes.some(n => n === parent)) {
+              if (!candidateNodes.some((n) => n === parent)) {
                 candidateNodes.push(parent);
               }
               return; // 識別子自体は追加しない
@@ -149,7 +165,8 @@ function findSymbolAtLine(
       // 名前付きノードの場合（クラス、関数、変数など）
       if (hasGetNameMethod(node)) {
         try {
-          if ((node as any).getName() === symbolName) {
+          const namedNode = node as Node & { getName: () => string };
+          if (namedNode.getName() === symbolName) {
             candidateNodes.push(node);
           }
         } catch {
@@ -171,31 +188,40 @@ function findSymbolAtLine(
   const uniqueNodes = candidateNodes.filter((node) => {
     // 同じ位置から始まる他のノードがある場合、より具体的なノードを優先
     const nodeStart = node.getStart();
-    const duplicates = candidateNodes.filter(n => n.getStart() === nodeStart);
-    
+    const duplicates = candidateNodes.filter((n) => n.getStart() === nodeStart);
+
     if (duplicates.length > 1) {
       // 名前付きノード（クラス、関数など）を優先
-      const namedNodes = duplicates.filter(n => hasGetNameMethod(n) || Node.isVariableDeclaration(n));
+      const namedNodes = duplicates.filter(
+        (n) => hasGetNameMethod(n) || Node.isVariableDeclaration(n)
+      );
       if (namedNodes.length > 0) {
         return namedNodes[0] === node;
       }
     }
-    
+
     return true;
   });
 
   // まだ複数の候補がある場合、同じ行の異なる位置にある可能性
   if (uniqueNodes.length > 1) {
     // 列位置でソートして、同じ列位置のものだけをチェック
-    const firstNodeCol = sourceFile.getLineAndColumnAtPos(uniqueNodes[0].getStart()).column;
-    const sameColumnNodes = uniqueNodes.filter(n => 
-      sourceFile.getLineAndColumnAtPos(n.getStart()).column === firstNodeCol
+    const firstNodeCol = sourceFile.getLineAndColumnAtPos(
+      uniqueNodes[0].getStart()
+    ).column;
+    const sameColumnNodes = uniqueNodes.filter(
+      (n) =>
+        sourceFile.getLineAndColumnAtPos(n.getStart()).column === firstNodeCol
     );
-    
+
     if (sameColumnNodes.length > 1) {
-      throw new Error(`Multiple occurrences of symbol "${symbolName}" found on line ${String(line)}. Please be more specific.`);
+      throw new Error(
+        `Multiple occurrences of symbol "${symbolName}" found on line ${String(
+          line
+        )}. Please be more specific.`
+      );
     }
-    
+
     // 異なる列位置の場合は最初の出現を使用
     return uniqueNodes[0];
   }

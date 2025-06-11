@@ -1,6 +1,7 @@
 import { type Project } from "ts-morph";
 import { type Result, ok, err } from "neverthrow";
 import { isAbsolute, resolve, relative, dirname, join } from "path";
+import { existsSync } from "fs";
 
 export interface ModuleNode {
   filePath: string;
@@ -54,20 +55,24 @@ export function getModuleGraph(
     // Resolve entry points to absolute paths
     const resolvedEntryPoints: string[] = [];
     for (const entryPoint of request.entryPoints) {
-      const absolutePath = isAbsolute(entryPoint) 
-        ? entryPoint 
+      const absolutePath = isAbsolute(entryPoint)
+        ? entryPoint
         : resolve(request.rootDir, entryPoint);
-      
+
       // Add the file to the project if it doesn't exist
       let sourceFile = project.getSourceFile(absolutePath);
       if (!sourceFile) {
         try {
           sourceFile = project.addSourceFileAtPath(absolutePath);
         } catch (error) {
-          return err(`Failed to add entry point ${entryPoint}: ${error instanceof Error ? error.message : String(error)}`);
+          return err(
+            `Failed to add entry point ${entryPoint}: ${
+              error instanceof Error ? error.message : String(error)
+            }`
+          );
         }
       }
-      
+
       resolvedEntryPoints.push(sourceFile.getFilePath());
       graph.entryPoints.push(sourceFile.getFilePath());
     }
@@ -77,6 +82,7 @@ export function getModuleGraph(
     const queue = [...resolvedEntryPoints];
 
     while (queue.length > 0) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const filePath = queue.shift()!;
       if (visited.has(filePath)) continue;
       visited.add(filePath);
@@ -96,7 +102,11 @@ export function getModuleGraph(
       const importDeclarations = sourceFile.getImportDeclarations();
       for (const importDecl of importDeclarations) {
         const moduleSpecifier = importDecl.getModuleSpecifierValue();
-        const resolvedModule = resolveModulePath(filePath, moduleSpecifier, project);
+        const resolvedModule = resolveModulePath(
+          filePath,
+          moduleSpecifier,
+          project
+        );
         if (resolvedModule) {
           node.imports.push(resolvedModule);
           // Add to queue for processing
@@ -111,7 +121,11 @@ export function getModuleGraph(
       for (const exportDecl of exportDeclarations) {
         const moduleSpecifier = exportDecl.getModuleSpecifierValue();
         if (moduleSpecifier) {
-          const resolvedModule = resolveModulePath(filePath, moduleSpecifier, project);
+          const resolvedModule = resolveModulePath(
+            filePath,
+            moduleSpecifier,
+            project
+          );
           if (resolvedModule) {
             node.exports.push(resolvedModule);
             // Add to queue for processing
@@ -160,12 +174,12 @@ export function getModuleGraph(
     }
 
     // Convert to output format
-    const files = Array.from(graph.nodes.values()).map(node => ({
+    const files = Array.from(graph.nodes.values()).map((node) => ({
       path: relative(request.rootDir, node.filePath),
-      imports: node.imports.map(p => relative(request.rootDir, p)),
-      exports: node.exports.map(p => relative(request.rootDir, p)),
+      imports: node.imports.map((p) => relative(request.rootDir, p)),
+      exports: node.exports.map((p) => relative(request.rootDir, p)),
       exportedSymbols: node.exportedSymbols,
-      importedBy: node.importedFrom.map(p => relative(request.rootDir, p)),
+      importedBy: node.importedFrom.map((p) => relative(request.rootDir, p)),
     }));
 
     return ok({
@@ -176,14 +190,18 @@ export function getModuleGraph(
           totalFiles: graph.nodes.size,
           totalImports,
           totalExports,
-          circularDependencies: circularDeps.map(cycle => 
-            cycle.map(p => relative(request.rootDir, p))
+          circularDependencies: circularDeps.map((cycle) =>
+            cycle.map((p) => relative(request.rootDir, p))
           ),
         },
       },
     });
   } catch (error) {
-    return err(`Failed to analyze module graph: ${error instanceof Error ? error.message : String(error)}`);
+    return err(
+      `Failed to analyze module graph: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
   }
 }
 
@@ -193,7 +211,7 @@ function resolveModulePath(
   project: Project
 ): string | null {
   // Skip external modules
-  if (!moduleSpecifier.startsWith('.') && !moduleSpecifier.startsWith('/')) {
+  if (!moduleSpecifier.startsWith(".") && !moduleSpecifier.startsWith("/")) {
     return null;
   }
 
@@ -201,16 +219,15 @@ function resolveModulePath(
   const resolvedPath = resolve(fromDir, moduleSpecifier);
 
   // Try with TypeScript extensions
-  const extensions = ['.ts', '.tsx', '.d.ts', '.js', '.jsx'];
-  
+  const extensions = [".ts", ".tsx", ".d.ts", ".js", ".jsx"];
+
   // Helper function to try to get or add a source file
   const tryGetOrAddSourceFile = (filePath: string): string | null => {
     let sourceFile = project.getSourceFile(filePath);
     if (!sourceFile) {
       // Try to add the file if it exists on disk
       try {
-        const fs = require('fs');
-        if (fs.existsSync(filePath)) {
+        if (existsSync(filePath)) {
           // Use addSourceFileAtPath which handles tsconfig exclusions better
           sourceFile = project.addSourceFileAtPath(filePath);
         }
@@ -263,12 +280,12 @@ function detectCircularDependencies(graph: ModuleGraph): string[][] {
           if (cycleStart !== -1) {
             const cycle = path.slice(cycleStart);
             cycle.push(importPath); // Complete the cycle
-            
+
             // Check if this cycle is already recorded (in any rotation)
-            const isNewCycle = !cycles.some(existingCycle => 
+            const isNewCycle = !cycles.some((existingCycle) =>
               areCyclesEqual(cycle, existingCycle)
             );
-            
+
             if (isNewCycle) {
               cycles.push(cycle);
             }
@@ -292,7 +309,7 @@ function detectCircularDependencies(graph: ModuleGraph): string[][] {
 
 function areCyclesEqual(cycle1: string[], cycle2: string[]): boolean {
   if (cycle1.length !== cycle2.length) return false;
-  
+
   // Find the starting point of cycle1 in cycle2
   const start = cycle2.indexOf(cycle1[0]);
   if (start === -1) return false;

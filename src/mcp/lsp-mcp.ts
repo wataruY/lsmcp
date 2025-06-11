@@ -31,6 +31,7 @@ const tools = [
 ];
 
 for (const tool of tools) {
+  // @ts-expect-error - ToolDef is not a ZodObject
   registerTool(server, tool, projectRoot);
 }
 

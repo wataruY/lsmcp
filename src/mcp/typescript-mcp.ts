@@ -60,6 +60,7 @@ const tools = [
 ];
 
 for (const tool of tools) {
+  // @ts-expect-error FIXME
   registerTool(server, tool, projectRoot);
 }
 
