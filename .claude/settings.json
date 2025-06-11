@@ -9,6 +9,7 @@
       "Bash(pnpm run:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
+      "mcp__readability__read_url_content_as_markdown",
       "mcp__typescript__find_references",
       "mcp__typescript__get_definitions",
       "mcp__typescript__get_diagnostics",
