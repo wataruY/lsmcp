@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatDeleteSymbolResult } from "./delete_symbol.ts";
-import type { DeleteSymbolResult } from "./delete_symbol.ts";
+import { formatDeleteSymbolResult } from "./ts_delete_symbol.ts";
+import type { DeleteSymbolResult } from "./ts_delete_symbol.ts";
 
 describe("delete_symbol", () => {
   describe("formatDeleteSymbolResult", () => {

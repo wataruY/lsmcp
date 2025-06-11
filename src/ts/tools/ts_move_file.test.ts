@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatMoveFileResult } from "./move_file.ts";
-import type { MoveFileResult } from "./move_file.ts";
+import { formatMoveFileResult } from "./ts_move_file.ts";
+import type { MoveFileResult } from "./ts_move_file.ts";
 
 describe("move_file", () => {
   describe("formatMoveFileResult", () => {

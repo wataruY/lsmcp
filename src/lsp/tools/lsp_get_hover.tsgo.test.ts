@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { lspGetHoverTool } from "./get_hover.ts";
+import { lspGetHoverTool } from "./lsp_get_hover.ts";
 import { resolve } from "path";
 import { spawn } from "child_process";
 import { initialize, shutdown } from "../lsp_client.ts";
@@ -153,21 +153,23 @@ describe("lspGetHoverTool with native-preview LSP", () => {
       root,
       filePath: "examples/types.ts",
       line: 1,
-      target: "type",
+      target: "Value",
     });
 
     expect(result).toContain("Hover information");
+    expect(result).toContain("Value");
   });
 
-  it("should get hover for export keyword", async () => {
+  it("should get hover for exported function", async () => {
     const result = await lspGetHoverTool.handler({
       root,
       filePath: "examples/types.ts",
-      line: 1,
-      target: "export",
+      line: 10,
+      target: "getValue",
     });
 
     expect(result).toContain("Hover information");
+    expect(result).toContain("getValue");
   });
 
   it("should handle object literal hover", async () => {
@@ -181,16 +183,16 @@ describe("lspGetHoverTool with native-preview LSP", () => {
     expect(result).toBeTruthy();
   });
 
-  it("should get hover for string literal type", async () => {
+  it("should get hover for property v", async () => {
     const result = await lspGetHoverTool.handler({
       root,
       filePath: "examples/types.ts",
       line: 11,
-      target: '"value"',
+      target: "v",
     });
 
     expect(result).toContain("Hover information");
-    expect(result).toContain('"value"');
+    expect(result).toContain("v:");
   });
 
   it("should handle multiple targets on same line", async () => {

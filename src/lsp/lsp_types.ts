@@ -120,6 +120,10 @@ export interface DidChangeTextDocumentParams {
   contentChanges: TextDocumentContentChangeEvent[];
 }
 
+export interface DidCloseTextDocumentParams {
+  textDocument: TextDocumentIdentifier;
+}
+
 // Type aliases
 export type HoverResult = Hover | null;
 export type DefinitionResult = Definition | Location | Location[] | null;
@@ -156,6 +160,7 @@ export type LSPClient = {
   start: () => Promise<void>;
   stop: () => Promise<void>;
   openDocument: (uri: string, text: string) => void;
+  closeDocument: (uri: string) => void;
   updateDocument: (uri: string, text: string, version: number) => void;
   findReferences: (uri: string, position: Position) => Promise<Location[]>;
   getDefinition: (

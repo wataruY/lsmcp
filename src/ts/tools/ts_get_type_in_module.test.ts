@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatGetTypeInModuleResult } from "./get_type_in_module";
-import type { GetTypeInModuleResult } from "./get_type_in_module";
+import { formatGetTypeInModuleResult } from "./ts_get_type_in_module.ts";
+import type { GetTypeInModuleResult } from "./ts_get_type_in_module.ts";
 import type { TypeSignature } from "../navigations/get_type_signature";
 
 describe("get_type_in_module", () => {

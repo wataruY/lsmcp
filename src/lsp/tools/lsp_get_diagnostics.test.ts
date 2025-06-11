@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { lspGetDiagnosticsTool } from "./get_diagnostics.ts";
+import { lspGetDiagnosticsTool } from "./lsp_get_diagnostics.ts";
 import { resolve } from "path";
 import { spawn } from "child_process";
 import { initialize, shutdown } from "../lsp_client.ts";

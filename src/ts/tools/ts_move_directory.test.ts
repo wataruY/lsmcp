@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Project } from "ts-morph";
-import { move_directory } from "./move_directory.ts";
+import { move_directory } from "./ts_move_directory.ts";
 import { mkdir, writeFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatGetDiagnosticsResult } from "./get_diagnostics.ts";
-import type { GetDiagnosticsResult } from "./get_diagnostics.ts";
+import { formatGetDiagnosticsResult } from "./ts_get_diagnostics.ts";
+import type { GetDiagnosticsResult } from "./ts_get_diagnostics.ts";
 
 describe("get_diagnostics", () => {
   describe("formatGetDiagnosticsResult", () => {

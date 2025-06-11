@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { lspFindReferencesTool } from "./find_references.ts";
+import { lspFindReferencesTool } from "./lsp_find_references.ts";
 import { resolve } from "path";
 import { spawn } from "child_process";
 import { initialize, shutdown } from "../lsp_client.ts";
 
 describe("experimentalFindReferencesTool", () => {
   const root = resolve(__dirname, "../../..");
-  
+
   beforeAll(async () => {
     // Initialize LSP client for tests
     const process = spawn("npx", ["typescript-language-server", "--stdio"], {
@@ -15,7 +15,7 @@ describe("experimentalFindReferencesTool", () => {
     });
     await initialize(root, process);
   });
-  
+
   afterAll(async () => {
     await shutdown();
   });

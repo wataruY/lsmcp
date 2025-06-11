@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { lspGetHoverTool } from "./get_hover.ts";
+import { lspGetHoverTool } from "./lsp_get_hover.ts";
 import { resolve } from "path";
 import { spawn } from "child_process";
 import { initialize, shutdown } from "../lsp_client.ts";
@@ -197,12 +197,13 @@ describe("lspGetHoverTool with fresh LSP instance", () => {
     const result = await lspGetHoverTool.handler({
       root,
       filePath: "examples/types.ts",
-      line: 1,
-      target: "export",
+      line: 5,
+      target: "ValueWithOptional",
     });
 
     // The result should contain hover information
     expect(result).toBeTruthy();
     expect(result).toContain("Hover information");
+    expect(result).toContain("ValueWithOptional");
   });
 });

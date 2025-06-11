@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatRenameSymbolResult } from "./rename_symbol.ts";
-import type { RenameSymbolResult } from "./rename_symbol.ts";
+import { formatRenameSymbolResult } from "./ts_rename_symbol.ts";
+import type { RenameSymbolResult } from "./ts_rename_symbol.ts";
 
 describe("rename_symbol", () => {
   describe("formatRenameSymbolResult", () => {

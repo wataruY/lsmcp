@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatGetTypeAtSymbolResult } from "./get_type_at_symbol.ts";
-import type { GetTypeAtSymbolResult } from "./get_type_at_symbol.ts";
+import { formatGetTypeAtSymbolResult } from "./ts_get_type_at_symbol.ts";
+import type { GetTypeAtSymbolResult } from "./ts_get_type_at_symbol.ts";
 
 describe("get_type_at_symbol", () => {
   describe("formatGetTypeAtSymbolResult", () => {

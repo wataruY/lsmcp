@@ -107,6 +107,11 @@ async function getDiagnosticsWithLSP(
       (d) => d.severity === "warning"
     ).length;
 
+    // Close the document if using virtual content to avoid caching issues
+    if (request.virtualContent) {
+      client.closeDocument(fileUri);
+    }
+
     return ok({
       message: `Found ${errorCount} error${
         errorCount !== 1 ? "s" : ""

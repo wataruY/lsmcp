@@ -10,6 +10,7 @@ import {
   InitializeResult,
   DidOpenTextDocumentParams,
   DidChangeTextDocumentParams,
+  DidCloseTextDocumentParams,
   HoverResult,
   DefinitionResult,
   ReferencesResult,
@@ -281,6 +282,17 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     sendNotification("textDocument/didOpen", params);
   }
 
+  function closeDocument(uri: string): void {
+    const params: DidCloseTextDocumentParams = {
+      textDocument: {
+        uri,
+      },
+    };
+    sendNotification("textDocument/didClose", params);
+    // Also clear diagnostics for this document
+    state.diagnostics.delete(uri);
+  }
+
   function updateDocument(uri: string, text: string, version: number): void {
     const params: DidChangeTextDocumentParams = {
       textDocument: {
@@ -391,6 +403,7 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     start,
     stop,
     openDocument,
+    closeDocument,
     updateDocument,
     findReferences,
     getDefinition,

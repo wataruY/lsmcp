@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatFindReferencesResult } from "./find_references.ts";
-import type { FindReferencesResult } from "./find_references.ts";
+import { formatFindReferencesResult } from "./ts_find_references.ts";
+import type { FindReferencesResult } from "./ts_find_references.ts";
 
 describe("find_references", () => {
   describe("formatFindReferencesResult", () => {

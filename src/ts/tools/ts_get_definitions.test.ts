@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatGetDefinitionsResult } from "./get_definitions.ts";
-import type { GetDefinitionsResult } from "./get_definitions.ts";
+import { formatGetDefinitionsResult } from "./ts_get_definitions.ts";
+import type { GetDefinitionsResult } from "./ts_get_definitions.ts";
 
 describe("get_definitions", () => {
   describe("formatGetDefinitionsResult", () => {

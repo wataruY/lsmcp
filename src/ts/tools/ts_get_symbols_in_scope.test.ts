@@ -4,7 +4,7 @@ import {
   handleGetSymbolsInScope,
   formatGetSymbolsInScopeResult,
   SymbolMeaning,
-} from "./get_symbols_in_scope.ts";
+} from "./ts_get_symbols_in_scope.ts";
 import * as projectCache from "../project_cache.ts";
 
 // Mock the project cache module

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatGetModuleSymbolsResult } from "./get_module_symbols.ts";
-import type { GetModuleSymbolsResult } from "./get_module_symbols.ts";
+import { formatGetModuleSymbolsResult } from "./ts_get_module_symbols.ts";
+import type { GetModuleSymbolsResult } from "./ts_get_module_symbols.ts";
 
 describe("get_module_symbols", () => {
   describe("formatGetModuleSymbolsResult", () => {
