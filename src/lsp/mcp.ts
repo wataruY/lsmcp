@@ -4,10 +4,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerTool } from "../mcp/mcp_server_utils.ts";
-import { lspFindReferencesTool } from "../lsp/tools/find_references.ts";
-import { lspGetDefinitionsTool } from "../lsp/tools/get_definitions.ts";
-import { lspGetDiagnosticsTool } from "../lsp/tools/get_diagnostics.ts";
-import { lspGetHoverTool } from "../lsp/tools/get_hover.ts";
+import { lspFindReferencesTool } from "./tools/find_references.ts";
+import { lspGetDefinitionsTool } from "./tools/get_definitions.ts";
+import { lspGetDiagnosticsTool } from "./tools/get_diagnostics.ts";
+import { lspGetHoverTool } from "./tools/get_hover.ts";
 
 const projectRoot = process.env.PROJECT_ROOT || process.cwd();
 

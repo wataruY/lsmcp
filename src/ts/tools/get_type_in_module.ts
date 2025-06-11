@@ -5,7 +5,7 @@ import { findProjectForFile } from "../project_cache";
 import {
   formatTypeSignature,
   type FormatTypeSignatureInput,
-} from "../../mcp/signature_formatter";
+} from "../signature_formatter";
 import type { ToolDef } from "../../mcp/types";
 
 const schema = z.object({
