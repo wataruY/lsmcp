@@ -64,7 +64,17 @@ for (const tool of tools) {
 }
 
 if (USE_TSGO) {
-  console.log("[tsgo] Using experimental TypeScript MCP server tools");
+  // Use tsgo LSP
+  const tsgoProcess = spawn(
+    "npx",
+    ["@typescript/native-preview", "--lsp", "-stdio"],
+    {
+      cwd: projectRoot,
+      stdio: ["pipe", "pipe", "pipe"],
+    }
+  );
+  await initializeLSPClient(projectRoot, tsgoProcess, "typescript");
+  console.error("[tsgo] Initialized tsgo LSP client");
 }
 
 interface McpConfig {
@@ -322,20 +332,6 @@ async function main() {
     console.error(`Project root: ${projectRoot}`);
 
     // Initialize LSP client for LSP-based tools when USE_TSGO is enabled
-    if (USE_TSGO) {
-      // Use tsgo LSP
-      const tsgoProcess = spawn(
-        "npx",
-        ["@typescript/native-preview", "-lsp", "-stdio"],
-        {
-          cwd: projectRoot,
-          stdio: ["pipe", "pipe", "pipe"],
-        }
-      );
-      await initializeLSPClient(projectRoot, tsgoProcess, "typescript");
-      console.error("[tsgo] Initialized tsgo LSP client");
-    }
-
     // Display TypeScript information
     const tsInfo = getTypescriptInfo();
     if (tsInfo) {
