@@ -30,6 +30,9 @@ importers:
       '@typescript-eslint/utils':
         specifier: ^8.33.1
         version: 8.33.1(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
+      '@typescript/native-preview':
+        specifier: 7.0.0-dev.20250610.1
+        version: 7.0.0-dev.20250610.1
       ai:
         specifier: ^4.3.16
         version: 4.3.16(react@19.1.0)(zod@3.25.56)
@@ -41,13 +44,16 @@ importers:
         version: 4.1.4(@typescript-eslint/eslint-plugin@8.33.1(@typescript-eslint/parser@8.33.1(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3))(eslint@9.28.0(jiti@2.4.2))
       tsdown:
         specifier: ^0.12.7
-        version: 0.12.7(typescript@5.8.3)
+        version: 0.12.7(@typescript/native-preview@7.0.0-dev.20250610.1)(typescript@5.8.3)
       typescript:
         specifier: ^5.7.3
         version: 5.8.3
       typescript-eslint:
         specifier: ^8.33.1
         version: 8.33.1(eslint@9.28.0(jiti@2.4.2))(typescript@5.8.3)
+      typescript-language-server:
+        specifier: ^4.3.4
+        version: 4.3.4
       vitest:
         specifier: ^3.2.2
         version: 3.2.2(@types/node@22.15.30)(jiti@2.4.2)
@@ -618,6 +624,53 @@ packages:
   '@typescript-eslint/visitor-keys@8.33.1':
     resolution: {integrity: sha512-3i8NrFcZeeDHJ+7ZUuDkGT+UHq+XoFGsymNK2jZCOHcfEzRQ0BdpRtdpSx/Iyf3MHLWIcLS0COuOPibKQboIiQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250610.1':
+    resolution: {integrity: sha512-75yXY7eOkFP+bjva3O08sDnJucyJNJfP9iPXf6GnXJ/IBDK5Cqv8il+3eVkwPPPL0XqCSKi/+2yHjk4Btgt0QQ==}
+    engines: {node: '>=20.6.0'}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250610.1':
+    resolution: {integrity: sha512-oViiuRpI6DPorKQ7Y285CD8camFF46VQmSqIHmIsZHt0NPeiXW5w7MTZNF3yEKkmv/1uy6uxHJ7i6Ud5rSSt+g==}
+    engines: {node: '>=20.6.0'}
+    cpu: [x64]
+    os: [darwin]
+
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250610.1':
+    resolution: {integrity: sha512-t7N3BlonNZcB0mcFLpak0s5SysqrIgi+qxrMv0HKygyXIXKBycfKn6q509fLw0bosjvWA+ZSDz30tSfZb4x7lQ==}
+    engines: {node: '>=20.6.0'}
+    cpu: [arm64]
+    os: [linux]
+
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250610.1':
+    resolution: {integrity: sha512-/Hg2jbFtEJFkags/bfHSqYX9clpd8oQXZoROoDpiIeiIMD1/1bn6xhOYrM1sKaG7f/Efs9PMocWpCeup9GSpTA==}
+    engines: {node: '>=20.6.0'}
+    cpu: [arm]
+    os: [linux]
+
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250610.1':
+    resolution: {integrity: sha512-xelNepvxET8z1v0FXbvNmW9KHe/+KmM9oSXgxcmDt01ym9buebAXV67QWOMhf1YiiAt8HdsIDWeOnsHgcgXKAQ==}
+    engines: {node: '>=20.6.0'}
+    cpu: [x64]
+    os: [linux]
+
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250610.1':
+    resolution: {integrity: sha512-Bkxi5vYgLeCxSFSnGDTcWpPDBNj1xk92iOd1JhqXRFULFye5Q5diJOVRIrV9IZFWs0veM52Alse09hwK2suBkw==}
+    engines: {node: '>=20.6.0'}
+    cpu: [arm64]
+    os: [win32]
+
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250610.1':
+    resolution: {integrity: sha512-RlmpWZIYYv9wzjgMwVw8iuh7OqGtUt6V7+1dHTrhIoSqjm4CumoV7tK9AX69yzcbM1UPk44C/xHpDbVnqouF1g==}
+    engines: {node: '>=20.6.0'}
+    cpu: [x64]
+    os: [win32]
+
+  '@typescript/native-preview@7.0.0-dev.20250610.1':
+    resolution: {integrity: sha512-cQZQbrikf/Gg818dyCbtWu/VZ7S8hu61tIIxlVhOxj9PHJS+FouZD6axGO5fHrexl88Rc+BklRNv1t8k6zl1/Q==}
+    engines: {node: '>=20.6.0'}
+    hasBin: true
 
   '@vitest/expect@3.2.2':
     resolution: {integrity: sha512-ipHw0z669vEMjzz3xQE8nJX1s0rQIb7oEl4jjl35qWTwm/KIHERIg/p/zORrjAaZKXfsv7IybcNGHwhOOAPMwQ==}
@@ -1547,6 +1600,11 @@ packages:
       eslint: ^8.57.0 || ^9.0.0
       typescript: '>=4.8.4 <5.9.0'
 
+  typescript-language-server@4.3.4:
+    resolution: {integrity: sha512-0pQ4ffAarsf10VwFhyyyqNJhuDd4r6f4dSsQN38WdbQ3WVxqi08p/bI//v1VnOV5CSVd4AeOUY/jfJYheHTQPQ==}
+    engines: {node: '>=18'}
+    hasBin: true
+
   typescript@5.8.3:
     resolution: {integrity: sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==}
     engines: {node: '>=14.17'}
@@ -1646,6 +1704,20 @@ packages:
         optional: true
       jsdom:
         optional: true
+
+  vscode-jsonrpc@5.0.1:
+    resolution: {integrity: sha512-JvONPptw3GAQGXlVV2utDcHx0BiY34FupW/kI6mZ5x06ER5DdPG/tXWMVHjTNULF5uKPOUUD0SaXg5QaubJL0A==}
+    engines: {node: '>=8.0.0 || >=10.0.0'}
+
+  vscode-jsonrpc@8.2.0:
+    resolution: {integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==}
+    engines: {node: '>=14.0.0'}
+
+  vscode-languageserver-protocol@3.17.5:
+    resolution: {integrity: sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==}
+
+  vscode-languageserver-types@3.17.5:
+    resolution: {integrity: sha512-Ld1VelNuX9pdF39h2Hgaeb5hEZM2Z3jUrrMgWQAu82jMtZp7p3vJT3BzToKtZI7NgQssZje5o0zryOrhQvzQAg==}
 
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
@@ -2157,6 +2229,37 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 8.33.1
       eslint-visitor-keys: 4.2.0
+
+  '@typescript/native-preview-darwin-arm64@7.0.0-dev.20250610.1':
+    optional: true
+
+  '@typescript/native-preview-darwin-x64@7.0.0-dev.20250610.1':
+    optional: true
+
+  '@typescript/native-preview-linux-arm64@7.0.0-dev.20250610.1':
+    optional: true
+
+  '@typescript/native-preview-linux-arm@7.0.0-dev.20250610.1':
+    optional: true
+
+  '@typescript/native-preview-linux-x64@7.0.0-dev.20250610.1':
+    optional: true
+
+  '@typescript/native-preview-win32-arm64@7.0.0-dev.20250610.1':
+    optional: true
+
+  '@typescript/native-preview-win32-x64@7.0.0-dev.20250610.1':
+    optional: true
+
+  '@typescript/native-preview@7.0.0-dev.20250610.1':
+    optionalDependencies:
+      '@typescript/native-preview-darwin-arm64': 7.0.0-dev.20250610.1
+      '@typescript/native-preview-darwin-x64': 7.0.0-dev.20250610.1
+      '@typescript/native-preview-linux-arm': 7.0.0-dev.20250610.1
+      '@typescript/native-preview-linux-arm64': 7.0.0-dev.20250610.1
+      '@typescript/native-preview-linux-x64': 7.0.0-dev.20250610.1
+      '@typescript/native-preview-win32-arm64': 7.0.0-dev.20250610.1
+      '@typescript/native-preview-win32-x64': 7.0.0-dev.20250610.1
 
   '@vitest/expect@3.2.2':
     dependencies:
@@ -2872,7 +2975,7 @@ snapshots:
 
   reusify@1.1.0: {}
 
-  rolldown-plugin-dts@0.13.8(rolldown@1.0.0-beta.11-commit.f051675)(typescript@5.8.3):
+  rolldown-plugin-dts@0.13.8(@typescript/native-preview@7.0.0-dev.20250610.1)(rolldown@1.0.0-beta.11-commit.f051675)(typescript@5.8.3):
     dependencies:
       '@babel/generator': 7.27.5
       '@babel/parser': 7.27.5
@@ -2884,6 +2987,7 @@ snapshots:
       get-tsconfig: 4.10.1
       rolldown: 1.0.0-beta.11-commit.f051675
     optionalDependencies:
+      '@typescript/native-preview': 7.0.0-dev.20250610.1
       typescript: 5.8.3
     transitivePeerDependencies:
       - oxc-resolver
@@ -3076,7 +3180,7 @@ snapshots:
       '@ts-morph/common': 0.27.0
       code-block-writer: 13.0.3
 
-  tsdown@0.12.7(typescript@5.8.3):
+  tsdown@0.12.7(@typescript/native-preview@7.0.0-dev.20250610.1)(typescript@5.8.3):
     dependencies:
       ansis: 4.1.0
       cac: 6.7.14
@@ -3086,7 +3190,7 @@ snapshots:
       empathic: 1.1.0
       hookable: 5.5.3
       rolldown: 1.0.0-beta.11-commit.f051675
-      rolldown-plugin-dts: 0.13.8(rolldown@1.0.0-beta.11-commit.f051675)(typescript@5.8.3)
+      rolldown-plugin-dts: 0.13.8(@typescript/native-preview@7.0.0-dev.20250610.1)(rolldown@1.0.0-beta.11-commit.f051675)(typescript@5.8.3)
       semver: 7.7.2
       tinyexec: 1.0.1
       tinyglobby: 0.2.14
@@ -3121,6 +3225,11 @@ snapshots:
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
+
+  typescript-language-server@4.3.4:
+    dependencies:
+      vscode-jsonrpc: 5.0.1
+      vscode-languageserver-protocol: 3.17.5
 
   typescript@5.8.3: {}
 
@@ -3219,6 +3328,17 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  vscode-jsonrpc@5.0.1: {}
+
+  vscode-jsonrpc@8.2.0: {}
+
+  vscode-languageserver-protocol@3.17.5:
+    dependencies:
+      vscode-jsonrpc: 8.2.0
+      vscode-languageserver-types: 3.17.5
+
+  vscode-languageserver-types@3.17.5: {}
 
   which@2.0.2:
     dependencies:

@@ -15,6 +15,9 @@ import { getModuleSymbolsTool } from "../tools/get_module_symbols.ts";
 import { getTypeInModuleTool } from "../tools/get_type_in_module.ts";
 import { getTypeAtSymbolTool } from "../tools/get_type_at_symbol.ts";
 import { getSymbolsInScopeTool } from "../tools/get_symbols_in_scope.ts";
+import { experimentalGetHoverTool } from "../tools/experimental_get_hover_tool.ts";
+import { experimentalFindReferencesTool } from "../tools/experimental_find_references_tool.ts";
+import { experimentalGetDefinitionsTool } from "../tools/experimental_get_definitions_tool.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
@@ -47,6 +50,28 @@ const tools = [
 
 for (const tool of tools) {
   registerTool(server, tool, projectRoot);
+}
+
+// Register experimental LSP tools directly
+const experimentalTools = [
+  experimentalGetHoverTool,
+  experimentalFindReferencesTool,
+  experimentalGetDefinitionsTool,
+];
+
+for (const tool of experimentalTools) {
+  server.tool(
+    tool.name,
+    tool.description,
+    tool.inputSchema.properties,
+    async (args: any) => {
+      const result = await tool.handler({
+        ...args,
+        root: args.root || projectRoot,
+      });
+      return result;
+    }
+  );
 }
 
 interface McpConfig {
@@ -106,6 +131,9 @@ function getTypescriptPermissions(): string[] {
     "mcp__typescript__get_type_in_module",
     "mcp__typescript__get_type_at_symbol",
     "mcp__typescript__get_symbols_in_scope",
+    "mcp__typescript__experimental_get_hover",
+    "mcp__typescript__experimental_find_references",
+    "mcp__typescript__experimental_get_definitions",
   ];
 }
 
