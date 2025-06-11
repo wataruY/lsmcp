@@ -254,16 +254,16 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     });
 
     state.process.stderr?.on("data", (data: Buffer) => {
-      console.error("LSP stderr:", data.toString());
+      // console.error("LSP stderr:", data.toString());
     });
 
     state.process.on("exit", (code) => {
-      console.error(`LSP server exited with code ${code}`);
+      // console.error(`LSP server exited with code ${code}`);
       state.process = null;
     });
 
     state.process.on("error", (error) => {
-      console.error("LSP server error:", error);
+      // console.error("LSP server error:", error);
     });
 
     // Initialize the LSP connection

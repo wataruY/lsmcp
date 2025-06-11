@@ -2,6 +2,7 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig({
   entry: {
-    mcp: "src/mcp/typescript-mcp.ts",
+    "typescript-mcp": "src/mcp/typescript-mcp.ts",
+    "lsp-mcp": "src/mcp/lsp-mcp.ts",
   },
 });

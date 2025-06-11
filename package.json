@@ -4,10 +4,7 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    ".": {
-      "import": "./dist/mcp.js",
-      "require": "./dist/mcp.cjs"
-    },
+    ".": "./dist/typescript-mcp.js",
     "./package.json": "./package.json"
   },
   "scripts": {
@@ -20,7 +17,7 @@
     "run:mcp": "pnpm build && node dist/mcp.js"
   },
   "bin": {
-    "typescript-mcp": "./dist/mcp.js"
+    "typescript-mcp": "./dist/typescript-mcp.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
