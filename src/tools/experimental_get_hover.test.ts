@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { experimentalGetHoverTool } from "./experimental_get_hover_tool.ts";
+import { experimentalGetHoverTool } from "./experimental_get_hover.ts";
 import { resolve } from "path";
 
 describe("experimentalGetHoverTool", () => {

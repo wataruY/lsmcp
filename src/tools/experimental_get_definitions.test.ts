@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { experimentalGetDefinitionsTool } from "./experimental_get_definitions_tool.ts";
+import { experimentalGetDefinitionsTool } from "./experimental_get_definitions.ts";
 import { resolve } from "path";
 
 describe("experimentalGetDefinitionsTool", () => {

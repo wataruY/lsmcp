@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { experimentalFindReferencesTool } from "./experimental_find_references_tool.ts";
+import { experimentalFindReferencesTool } from "./experimental_find_references.ts";
 import { resolve } from "path";
 
 describe("experimentalFindReferencesTool", () => {

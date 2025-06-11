@@ -47,29 +47,31 @@ async function getHover(
   if ("error" in setupResult) {
     return err(setupResult.error);
   }
-  
+
   const { setup } = setupResult;
   const { client, fileUri, targetLine, symbolPosition } = setup;
-  
+
   try {
     // Get hover info
-    const result = await client.getHover(fileUri, {
+    const result = (await client.getHover(fileUri, {
       line: targetLine,
       character: symbolPosition,
-    }) as HoverResult | null;
-    
+    })) as HoverResult | null;
+
     await client.stop();
-    
+
     if (!result) {
       return ok({
-        message: `No hover information available for "${request.symbolName}" at ${request.filePath}:${targetLine + 1}:${symbolPosition + 1}`,
+        message: `No hover information available for "${
+          request.symbolName
+        }" at ${request.filePath}:${targetLine + 1}:${symbolPosition + 1}`,
         hover: null,
       });
     }
-    
+
     // Format hover contents
     const formattedContents = formatHoverContents(result.contents);
-    
+
     // Format range if available
     let range = undefined;
     if (result.range) {
@@ -84,9 +86,11 @@ async function getHover(
         },
       };
     }
-    
+
     return ok({
-      message: `Hover information for "${request.symbolName}" at ${request.filePath}:${targetLine + 1}:${symbolPosition + 1}`,
+      message: `Hover information for "${request.symbolName}" at ${
+        request.filePath
+      }:${targetLine + 1}:${symbolPosition + 1}`,
       hover: {
         contents: formattedContents,
         range,
@@ -101,7 +105,9 @@ async function getHover(
 /**
  * Formats hover contents from various LSP formats to a string
  */
-function formatHoverContents(contents: MarkedString | MarkedString[] | MarkupContent): string {
+function formatHoverContents(
+  contents: MarkedString | MarkedString[] | MarkupContent
+): string {
   if (typeof contents === "string") {
     return contents;
   } else if (Array.isArray(contents)) {
@@ -114,6 +120,7 @@ function formatHoverContents(contents: MarkedString | MarkedString[] | MarkupCon
         }
       })
       .join("\n");
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   } else if (typeof contents === "object" && contents && "value" in contents) {
     return (contents as MarkupContent).value;
   }
@@ -122,7 +129,8 @@ function formatHoverContents(contents: MarkedString | MarkedString[] | MarkupCon
 
 export const experimentalGetHoverTool = {
   name: "experimental_get_hover",
-  description: "Get hover information (type signature, documentation) for a TypeScript symbol using LSP",
+  description:
+    "Get hover information (type signature, documentation) for a TypeScript symbol using LSP",
   inputSchema: {
     type: "object",
     properties: {
