@@ -1,36 +1,34 @@
 import { spawn, ChildProcess } from "child_process";
 import { EventEmitter } from "events";
+import {
+  Position,
+  Location,
+  Diagnostic,
+  Hover,
+  Definition,
+  DocumentUri,
+  integer,
+  MarkupContent,
+  MarkedString,
+} from "vscode-languageserver-types";
 
+// LSP Message types
 interface LSPMessage {
   jsonrpc: "2.0";
   id?: number | string;
   method?: string;
-  params?: any;
-  result?: any;
+  params?: unknown;
+  result?: unknown;
   error?: {
     code: number;
     message: string;
-    data?: any;
+    data?: unknown;
   };
 }
 
-interface Position {
-  line: number;
-  character: number;
-}
-
-interface Range {
-  start: Position;
-  end: Position;
-}
-
-interface Location {
-  uri: string;
-  range: Range;
-}
-
+// LSP Protocol types (vscode-languageserver-typesに含まれていない型を自前定義)
 interface TextDocumentIdentifier {
-  uri: string;
+  uri: DocumentUri;
 }
 
 interface TextDocumentPositionParams {
@@ -38,107 +36,218 @@ interface TextDocumentPositionParams {
   position: Position;
 }
 
-export class LSPClient extends EventEmitter {
-  private process: ChildProcess | null = null;
-  private messageId = 0;
-  private responseHandlers = new Map<number | string, (response: LSPMessage) => void>();
-  private buffer = "";
-  private contentLength = -1;
-  
-  constructor(private rootPath: string) {
-    super();
-  }
+interface PublishDiagnosticsParams {
+  uri: DocumentUri;
+  diagnostics: Diagnostic[];
+}
 
-  async start(): Promise<void> {
-    // Start TypeScript Language Server
-    this.process = spawn("npx", ["typescript-language-server", "--stdio"], {
-      cwd: this.rootPath,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+interface ReferenceContext {
+  includeDeclaration: boolean;
+}
 
-    this.process.stdout?.on("data", (data: Buffer) => {
-      this.buffer += data.toString();
-      this.processBuffer();
-    });
+interface ReferenceParams extends TextDocumentPositionParams {
+  context: ReferenceContext;
+}
 
-    this.process.stderr?.on("data", (data: Buffer) => {
-      console.error("LSP stderr:", data.toString());
-    });
+interface ClientCapabilities {
+  textDocument?: {
+    synchronization?: {
+      dynamicRegistration?: boolean;
+      willSave?: boolean;
+      willSaveWaitUntil?: boolean;
+      didSave?: boolean;
+    };
+    publishDiagnostics?: {
+      relatedInformation?: boolean;
+    };
+    definition?: {
+      linkSupport?: boolean;
+    };
+    references?: Record<string, unknown>;
+    hover?: {
+      contentFormat?: string[];
+    };
+  };
+}
 
-    this.process.on("exit", (code) => {
-      console.error(`LSP server exited with code ${code}`);
-      this.process = null;
-    });
+interface InitializeParams {
+  processId: number | null;
+  clientInfo?: {
+    name: string;
+    version?: string;
+  };
+  locale?: string;
+  rootPath?: string | null;
+  rootUri: DocumentUri | null;
+  capabilities: ClientCapabilities;
+}
 
-    // Initialize the LSP connection
-    await this.initialize();
-  }
+interface InitializeResult {
+  capabilities: {
+    textDocumentSync?: number;
+    hoverProvider?: boolean;
+    definitionProvider?: boolean;
+    referencesProvider?: boolean;
+    [key: string]: unknown;
+  };
+  serverInfo?: {
+    name: string;
+    version?: string;
+  };
+}
 
-  private processBuffer(): void {
-    while (true) {
-      if (this.contentLength === -1) {
+interface TextDocumentItem {
+  uri: DocumentUri;
+  languageId: string;
+  version: integer;
+  text: string;
+}
+
+interface DidOpenTextDocumentParams {
+  textDocument: TextDocumentItem;
+}
+
+interface VersionedTextDocumentIdentifier extends TextDocumentIdentifier {
+  version: integer;
+}
+
+interface TextDocumentContentChangeEvent {
+  text: string;
+}
+
+interface DidChangeTextDocumentParams {
+  textDocument: VersionedTextDocumentIdentifier;
+  contentChanges: TextDocumentContentChangeEvent[];
+}
+
+// 型エイリアス
+export type HoverResult = Hover | null;
+export type DefinitionResult = Definition | Location | Location[] | null;
+export type ReferencesResult = Location[] | null;
+
+// Hover contents types (他のファイルで使用される)
+export type HoverContents =
+  | string
+  | MarkedString
+  | MarkupContent
+  | (string | MarkedString | MarkupContent)[];
+
+interface LSPClientState {
+  process: ChildProcess | null;
+  messageId: number;
+  responseHandlers: Map<number | string, (response: LSPMessage) => void>;
+  buffer: string;
+  contentLength: number;
+  diagnostics: Map<string, Diagnostic[]>;
+  eventEmitter: EventEmitter;
+  rootPath: string;
+}
+
+export function createLSPClient(rootPath: string): LSPClientState & {
+  start: () => Promise<void>;
+  stop: () => Promise<void>;
+  openDocument: (uri: string, text: string) => void;
+  updateDocument: (uri: string, text: string, version: number) => void;
+  findReferences: (uri: string, position: Position) => Promise<Location[]>;
+  getDefinition: (
+    uri: string,
+    position: Position
+  ) => Promise<Location | Location[]>;
+  getHover: (uri: string, position: Position) => Promise<unknown>;
+  getDiagnostics: (uri: string) => Diagnostic[];
+  on: (event: string, listener: (...args: unknown[]) => void) => void;
+  emit: (event: string, ...args: unknown[]) => boolean;
+} {
+  const state: LSPClientState = {
+    process: null,
+    messageId: 0,
+    responseHandlers: new Map(),
+    buffer: "",
+    contentLength: -1,
+    diagnostics: new Map(),
+    eventEmitter: new EventEmitter(),
+    rootPath,
+  };
+
+  function processBuffer(): void {
+    while (state.buffer.length > 0) {
+      if (state.contentLength === -1) {
         // Look for Content-Length header
-        const headerEnd = this.buffer.indexOf("\r\n\r\n");
+        const headerEnd = state.buffer.indexOf("\r\n\r\n");
         if (headerEnd === -1) {
           return;
         }
 
-        const header = this.buffer.substring(0, headerEnd);
+        const header = state.buffer.substring(0, headerEnd);
         const contentLengthMatch = header.match(/Content-Length: (\d+)/);
         if (!contentLengthMatch) {
           console.error("Invalid LSP header:", header);
-          this.buffer = this.buffer.substring(headerEnd + 4);
+          state.buffer = state.buffer.substring(headerEnd + 4);
           continue;
         }
 
-        this.contentLength = parseInt(contentLengthMatch[1], 10);
-        this.buffer = this.buffer.substring(headerEnd + 4);
+        state.contentLength = parseInt(contentLengthMatch[1], 10);
+        state.buffer = state.buffer.substring(headerEnd + 4);
       }
 
-      if (this.buffer.length < this.contentLength) {
+      if (state.buffer.length < state.contentLength) {
         // Wait for more data
         return;
       }
 
-      const messageBody = this.buffer.substring(0, this.contentLength);
-      this.buffer = this.buffer.substring(this.contentLength);
-      this.contentLength = -1;
+      const messageBody = state.buffer.substring(0, state.contentLength);
+      state.buffer = state.buffer.substring(state.contentLength);
+      state.contentLength = -1;
 
       try {
         const message = JSON.parse(messageBody) as LSPMessage;
-        this.handleMessage(message);
-      } catch (e) {
-        console.error("Failed to parse LSP message:", messageBody, e);
+        handleMessage(message);
+      } catch (error) {
+        console.error("Failed to parse LSP message:", messageBody, error);
       }
     }
   }
 
-  private handleMessage(message: LSPMessage): void {
-    if (message.id !== undefined && (message.result !== undefined || message.error !== undefined)) {
+  function handleMessage(message: LSPMessage): void {
+    if (
+      message.id !== undefined &&
+      (message.result !== undefined || message.error !== undefined)
+    ) {
       // This is a response
-      const handler = this.responseHandlers.get(message.id);
+      const handler = state.responseHandlers.get(message.id);
       if (handler) {
         handler(message);
-        this.responseHandlers.delete(message.id);
+        state.responseHandlers.delete(message.id);
       }
     } else if (message.method) {
       // This is a notification or request from server
-      this.emit("message", message);
+      if (
+        message.method === "textDocument/publishDiagnostics" &&
+        message.params
+      ) {
+        // Store diagnostics for the file
+        const params = message.params as PublishDiagnosticsParams;
+        state.diagnostics.set(params.uri, params.diagnostics);
+      }
+      state.eventEmitter.emit("message", message);
     }
   }
 
-  private sendMessage(message: LSPMessage): void {
-    if (!this.process) {
+  function sendMessage(message: LSPMessage): void {
+    if (!state.process) {
       throw new Error("LSP server not started");
     }
 
     const content = JSON.stringify(message);
     const header = `Content-Length: ${Buffer.byteLength(content)}\r\n\r\n`;
-    this.process.stdin?.write(header + content);
+    state.process.stdin?.write(header + content);
   }
 
-  private async sendRequest(method: string, params?: any): Promise<any> {
-    const id = ++this.messageId;
+  function sendRequest<T = unknown>(
+    method: string,
+    params?: unknown
+  ): Promise<T> {
+    const id = ++state.messageId;
     const message: LSPMessage = {
       jsonrpc: "2.0",
       id,
@@ -146,40 +255,49 @@ export class LSPClient extends EventEmitter {
       params,
     };
 
-    return new Promise((resolve, reject) => {
-      this.responseHandlers.set(id, (response) => {
+    return new Promise<T>((resolve, reject) => {
+      state.responseHandlers.set(id, (response) => {
         if (response.error) {
           reject(new Error(response.error.message));
         } else {
-          resolve(response.result);
+          resolve(response.result as T);
         }
       });
 
-      this.sendMessage(message);
+      sendMessage(message);
     });
   }
 
-  private sendNotification(method: string, params?: any): void {
+  function sendNotification(method: string, params?: unknown): void {
     const message: LSPMessage = {
       jsonrpc: "2.0",
       method,
       params,
     };
-    this.sendMessage(message);
+    sendMessage(message);
   }
 
-  private async initialize(): Promise<void> {
-    const result = await this.sendRequest("initialize", {
+  async function initialize(): Promise<void> {
+    const initParams: InitializeParams = {
       processId: process.pid,
       clientInfo: {
         name: "typescript-mcp-lsp-client",
         version: "0.1.0",
       },
       locale: "en",
-      rootPath: this.rootPath,
-      rootUri: `file://${this.rootPath}`,
+      rootPath: state.rootPath,
+      rootUri: `file://${state.rootPath}`,
       capabilities: {
         textDocument: {
+          synchronization: {
+            dynamicRegistration: false,
+            willSave: false,
+            willSaveWaitUntil: false,
+            didSave: true,
+          },
+          publishDiagnostics: {
+            relatedInformation: true,
+          },
           definition: {
             linkSupport: true,
           },
@@ -189,84 +307,172 @@ export class LSPClient extends EventEmitter {
           },
         },
       },
-    });
+    };
+
+    await sendRequest<InitializeResult>("initialize", initParams);
 
     // Send initialized notification
-    this.sendNotification("initialized", {});
-
-    return result;
+    sendNotification("initialized", {});
   }
 
-  async openDocument(uri: string, text: string): Promise<void> {
-    this.sendNotification("textDocument/didOpen", {
+  async function start(): Promise<void> {
+    // Start TypeScript Language Server
+    state.process = spawn("npx", ["typescript-language-server", "--stdio"], {
+      cwd: state.rootPath,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+
+    state.process.stdout?.on("data", (data: Buffer) => {
+      state.buffer += data.toString();
+      processBuffer();
+    });
+
+    state.process.stderr?.on("data", (data: Buffer) => {
+      console.error("LSP stderr:", data.toString());
+    });
+
+    state.process.on("exit", (code) => {
+      console.error(`LSP server exited with code ${code}`);
+      state.process = null;
+    });
+
+    // Initialize the LSP connection
+    await initialize();
+  }
+
+  function openDocument(uri: string, text: string): void {
+    const params: DidOpenTextDocumentParams = {
       textDocument: {
         uri,
         languageId: "typescript",
         version: 1,
         text,
       },
-    });
+    };
+    sendNotification("textDocument/didOpen", params);
   }
 
-  async updateDocument(uri: string, text: string, version: number): Promise<void> {
-    this.sendNotification("textDocument/didChange", {
+  function updateDocument(uri: string, text: string, version: number): void {
+    const params: DidChangeTextDocumentParams = {
       textDocument: {
         uri,
         version,
       },
       contentChanges: [{ text }],
-    });
+    };
+    sendNotification("textDocument/didChange", params);
   }
 
-  async findReferences(uri: string, position: Position): Promise<Location[]> {
-    const params: TextDocumentPositionParams = {
+  async function findReferences(
+    uri: string,
+    position: Position
+  ): Promise<Location[]> {
+    const params: ReferenceParams = {
       textDocument: { uri },
       position,
-    };
-    const result = await this.sendRequest("textDocument/references", {
-      ...params,
       context: {
         includeDeclaration: true,
       },
-    });
-    return result || [];
+    };
+    const result = await sendRequest<ReferencesResult>(
+      "textDocument/references",
+      params
+    );
+    return result ?? [];
   }
 
-  async getDefinition(uri: string, position: Position): Promise<Location | Location[]> {
+  async function getDefinition(
+    uri: string,
+    position: Position
+  ): Promise<Location | Location[]> {
     const params: TextDocumentPositionParams = {
       textDocument: { uri },
       position,
     };
-    const result = await this.sendRequest("textDocument/definition", params);
-    return result || [];
+    const result = await sendRequest<DefinitionResult>(
+      "textDocument/definition",
+      params
+    );
+
+    if (!result) {
+      return [];
+    }
+
+    if (Array.isArray(result)) {
+      return result;
+    }
+
+    // Handle single Location or Definition
+    if ("uri" in result) {
+      return [result];
+    }
+
+    // Handle Definition type (convert to Location)
+    if ("range" in result && "uri" in result) {
+      return [result as Location];
+    }
+
+    return [];
   }
 
-  async getHover(uri: string, position: Position): Promise<any> {
+  async function getHover(
+    uri: string,
+    position: Position
+  ): Promise<HoverResult | null> {
     const params: TextDocumentPositionParams = {
       textDocument: { uri },
       position,
     };
-    const result = await this.sendRequest("textDocument/hover", params);
+    const result = await sendRequest<HoverResult | null>(
+      "textDocument/hover",
+      params
+    );
     return result;
   }
 
-  async stop(): Promise<void> {
-    if (this.process) {
+  function getDiagnostics(uri: string): Diagnostic[] {
+    // In LSP, diagnostics are pushed by the server via notifications
+    // We need to retrieve them from our diagnostics storage
+    return state.diagnostics.get(uri) || [];
+  }
+
+  async function stop(): Promise<void> {
+    if (state.process) {
       // Send shutdown request
       try {
-        await this.sendRequest("shutdown");
-        this.sendNotification("exit");
-      } catch (e) {
+        await sendRequest("shutdown");
+        sendNotification("exit");
+      } catch {
         // Ignore errors during shutdown
       }
-      
+
       // Give it a moment to shut down gracefully
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      if (this.process) {
-        this.process.kill();
-        this.process = null;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      try {
+        if (!state.process.killed) {
+          state.process.kill();
+        }
+      } catch {
+        // Ignore errors during process termination
       }
+      state.process = null;
     }
   }
+
+  return {
+    ...state,
+    start,
+    stop,
+    openDocument,
+    updateDocument,
+    findReferences,
+    getDefinition,
+    getHover,
+    getDiagnostics,
+    on: (event: string, listener: (...args: unknown[]) => void) =>
+      state.eventEmitter.on(event, listener),
+    emit: (event: string, ...args: unknown[]) =>
+      state.eventEmitter.emit(event, ...args),
+  };
 }
