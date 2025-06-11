@@ -1,14 +1,14 @@
 import { type Result, ok, err } from "neverthrow";
-import { LSPClient } from "../_experimental/lsp_client.ts";
 import { readFileSync } from "fs";
-import { resolve, relative } from "path";
+import { relative } from "path";
+import {
+  type LSPToolRequest,
+  type McpToolResult,
+  setupLSPRequest,
+  formatMcpResult,
+} from "./lsp_common.ts";
 
-interface FindReferencesRequest {
-  root: string;
-  filePath: string;
-  line: number | string;
-  symbolName: string;
-}
+interface FindReferencesRequest extends LSPToolRequest {}
 
 interface Reference {
   filePath: string;
@@ -23,54 +23,25 @@ interface FindReferencesSuccess {
   references: Reference[];
 }
 
+/**
+ * Finds all references to a TypeScript symbol using LSP
+ */
 async function findReferencesWithLSP(
   request: FindReferencesRequest
 ): Promise<Result<FindReferencesSuccess, string>> {
-  const client = new LSPClient(request.root);
+  const setupResult = await setupLSPRequest(request);
+  if ("error" in setupResult) {
+    return err(setupResult.error);
+  }
+  
+  const { setup } = setupResult;
+  const { client, fileUri, targetLine, symbolPosition } = setup;
   
   try {
-    // Start LSP server
-    await client.start();
-    
-    // Read file content
-    const absolutePath = resolve(request.root, request.filePath);
-    const fileContent = readFileSync(absolutePath, "utf-8");
-    const fileUri = `file://${absolutePath}`;
-    
-    // Parse line number
-    const lines = fileContent.split("\n");
-    let targetLine: number;
-    
-    if (typeof request.line === "string") {
-      // Find line containing the string
-      const lineIndex = lines.findIndex(line => line.includes(request.line as string));
-      if (lineIndex === -1) {
-        await client.stop().catch(() => {});
-        return err(`Line containing "${request.line}" not found in ${request.filePath}`);
-      }
-      targetLine = lineIndex;
-    } else {
-      targetLine = request.line - 1; // Convert to 0-based
-    }
-    
-    // Find symbol position in line
-    const lineText = lines[targetLine];
-    const symbolIndex = lineText.indexOf(request.symbolName);
-    if (symbolIndex === -1) {
-      await client.stop().catch(() => {});
-      return err(`Symbol "${request.symbolName}" not found on line ${targetLine + 1}`);
-    }
-    
-    // Open document in LSP
-    await client.openDocument(fileUri, fileContent);
-    
-    // Give LSP server time to process the document
-    await new Promise<void>(resolve => setTimeout(resolve, 1000));
-    
     // Find references
     const locations = await client.findReferences(fileUri, {
       line: targetLine,
-      character: symbolIndex,
+      character: symbolPosition,
     });
     
     // Convert LSP locations to our Reference format
@@ -118,12 +89,6 @@ async function findReferencesWithLSP(
   }
 }
 
-interface McpToolResult {
-  content: { type: "text"; text: string; [x: string]: unknown }[];
-  isError?: boolean;
-  [x: string]: unknown;
-}
-
 export const experimentalFindReferencesTool = {
   name: "experimental_find_references",
   description: "Find all references to a TypeScript/JavaScript symbol across the codebase using LSP",
@@ -155,33 +120,19 @@ export const experimentalFindReferencesTool = {
   handler: async (args: FindReferencesRequest): Promise<McpToolResult> => {
     const result = await findReferencesWithLSP(args);
     if (result.isOk()) {
-      const content: { type: "text"; text: string }[] = [
-        {
-          type: "text",
-          text: result.value.message,
-        },
-      ];
+      const messages = [result.value.message];
       
       if (result.value.references.length > 0) {
-        content.push({
-          type: "text",
-          text: result.value.references
+        messages.push(
+          result.value.references
             .map(ref => `\n${ref.filePath}:${ref.line}:${ref.column}\n${ref.preview}`)
-            .join("\n"),
-        });
+            .join("\n")
+        );
       }
       
-      return { content };
+      return formatMcpResult(true, messages);
     } else {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error: ${result.error}`,
-          },
-        ],
-        isError: true,
-      };
+      return formatMcpResult(false, [`Error: ${result.error}`]);
     }
   },
 };

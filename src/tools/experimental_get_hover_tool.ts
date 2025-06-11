@@ -1,16 +1,16 @@
 import { type Result, ok, err } from "neverthrow";
-import { LSPClient } from "../_experimental/lsp_client.ts";
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import {
+  type LSPToolRequest,
+  type McpToolResult,
+  setupLSPRequest,
+  formatMcpResult,
+} from "./lsp_common.ts";
 
-interface GetHoverRequest {
-  root: string;
-  filePath: string;
-  line: number | string;
-  symbolName: string;
-}
+interface GetHoverRequest extends LSPToolRequest {}
 
-// LSP Hover response types
+/**
+ * LSP Hover response types
+ */
 interface MarkupContent {
   kind: "plaintext" | "markdown";
   value: string;
@@ -37,82 +37,38 @@ interface GetHoverSuccess {
   } | null;
 }
 
+/**
+ * Gets hover information for a TypeScript symbol using LSP
+ */
 async function getHover(
   request: GetHoverRequest
 ): Promise<Result<GetHoverSuccess, string>> {
-  const client = new LSPClient(request.root);
+  const setupResult = await setupLSPRequest(request);
+  if ("error" in setupResult) {
+    return err(setupResult.error);
+  }
+  
+  const { setup } = setupResult;
+  const { client, fileUri, targetLine, symbolPosition } = setup;
   
   try {
-    // Start LSP server
-    await client.start();
-    
-    // Read file content
-    const absolutePath = resolve(request.root, request.filePath);
-    const fileContent = readFileSync(absolutePath, "utf-8");
-    const fileUri = `file://${absolutePath}`;
-    
-    // Parse line number
-    const lines = fileContent.split("\n");
-    let targetLine: number;
-    
-    if (typeof request.line === "string") {
-      // Find line containing the string
-      const lineIndex = lines.findIndex(line => line.includes(request.line as string));
-      if (lineIndex === -1) {
-        await client.stop().catch(() => {});
-        return err(`Line containing "${request.line}" not found in ${request.filePath}`);
-      }
-      targetLine = lineIndex;
-    } else {
-      targetLine = request.line - 1; // Convert to 0-based
-    }
-    
-    // Find symbol position in line
-    const lineText = lines[targetLine];
-    const symbolIndex = lineText.indexOf(request.symbolName);
-    if (symbolIndex === -1) {
-      await client.stop().catch(() => {});
-      return err(`Symbol "${request.symbolName}" not found on line ${targetLine + 1}`);
-    }
-    
-    // Open document in LSP
-    await client.openDocument(fileUri, fileContent);
-    
-    // Give LSP server time to process the document
-    await new Promise<void>(resolve => setTimeout(resolve, 1000));
-    
     // Get hover info
     const result = await client.getHover(fileUri, {
       line: targetLine,
-      character: symbolIndex,
+      character: symbolPosition,
     }) as HoverResult | null;
     
     await client.stop();
     
     if (!result) {
       return ok({
-        message: `No hover information available for "${request.symbolName}" at ${request.filePath}:${targetLine + 1}:${symbolIndex + 1}`,
+        message: `No hover information available for "${request.symbolName}" at ${request.filePath}:${targetLine + 1}:${symbolPosition + 1}`,
         hover: null,
       });
     }
     
     // Format hover contents
-    let formattedContents = "";
-    if (typeof result.contents === "string") {
-      formattedContents = result.contents;
-    } else if (Array.isArray(result.contents)) {
-      formattedContents = result.contents
-        .map((content: MarkedString) => {
-          if (typeof content === "string") {
-            return content;
-          } else {
-            return content.value;
-          }
-        })
-        .join("\n");
-    } else if (result.contents && typeof result.contents === "object" && "value" in result.contents) {
-      formattedContents = (result.contents as MarkupContent).value;
-    }
+    const formattedContents = formatHoverContents(result.contents);
     
     // Format range if available
     let range = undefined;
@@ -130,7 +86,7 @@ async function getHover(
     }
     
     return ok({
-      message: `Hover information for "${request.symbolName}" at ${request.filePath}:${targetLine + 1}:${symbolIndex + 1}`,
+      message: `Hover information for "${request.symbolName}" at ${request.filePath}:${targetLine + 1}:${symbolPosition + 1}`,
       hover: {
         contents: formattedContents,
         range,
@@ -142,10 +98,26 @@ async function getHover(
   }
 }
 
-interface McpToolResult {
-  content: { type: "text"; text: string; [x: string]: unknown }[];
-  isError?: boolean;
-  [x: string]: unknown;
+/**
+ * Formats hover contents from various LSP formats to a string
+ */
+function formatHoverContents(contents: MarkedString | MarkedString[] | MarkupContent): string {
+  if (typeof contents === "string") {
+    return contents;
+  } else if (Array.isArray(contents)) {
+    return contents
+      .map((content: MarkedString) => {
+        if (typeof content === "string") {
+          return content;
+        } else {
+          return content.value;
+        }
+      })
+      .join("\n");
+  } else if (typeof contents === "object" && contents && "value" in contents) {
+    return (contents as MarkupContent).value;
+  }
+  return "";
 }
 
 export const experimentalGetHoverTool = {
@@ -179,32 +151,13 @@ export const experimentalGetHoverTool = {
   handler: async (args: GetHoverRequest): Promise<McpToolResult> => {
     const result = await getHover(args);
     if (result.isOk()) {
-      return {
-        content: [
-          {
-            type: "text",
-            text: result.value.message,
-          },
-          ...(result.value.hover
-            ? [
-                {
-                  type: "text" as const,
-                  text: result.value.hover.contents,
-                },
-              ]
-            : []),
-        ],
-      };
+      const messages = [result.value.message];
+      if (result.value.hover) {
+        messages.push(result.value.hover.contents);
+      }
+      return formatMcpResult(true, messages);
     } else {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error: ${result.error}`,
-          },
-        ],
-        isError: true,
-      };
+      return formatMcpResult(false, [`Error: ${result.error}`]);
     }
   },
 };

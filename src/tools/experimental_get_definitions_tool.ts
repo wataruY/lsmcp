@@ -1,13 +1,14 @@
 import { type Result, ok, err } from "neverthrow";
-import { LSPClient } from "../_experimental/lsp_client.ts";
 import { readFileSync } from "fs";
-import { resolve, relative } from "path";
+import { relative } from "path";
+import {
+  type LSPToolRequest,
+  type McpToolResult,
+  setupLSPRequest,
+  formatMcpResult,
+} from "./lsp_common.ts";
 
-interface GetDefinitionsRequest {
-  root: string;
-  filePath: string;
-  line: number | string;
-  symbolName: string;
+interface GetDefinitionsRequest extends LSPToolRequest {
   before?: number;
   after?: number;
 }
@@ -36,54 +37,25 @@ interface Location {
 
 type DefinitionResult = Location | Location[] | null;
 
+/**
+ * Gets definitions for a TypeScript symbol using LSP
+ */
 async function getDefinitionsWithLSP(
   request: GetDefinitionsRequest
 ): Promise<Result<GetDefinitionsSuccess, string>> {
-  const client = new LSPClient(request.root);
+  const setupResult = await setupLSPRequest(request);
+  if ("error" in setupResult) {
+    return err(setupResult.error);
+  }
+  
+  const { setup } = setupResult;
+  const { client, fileUri, targetLine, symbolPosition } = setup;
   
   try {
-    // Start LSP server
-    await client.start();
-    
-    // Read file content
-    const absolutePath = resolve(request.root, request.filePath);
-    const fileContent = readFileSync(absolutePath, "utf-8");
-    const fileUri = `file://${absolutePath}`;
-    
-    // Parse line number
-    const lines = fileContent.split("\n");
-    let targetLine: number;
-    
-    if (typeof request.line === "string") {
-      // Find line containing the string
-      const lineIndex = lines.findIndex(line => line.includes(request.line as string));
-      if (lineIndex === -1) {
-        await client.stop().catch(() => {});
-        return err(`Line containing "${request.line}" not found in ${request.filePath}`);
-      }
-      targetLine = lineIndex;
-    } else {
-      targetLine = request.line - 1; // Convert to 0-based
-    }
-    
-    // Find symbol position in line
-    const lineText = lines[targetLine];
-    const symbolIndex = lineText.indexOf(request.symbolName);
-    if (symbolIndex === -1) {
-      await client.stop().catch(() => {});
-      return err(`Symbol "${request.symbolName}" not found on line ${targetLine + 1}`);
-    }
-    
-    // Open document in LSP
-    await client.openDocument(fileUri, fileContent);
-    
-    // Give LSP server time to process the document
-    await new Promise<void>(resolve => setTimeout(resolve, 1000));
-    
     // Get definition
     const result = await client.getDefinition(fileUri, {
       line: targetLine,
-      character: symbolIndex,
+      character: symbolPosition,
     }) as DefinitionResult;
     
     // Normalize result to array
@@ -150,12 +122,6 @@ async function getDefinitionsWithLSP(
   }
 }
 
-interface McpToolResult {
-  content: { type: "text"; text: string; [x: string]: unknown }[];
-  isError?: boolean;
-  [x: string]: unknown;
-}
-
 export const experimentalGetDefinitionsTool = {
   name: "experimental_get_definitions",
   description: "Get the definition(s) of a TypeScript symbol using LSP",
@@ -195,33 +161,17 @@ export const experimentalGetDefinitionsTool = {
   handler: async (args: GetDefinitionsRequest): Promise<McpToolResult> => {
     const result = await getDefinitionsWithLSP(args);
     if (result.isOk()) {
-      const content: { type: "text"; text: string }[] = [
-        {
-          type: "text",
-          text: result.value.message,
-        },
-      ];
+      const messages = [result.value.message];
       
       if (result.value.definitions.length > 0) {
         for (const def of result.value.definitions) {
-          content.push({
-            type: "text",
-            text: `\n${def.filePath}:${def.line}:${def.column} - ${def.symbolName}\n${def.preview}`,
-          });
+          messages.push(`\n${def.filePath}:${def.line}:${def.column} - ${def.symbolName}\n${def.preview}`);
         }
       }
       
-      return { content };
+      return formatMcpResult(true, messages);
     } else {
-      return {
-        content: [
-          {
-            type: "text",
-            text: `Error: ${result.error}`,
-          },
-        ],
-        isError: true,
-      };
+      return formatMcpResult(false, [`Error: ${result.error}`]);
     }
   },
 };
