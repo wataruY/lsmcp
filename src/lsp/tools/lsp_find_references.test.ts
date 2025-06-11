@@ -33,7 +33,7 @@ describe("lspFindReferencesTool", () => {
   it("should find references to a type", async () => {
     const result = await lspFindReferencesTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 1,
       symbolName: "Value",
     });
@@ -45,7 +45,7 @@ describe("lspFindReferencesTool", () => {
   it("should find references to a function", async () => {
     const result = await lspFindReferencesTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 10,
       symbolName: "getValue",
     });
@@ -57,7 +57,7 @@ describe("lspFindReferencesTool", () => {
   it("should handle string line matching", async () => {
     const result = await lspFindReferencesTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: "ValueWithOptional",
       symbolName: "ValueWithOptional",
     });
@@ -69,7 +69,7 @@ describe("lspFindReferencesTool", () => {
     await expect(
       lspFindReferencesTool.execute({
         root,
-        filePath: "examples/types.ts",
+        filePath: "playground/types.ts",
         line: 1,
         symbolName: "nonexistent",
       })
@@ -80,7 +80,7 @@ describe("lspFindReferencesTool", () => {
     await expect(
       lspFindReferencesTool.execute({
         root,
-        filePath: "examples/types.ts",
+        filePath: "playground/types.ts",
         line: "nonexistent line",
         symbolName: "Value",
       })
@@ -101,7 +101,7 @@ describe("lspFindReferencesTool", () => {
   it("should include preview context in results", async () => {
     const result = await lspFindReferencesTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 11,
       symbolName: "v",
     });
@@ -114,7 +114,7 @@ describe("lspFindReferencesTool", () => {
     // The Value type is defined and used in types.ts
     const result = await lspFindReferencesTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 1,
       symbolName: "Value",
     });

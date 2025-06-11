@@ -30,7 +30,7 @@ describe("lspGetDefinitionsTool", () => {
     // Using the example connected.ts file which imports from "./scratch"
     const result = await lspGetDefinitionsTool.execute({
       root,
-      filePath: "examples/connected.ts",
+      filePath: "playground/connected.ts",
       line: 1, // export line
       symbolName: "x",
     });
@@ -43,7 +43,7 @@ describe("lspGetDefinitionsTool", () => {
     // The types.ts file has Value type used in getValue function
     const result = await lspGetDefinitionsTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 10, // getValue function that returns Value type
       symbolName: "Value",
     });
@@ -54,7 +54,7 @@ describe("lspGetDefinitionsTool", () => {
   it.skip("should handle string line matching", async () => {
     const result = await lspGetDefinitionsTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: "ValueWithOptional",
       symbolName: "ValueWithOptional",
     });
@@ -66,7 +66,7 @@ describe("lspGetDefinitionsTool", () => {
     await expect(
       lspGetDefinitionsTool.execute({
         root,
-        filePath: "examples/types.ts",
+        filePath: "playground/types.ts",
         line: 1,
         symbolName: "nonexistent",
       })
@@ -77,7 +77,7 @@ describe("lspGetDefinitionsTool", () => {
     await expect(
       lspGetDefinitionsTool.execute({
         root,
-        filePath: "examples/types.ts",
+        filePath: "playground/types.ts",
         line: "nonexistent line",
         symbolName: "Value",
       })
@@ -98,7 +98,7 @@ describe("lspGetDefinitionsTool", () => {
   it.skip("should handle no definition found for built-in symbols", async () => {
     const result = await lspGetDefinitionsTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 11, // The return statement line
       symbolName: "v",
       before: 2,

@@ -94,7 +94,7 @@ describe("lspGetDiagnosticsTool", { timeout: 10000 }, () => {
   it("should get diagnostics for actual file", async () => {
     const result = await lspGetDiagnosticsTool.execute({
       root,
-      filePath: "examples/scratch.ts",
+      filePath: "playground/scratch.ts",
     });
 
     expect(result).toMatch(/Found \d+ errors? and \d+ warnings?/);

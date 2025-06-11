@@ -38,7 +38,7 @@ describe.skip("experimentalGetHoverTool", () => {
   it("should get hover information for a type", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 1,
       target: "Value",
     });
@@ -50,7 +50,7 @@ describe.skip("experimentalGetHoverTool", () => {
   it("should get hover information using line string match", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: "ValueWithOptional",
       target: "ValueWithOptional",
     });
@@ -62,7 +62,7 @@ describe.skip("experimentalGetHoverTool", () => {
   it("should get hover information for a function", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 10,
       target: "getValue",
     });
@@ -75,7 +75,7 @@ describe.skip("experimentalGetHoverTool", () => {
     await expect(
       lspGetHoverTool.execute({
         root,
-        filePath: "examples/types.ts",
+        filePath: "playground/types.ts",
         line: 3, // Empty line
         target: "v",
       })
@@ -86,7 +86,7 @@ describe.skip("experimentalGetHoverTool", () => {
     await expect(
       lspGetHoverTool.execute({
         root,
-        filePath: "examples/types.ts",
+        filePath: "playground/types.ts",
         line: 1,
         target: "NonExistentSymbol",
       })
@@ -97,7 +97,7 @@ describe.skip("experimentalGetHoverTool", () => {
     await expect(
       lspGetHoverTool.execute({
         root,
-        filePath: "examples/does-not-exist.ts",
+        filePath: "playground/does-not-exist.ts",
         line: 1,
         target: "something",
       })
@@ -108,7 +108,7 @@ describe.skip("experimentalGetHoverTool", () => {
     await expect(
       lspGetHoverTool.execute({
         root,
-        filePath: "examples/types.ts",
+        filePath: "playground/types.ts",
         line: "NonExistentLine",
         target: "something",
       })
@@ -118,7 +118,7 @@ describe.skip("experimentalGetHoverTool", () => {
   it("should get hover information without line specified", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       target: "Value",
     });
 
@@ -151,7 +151,7 @@ describe("lspGetHoverTool with native-preview LSP", () => {
   it("should get hover for type aliases", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 1,
       target: "Value",
     });
@@ -163,7 +163,7 @@ describe("lspGetHoverTool with native-preview LSP", () => {
   it("should get hover for exported function", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 10,
       target: "getValue",
     });
@@ -175,7 +175,7 @@ describe("lspGetHoverTool with native-preview LSP", () => {
   it("should handle object literal hover", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 11,
       target: "{",
     });
@@ -186,7 +186,7 @@ describe("lspGetHoverTool with native-preview LSP", () => {
   it("should get hover for property v", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 11,
       target: "v",
     });
@@ -199,14 +199,14 @@ describe("lspGetHoverTool with native-preview LSP", () => {
     // Line with "v: string" has both "v" and "string"
     const result1 = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 2,
       target: "v",
     });
 
     const result2 = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 2,
       target: "string",
     });
@@ -218,7 +218,7 @@ describe("lspGetHoverTool with native-preview LSP", () => {
   it("should provide detailed type information", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: "ValueWithOptional",
       target: "ValueWithOptional",
     });
@@ -232,7 +232,7 @@ describe("lspGetHoverTool with native-preview LSP", () => {
   it("should handle target at end of line", async () => {
     const result = await lspGetHoverTool.execute({
       root,
-      filePath: "examples/types.ts",
+      filePath: "playground/types.ts",
       line: 3,
       target: "};",
     });
