@@ -4,21 +4,21 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerTool } from "./mcp_server_utils.ts";
-import { moveFileTool } from "../tools/move_file.ts";
-import { move_directory } from "../tools/move_directory.ts";
-import { renameSymbolTool } from "../tools/rename_symbol.ts";
-import { deleteSymbolTool } from "../tools/delete_symbol.ts";
-import { findReferencesTool } from "../tools/find_references.ts";
-import { getDefinitionsTool } from "../tools/get_definitions.ts";
-import { getDiagnosticsTool } from "../tools/get_diagnostics.ts";
-import { getModuleSymbolsTool } from "../tools/get_module_symbols.ts";
-import { getTypeInModuleTool } from "../tools/get_type_in_module.ts";
-import { getTypeAtSymbolTool } from "../tools/get_type_at_symbol.ts";
-import { getSymbolsInScopeTool } from "../tools/get_symbols_in_scope.ts";
-import { experimentalGetHoverTool } from "../tools/experimental_get_hover.ts";
-import { experimentalFindReferencesTool } from "../tools/experimental_find_references.ts";
-import { experimentalGetDefinitionsTool } from "../tools/experimental_get_definitions.ts";
-import { experimentalGetDiagnosticsTool } from "../tools/experimental_get_diagnostics.ts";
+import { moveFileTool } from "../ts/tools/move_file.ts";
+import { move_directory } from "../ts/tools/move_directory.ts";
+import { renameSymbolTool } from "../ts/tools/rename_symbol.ts";
+import { deleteSymbolTool } from "../ts/tools/delete_symbol.ts";
+import { findReferencesTool } from "../ts/tools/find_references.ts";
+import { getDefinitionsTool } from "../ts/tools/get_definitions.ts";
+import { getDiagnosticsTool } from "../ts/tools/get_diagnostics.ts";
+import { getModuleSymbolsTool } from "../ts/tools/get_module_symbols.ts";
+import { getTypeInModuleTool } from "../ts/tools/get_type_in_module.ts";
+import { getTypeAtSymbolTool } from "../ts/tools/get_type_at_symbol.ts";
+import { getSymbolsInScopeTool } from "../ts/tools/get_symbols_in_scope.ts";
+import { experimentalGetHoverTool } from "../lsp/tools/get_hover.ts";
+import { experimentalFindReferencesTool } from "../lsp/tools/find_references.ts";
+import { experimentalGetDefinitionsTool } from "../lsp/tools/get_definitions.ts";
+import { experimentalGetDiagnosticsTool } from "../lsp/tools/get_diagnostics.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
@@ -54,7 +54,7 @@ for (const tool of tools) {
 }
 
 // Register experimental LSP tools if enabled via environment variable
-const enableExperimental = process.env.ENABLE_EXPERIMENTAL_TOOLS === 'true';
+const enableExperimental = process.env.ENABLE_EXPERIMENTAL_TOOLS === "true";
 
 if (enableExperimental) {
   const experimentalTools = [
@@ -67,7 +67,7 @@ if (enableExperimental) {
   for (const tool of experimentalTools) {
     registerTool(server, tool, projectRoot);
   }
-  
+
   console.error("Experimental LSP-based tools enabled");
 }
 
@@ -129,9 +129,9 @@ function getTypescriptPermissions(): string[] {
     "mcp__typescript__get_type_at_symbol",
     "mcp__typescript__get_symbols_in_scope",
   ];
-  
+
   // Only include experimental permissions if enabled
-  if (process.env.ENABLE_EXPERIMENTAL_TOOLS === 'true') {
+  if (process.env.ENABLE_EXPERIMENTAL_TOOLS === "true") {
     basePermissions.push(
       "mcp__typescript__experimental_get_hover",
       "mcp__typescript__experimental_find_references",
@@ -139,7 +139,7 @@ function getTypescriptPermissions(): string[] {
       "mcp__typescript__experimental_get_diagnostics"
     );
   }
-  
+
   return basePermissions;
 }
 
@@ -318,11 +318,13 @@ async function main() {
     await server.connect(transport);
     console.error("TypeScript Refactoring MCP Server running on stdio");
     console.error(`Project root: ${projectRoot}`);
-    
+
     // Display TypeScript information
     const tsInfo = getTypescriptInfo();
     if (tsInfo) {
-      console.error(`Detected typescript path: ${tsInfo.path} version: ${tsInfo.version}`);
+      console.error(
+        `Detected typescript path: ${tsInfo.path} version: ${tsInfo.version}`
+      );
     } else {
       console.error("Warning: TypeScript not detected in current project");
     }

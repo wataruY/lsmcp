@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { Project } from "ts-morph";
-import { moveFile } from "../src/commands/move_file";
+import { moveFile } from "../src/ts/commands/move_file.ts";
 import fs from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";

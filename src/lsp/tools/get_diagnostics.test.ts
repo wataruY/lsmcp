@@ -1,0 +1,89 @@
+import { describe, it, expect } from "vitest";
+import { experimentalGetDiagnosticsTool } from "./get_diagnostics.ts";
+import { resolve } from "path";
+
+describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
+  const root = resolve(__dirname, "../../..");
+
+  it("should have correct tool definition", () => {
+    expect(experimentalGetDiagnosticsTool.name).toBe(
+      "experimental_get_diagnostics"
+    );
+    expect(experimentalGetDiagnosticsTool.description).toContain("diagnostics");
+  });
+
+  it("should get diagnostics for a file with errors", async () => {
+    const virtualContent = `
+      const x: string = 123; // Type error
+      console.log(y); // Undefined variable
+      
+      function foo(a: number) {
+        return a + "hello"; // Type error
+      }
+    `;
+
+    const result = await experimentalGetDiagnosticsTool.handler({
+      root,
+      filePath: "test.ts",
+      virtualContent,
+    });
+
+    expect(result).toContain("error");
+    // Should find multiple errors
+    expect(result.toLowerCase()).toMatch(/\d+ errors?/);
+  });
+
+  it("should handle file with no errors", async () => {
+    const virtualContent = `
+      const x: string = "hello";
+      console.log(x);
+      
+      function foo(a: number): number {
+        return a + 1;
+      }
+    `;
+
+    const result = await experimentalGetDiagnosticsTool.handler({
+      root,
+      filePath: "test.ts",
+      virtualContent,
+    });
+
+    expect(result).toContain("0 errors and 0 warnings");
+  });
+
+  it("should handle warnings", async () => {
+    const virtualContent = `
+      // @ts-check
+      const x = 123;
+      // @ts-ignore
+      const unused = 456; // This might generate a warning
+    `;
+
+    const result = await experimentalGetDiagnosticsTool.handler({
+      root,
+      filePath: "test.js",
+      virtualContent,
+    });
+
+    expect(result).toMatch(/\d+ errors? and \d+ warnings?/);
+  });
+
+  it("should handle non-existent file error", async () => {
+    await expect(
+      experimentalGetDiagnosticsTool.handler({
+        root,
+        filePath: "non-existent-file-12345.ts",
+      })
+    ).rejects.toThrow("ENOENT");
+  });
+
+  it("should get diagnostics for actual file", async () => {
+    const result = await experimentalGetDiagnosticsTool.handler({
+      root,
+      filePath: "examples/scratch.ts",
+    });
+
+    expect(result).toMatch(/Found \d+ errors? and \d+ warnings?/);
+  });
+});
