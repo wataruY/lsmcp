@@ -141,7 +141,7 @@ export default tseslint.config(
   },
   {
     // examples directory overrides
-    files: ["examples/*.ts"],
+    files: ["examples/*.ts", "playground/*.ts"],
     rules: {
       "no-console": "off",
     },
