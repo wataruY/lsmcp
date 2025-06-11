@@ -39,6 +39,7 @@ export class LSPPoolManager {
 
   /**
    * Get or create a tsgo LSP client pool
+   * tsgo is accessed via @typescript/native-preview npm package
    */
   getTsgoPool(rootPath: string): PooledLSPClient {
     const key = `tsgo:${rootPath}`;
@@ -46,8 +47,8 @@ export class LSPPoolManager {
     if (!this.pools.has(key)) {
       const pool = new PooledLSPClient({
         rootPath,
-        command: "tsgo",
-        args: ["lsp"],
+        command: "npx",
+        args: ["@typescript/native-preview", "lsp"],
         languageId: "typescript",
         maxProcesses: 3,
         idleTimeout: 5 * 60 * 1000, // 5 minutes
