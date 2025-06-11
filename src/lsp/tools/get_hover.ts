@@ -246,8 +246,8 @@ function formatHoverContents(
   return "";
 }
 
-export const experimentalGetHoverTool: ToolDef<typeof schema> = {
-  name: "experimental_get_hover",
+export const lspGetHoverTool: ToolDef<typeof schema> = {
+  name: "lsp_get_hover",
   description:
     "Get hover information (type signature, documentation) for a TypeScript symbol using LSP",
   schema,

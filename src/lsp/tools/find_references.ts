@@ -102,8 +102,8 @@ async function findReferencesWithLSP(
   }
 }
 
-export const experimentalFindReferencesTool: ToolDef<typeof schema> = {
-  name: "find_references",
+export const lspFindReferencesTool: ToolDef<typeof schema> = {
+  name: "lsp_find_references",
   description: "Find all references to symbol across the codebase using LSP",
   schema,
   handler: async (args) => {

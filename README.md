@@ -85,6 +85,32 @@ Add permissions in `.claude/settings.json`:
 }
 ```
 
+### Experimental TSGO
+
+`npm add @typescript/native-preview`
+
+.mcp.json
+
+```json
+{
+  "mcpServers": {
+    "typescript": {
+      "env": {
+        "TSGO": "true"
+      },
+      "command": "npx",
+      "args": ["typescript-mcp"]
+    }
+  }
+}
+```
+
+```json
+      "mcp__typescript__lsp_find_references",
+      "mcp__typescript__lsp_get_definitions",
+      "mcp__typescript__lsp_zget_diagnostics",
+```
+
 ## Usage Examples
 
 ```bash
@@ -139,20 +165,6 @@ $ claude
     function toMcpToolHandler<T>(
 
 ```
-
-## MCP Tool Commands
-
-- `mcp__typescript__move_file` - Move file with automatic import updates
-- `mcp__typescript__move_directory` - Move directory with automatic import updates
-- `mcp__typescript__rename_symbol` - Rename symbols across the project
-- `mcp__typescript__delete_symbol` - Delete symbols and their references
-- `mcp__typescript__find_references` - Find all references to a symbol
-- `mcp__typescript__get_definitions` - Get symbol definitions
-- `mcp__typescript__get_diagnostics` - Get TypeScript diagnostics
-- `mcp__typescript__get_module_symbols` - List module exports
-- `mcp__typescript__get_type_in_module` - Get detailed type signatures from modules
-- `mcp__typescript__get_type_at_symbol` - Get type information at specific symbol location
-- `mcp__typescript__get_symbols_in_scope` - Get all symbols visible at a specific location
 
 ## Develop
 

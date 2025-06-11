@@ -15,16 +15,18 @@ import { getModuleSymbolsTool } from "../ts/tools/get_module_symbols.ts";
 import { getTypeInModuleTool } from "../ts/tools/get_type_in_module.ts";
 import { getTypeAtSymbolTool } from "../ts/tools/get_type_at_symbol.ts";
 import { getSymbolsInScopeTool } from "../ts/tools/get_symbols_in_scope.ts";
-import { experimentalGetHoverTool } from "../lsp/tools/get_hover.ts";
-import { experimentalFindReferencesTool } from "../lsp/tools/find_references.ts";
-import { experimentalGetDefinitionsTool } from "../lsp/tools/get_definitions.ts";
-import { experimentalGetDiagnosticsTool } from "../lsp/tools/get_diagnostics.ts";
+import { lspGetHoverTool } from "../lsp/tools/get_hover.ts";
+import { lspFindReferencesTool } from "../lsp/tools/find_references.ts";
+import { lspGetDefinitionsTool } from "../lsp/tools/get_definitions.ts";
+import { lspGetDiagnosticsTool } from "../lsp/tools/get_diagnostics.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
 
 // Get project root from environment variable or use current directory
 const projectRoot = process.env.PROJECT_ROOT || process.cwd();
+
+const USE_TSGO: boolean = process.env.TSGO != null;
 
 const server = new McpServer({
   name: "typescript",
@@ -37,9 +39,6 @@ const tools = [
   move_directory,
   renameSymbolTool,
   deleteSymbolTool,
-  findReferencesTool,
-  getDefinitionsTool,
-  getDiagnosticsTool,
   getModuleSymbolsTool,
   getTypeInModuleTool,
   getTypeAtSymbolTool,
@@ -47,28 +46,34 @@ const tools = [
   // WIP: does not work yet correctly
   // getModuleGraphTool,
   // getRelatedModulesTool,
+
+  ...(USE_TSGO
+    ? [
+        lspGetHoverTool,
+        lspFindReferencesTool,
+        lspGetDefinitionsTool,
+        lspGetDiagnosticsTool,
+      ]
+    : [findReferencesTool, getDefinitionsTool, getDiagnosticsTool]),
 ];
 
 for (const tool of tools) {
   registerTool(server, tool, projectRoot);
 }
 
-// Register experimental LSP tools if enabled via environment variable
-const enableExperimental = process.env.ENABLE_EXPERIMENTAL_TOOLS === "true";
-
-if (enableExperimental) {
-  const experimentalTools = [
-    experimentalGetHoverTool,
-    experimentalFindReferencesTool,
-    experimentalGetDefinitionsTool,
-    experimentalGetDiagnosticsTool,
-  ];
-
-  for (const tool of experimentalTools) {
-    registerTool(server, tool, projectRoot);
-  }
-
-  console.error("Experimental LSP-based tools enabled");
+if (USE_TSGO) {
+  console.log("[tsgo] Using experimental TypeScript MCP server tools");
+  // const resolved = import.meta.resolve("@typescript/native-preview");
+  // if (resolved) {
+  //   console.error(
+  //     "[tsgo] Using @typescript/native-preview for TypeScript MCP server",
+  //     resolved
+  //   );
+  // } else {
+  //   console.error(
+  //     "Error: @typescript/native-preview is not installed. Please run `npm install @typescript/native-preview`."
+  //   );
+  // }
 }
 
 interface McpConfig {
@@ -131,12 +136,18 @@ function getTypescriptPermissions(): string[] {
   ];
 
   // Only include experimental permissions if enabled
-  if (process.env.ENABLE_EXPERIMENTAL_TOOLS === "true") {
+  if (USE_TSGO) {
     basePermissions.push(
-      "mcp__typescript__experimental_get_hover",
-      "mcp__typescript__experimental_find_references",
-      "mcp__typescript__experimental_get_definitions",
-      "mcp__typescript__experimental_get_diagnostics"
+      "mcp__typescript__lsp_get_hover",
+      "mcp__typescript__lsp_find_references",
+      "mcp__typescript__lsp_get_definitions",
+      "mcp__typescript__lsp_get_diagnostics"
+    );
+  } else {
+    basePermissions.push(
+      "mcp__typescript__find_references",
+      "mcp__typescript__get_definitions",
+      "mcp__typescript__get_diagnostics"
     );
   }
 
@@ -338,3 +349,6 @@ main().catch((error: unknown) => {
   console.error("Fatal error:", error);
   process.exit(1);
 });
+function checkTsgoInstalled() {
+  throw new Error("Function not implemented.");
+}

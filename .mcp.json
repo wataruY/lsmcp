@@ -3,7 +3,7 @@
     "typescript": {
       "command": "npx",
       "env": {
-        "ENABLE_EXPERIMENTAL_TOOLS": "true"
+        "TSGO": "true"
       },
       "args": ["tsx", "src/mcp/server.ts"]
     },

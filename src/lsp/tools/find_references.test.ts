@@ -1,24 +1,22 @@
 import { describe, it, expect } from "vitest";
-import { experimentalFindReferencesTool } from "./find_references.ts";
+import { lspFindReferencesTool } from "./find_references.ts";
 import { resolve } from "path";
 
 describe("experimentalFindReferencesTool", () => {
   const root = resolve(__dirname, "../../..");
 
   it("should have correct tool definition", () => {
-    expect(experimentalFindReferencesTool.name).toBe("find_references");
-    expect(experimentalFindReferencesTool.description).toContain("references");
-    expect(experimentalFindReferencesTool.schema.shape).toBeDefined();
-    expect(experimentalFindReferencesTool.schema.shape.root).toBeDefined();
-    expect(experimentalFindReferencesTool.schema.shape.filePath).toBeDefined();
-    expect(experimentalFindReferencesTool.schema.shape.line).toBeDefined();
-    expect(
-      experimentalFindReferencesTool.schema.shape.symbolName
-    ).toBeDefined();
+    expect(lspFindReferencesTool.name).toBe("find_references");
+    expect(lspFindReferencesTool.description).toContain("references");
+    expect(lspFindReferencesTool.schema.shape).toBeDefined();
+    expect(lspFindReferencesTool.schema.shape.root).toBeDefined();
+    expect(lspFindReferencesTool.schema.shape.filePath).toBeDefined();
+    expect(lspFindReferencesTool.schema.shape.line).toBeDefined();
+    expect(lspFindReferencesTool.schema.shape.symbolName).toBeDefined();
   });
 
   it("should find references to a type", async () => {
-    const result = await experimentalFindReferencesTool.handler({
+    const result = await lspFindReferencesTool.handler({
       root,
       filePath: "examples/types.ts",
       line: 1,
@@ -30,7 +28,7 @@ describe("experimentalFindReferencesTool", () => {
   });
 
   it("should find references to a function", async () => {
-    const result = await experimentalFindReferencesTool.handler({
+    const result = await lspFindReferencesTool.handler({
       root,
       filePath: "examples/types.ts",
       line: 10,
@@ -42,7 +40,7 @@ describe("experimentalFindReferencesTool", () => {
   });
 
   it("should handle string line matching", async () => {
-    const result = await experimentalFindReferencesTool.handler({
+    const result = await lspFindReferencesTool.handler({
       root,
       filePath: "examples/types.ts",
       line: "ValueWithOptional",
@@ -54,7 +52,7 @@ describe("experimentalFindReferencesTool", () => {
 
   it("should handle symbol not found on line", async () => {
     await expect(
-      experimentalFindReferencesTool.handler({
+      lspFindReferencesTool.handler({
         root,
         filePath: "examples/types.ts",
         line: 1,
@@ -65,7 +63,7 @@ describe("experimentalFindReferencesTool", () => {
 
   it("should handle line not found", async () => {
     await expect(
-      experimentalFindReferencesTool.handler({
+      lspFindReferencesTool.handler({
         root,
         filePath: "examples/types.ts",
         line: "nonexistent line",
@@ -76,7 +74,7 @@ describe("experimentalFindReferencesTool", () => {
 
   it("should handle file not found", async () => {
     await expect(
-      experimentalFindReferencesTool.handler({
+      lspFindReferencesTool.handler({
         root,
         filePath: "nonexistent.ts",
         line: 1,
@@ -86,7 +84,7 @@ describe("experimentalFindReferencesTool", () => {
   });
 
   it("should include preview context in results", async () => {
-    const result = await experimentalFindReferencesTool.handler({
+    const result = await lspFindReferencesTool.handler({
       root,
       filePath: "examples/types.ts",
       line: 11,
@@ -99,7 +97,7 @@ describe("experimentalFindReferencesTool", () => {
 
   it("should find references in the same file", async () => {
     // The Value type is defined and used in types.ts
-    const result = await experimentalFindReferencesTool.handler({
+    const result = await lspFindReferencesTool.handler({
       root,
       filePath: "examples/types.ts",
       line: 1,

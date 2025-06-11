@@ -136,8 +136,8 @@ async function getDiagnosticsWithLSP(
   }
 }
 
-export const experimentalGetDiagnosticsTool: ToolDef<typeof schema> = {
-  name: "experimental_get_diagnostics",
+export const lspGetDiagnosticsTool: ToolDef<typeof schema> = {
+  name: "lsp_get_diagnostics",
   description:
     "Get TypeScript diagnostics (errors, warnings) for a file using LSP",
   schema,

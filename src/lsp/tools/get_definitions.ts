@@ -144,8 +144,8 @@ async function getDefinitionsWithLSP(
   }
 }
 
-export const experimentalGetDefinitionsTool: ToolDef<typeof schema> = {
-  name: "experimental_get_definitions",
+export const lspGetDefinitionsTool: ToolDef<typeof schema> = {
+  name: "lsp_get_definitions",
   description: "Get the definition(s) of a TypeScript symbol using LSP",
   schema,
   handler: async (args) => {

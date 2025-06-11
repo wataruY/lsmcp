@@ -1,15 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { experimentalGetDiagnosticsTool } from "./get_diagnostics.ts";
+import { lspGetDiagnosticsTool } from "./get_diagnostics.ts";
 import { resolve } from "path";
 
 describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
   const root = resolve(__dirname, "../../..");
 
   it("should have correct tool definition", () => {
-    expect(experimentalGetDiagnosticsTool.name).toBe(
-      "experimental_get_diagnostics"
-    );
-    expect(experimentalGetDiagnosticsTool.description).toContain("diagnostics");
+    expect(lspGetDiagnosticsTool.name).toBe("experimental_get_diagnostics");
+    expect(lspGetDiagnosticsTool.description).toContain("diagnostics");
   });
 
   it("should get diagnostics for a file with errors", async () => {
@@ -22,7 +20,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       }
     `;
 
-    const result = await experimentalGetDiagnosticsTool.handler({
+    const result = await lspGetDiagnosticsTool.handler({
       root,
       filePath: "test.ts",
       virtualContent,
@@ -43,7 +41,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       }
     `;
 
-    const result = await experimentalGetDiagnosticsTool.handler({
+    const result = await lspGetDiagnosticsTool.handler({
       root,
       filePath: "test.ts",
       virtualContent,
@@ -60,7 +58,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       const unused = 456; // This might generate a warning
     `;
 
-    const result = await experimentalGetDiagnosticsTool.handler({
+    const result = await lspGetDiagnosticsTool.handler({
       root,
       filePath: "test.js",
       virtualContent,
@@ -71,7 +69,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
 
   it("should handle non-existent file error", async () => {
     await expect(
-      experimentalGetDiagnosticsTool.handler({
+      lspGetDiagnosticsTool.handler({
         root,
         filePath: "non-existent-file-12345.ts",
       })
@@ -79,7 +77,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
   });
 
   it("should get diagnostics for actual file", async () => {
-    const result = await experimentalGetDiagnosticsTool.handler({
+    const result = await lspGetDiagnosticsTool.handler({
       root,
       filePath: "examples/scratch.ts",
     });
