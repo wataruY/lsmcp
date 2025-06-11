@@ -90,7 +90,7 @@ async function getHoverWithoutLine(
     // Find target text in file
     const targetResult = findTargetInFile(lines, request.target);
     if ("error" in targetResult) {
-      await client?.stop().catch(noop);
+      await client.stop().catch(noop);
       return err(`${targetResult.error} in ${request.filePath}`);
     }
 
@@ -107,7 +107,7 @@ async function getHoverWithoutLine(
       character: symbolPosition,
     })) as HoverResult | null;
 
-    await client?.stop();
+    await client.stop();
 
     return formatHoverResult(result, request, targetLine, symbolPosition);
   } catch (error) {
@@ -137,8 +137,8 @@ function formatHoverResult(
   // Format hover contents
   const formattedContents = formatHoverContents(result.contents);
 
-  // Format range if available
-  let range = undefined;
+  // Format range - if not available, specify all lines
+  let range;
   if (result.range) {
     range = {
       start: {
@@ -148,6 +148,21 @@ function formatHoverResult(
       end: {
         line: result.range.end.line + 1,
         character: result.range.end.character + 1,
+      },
+    };
+  } else {
+    // If range is null, specify all lines
+    const absolutePath = resolve(request.root, request.filePath);
+    const fileContent = readFileSync(absolutePath, "utf-8");
+    const lines = fileContent.split("\n");
+    range = {
+      start: {
+        line: 1,
+        character: 1,
+      },
+      end: {
+        line: lines.length,
+        character: lines[lines.length - 1]?.length || 0,
       },
     };
   }
@@ -197,11 +212,11 @@ async function getHover(
       character: symbolPosition,
     })) as HoverResult | null;
 
-    await client?.stop();
+    await client.stop();
 
     return formatHoverResult(result, request, targetLine, symbolPosition);
   } catch (error) {
-    await client?.stop().catch(noop);
+    await client.stop().catch(noop);
     return err(error instanceof Error ? error.message : String(error));
   }
 }
