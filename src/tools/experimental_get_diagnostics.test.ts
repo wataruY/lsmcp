@@ -26,13 +26,9 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       virtualContent,
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content[0].text).toContain("error");
-    
-    // The response should either contain diagnostics or indicate they were found
-    const allText = result.content.map(c => c.text).join("\n");
-    // Either we found errors or the diagnostic contains error information
-    expect(allText.toLowerCase()).toMatch(/error|diagnostic/);
+    expect(result).toContain("error");
+    // Should find multiple errors
+    expect(result.toLowerCase()).toMatch(/\d+ errors?/);
   });
 
   it("should handle file with no errors", async () => {
@@ -51,8 +47,7 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       virtualContent,
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content[0].text).toContain("0 errors and 0 warnings");
+    expect(result).toContain("0 errors and 0 warnings");
   });
 
   it("should handle warnings", async () => {
@@ -69,18 +64,16 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       virtualContent,
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content[0].text).toMatch(/\d+ error[s]? and \d+ warning[s]?/);
+    expect(result).toMatch(/\d+ errors? and \d+ warnings?/);
   });
 
   it("should handle non-existent file error", async () => {
-    const result = await experimentalGetDiagnosticsTool.handler({
-      root,
-      filePath: "non-existent-file-12345.ts",
-    });
-
-    expect(result.isError).toBeTruthy();
-    expect(result.content[0].text).toContain("Error:");
+    await expect(
+      experimentalGetDiagnosticsTool.handler({
+        root,
+        filePath: "non-existent-file-12345.ts",
+      })
+    ).rejects.toThrow("ENOENT");
   });
 
   it("should get diagnostics for actual file", async () => {
@@ -89,7 +82,6 @@ describe("experimentalGetDiagnosticsTool", { timeout: 10000 }, () => {
       filePath: "examples/scratch.ts",
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content[0].text).toMatch(/Found \d+ error[s]? and \d+ warning[s]?/);
+    expect(result).toMatch(/Found \d+ errors? and \d+ warnings?/);
   });
 });

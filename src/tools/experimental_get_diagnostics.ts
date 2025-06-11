@@ -1,14 +1,23 @@
+import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { type McpToolResult, formatMcpResult } from "./lsp_common.ts";
-import { createLSPClient } from "../_experimental/lsp_client.ts";
+import { spawn } from "child_process";
+import { createLSPClient } from "../lsp/lsp_client.ts";
+import type { ToolDef } from "../mcp/types.ts";
 
-interface GetDiagnosticsRequest {
-  root: string;
-  filePath: string;
-  virtualContent?: string;
-}
+const schema = z.object({
+  root: z.string().describe("Root directory for resolving relative paths"),
+  filePath: z
+    .string()
+    .describe("File path to check for diagnostics (relative to root)"),
+  virtualContent: z
+    .string()
+    .optional()
+    .describe("Virtual content to use for diagnostics instead of file content"),
+});
+
+type GetDiagnosticsRequest = z.infer<typeof schema>;
 
 interface Diagnostic {
   severity: "error" | "warning" | "information" | "hint";
@@ -51,9 +60,18 @@ interface LSPDiagnostic {
 async function getDiagnosticsWithLSP(
   request: GetDiagnosticsRequest
 ): Promise<Result<GetDiagnosticsSuccess, string>> {
-  const client = createLSPClient(request.root);
+  let client: ReturnType<typeof createLSPClient> | null = null;
 
   try {
+    // Start TypeScript Language Server
+    const process = spawn("npx", ["typescript-language-server", "--stdio"], {
+      cwd: request.root,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    
+    // Create client with process
+    client = createLSPClient({ rootPath: request.root, process });
+    
     // Start LSP server
     await client.start();
 
@@ -113,35 +131,17 @@ async function getDiagnosticsWithLSP(
       diagnostics,
     });
   } catch (error) {
-    await client.stop().catch(() => {});
+    await client?.stop().catch(() => {});
     return err(error instanceof Error ? error.message : String(error));
   }
 }
 
-export const experimentalGetDiagnosticsTool = {
+export const experimentalGetDiagnosticsTool: ToolDef<typeof schema> = {
   name: "experimental_get_diagnostics",
   description:
     "Get TypeScript diagnostics (errors, warnings) for a file using LSP",
-  inputSchema: {
-    type: "object",
-    properties: {
-      root: {
-        type: "string",
-        description: "Root directory for resolving relative paths",
-      },
-      filePath: {
-        type: "string",
-        description: "File path to check for diagnostics (relative to root)",
-      },
-      virtualContent: {
-        type: "string",
-        description:
-          "Virtual content to use for diagnostics instead of file content",
-      },
-    },
-    required: ["root", "filePath"],
-  },
-  handler: async (args: GetDiagnosticsRequest): Promise<McpToolResult> => {
+  schema,
+  handler: async (args) => {
     const result = await getDiagnosticsWithLSP(args);
     if (result.isOk()) {
       const messages = [result.value.message];
@@ -159,9 +159,9 @@ export const experimentalGetDiagnosticsTool = {
         }
       }
 
-      return formatMcpResult(true, messages);
+      return messages.join("\n\n");
     } else {
-      return formatMcpResult(false, [`Error: ${result.error}`]);
+      throw new Error(result.error);
     }
   },
 };

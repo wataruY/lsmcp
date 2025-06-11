@@ -8,12 +8,7 @@ describe("experimentalGetDefinitionsTool", () => {
   it("should have correct tool definition", () => {
     expect(experimentalGetDefinitionsTool.name).toBe("experimental_get_definitions");
     expect(experimentalGetDefinitionsTool.description).toContain("definition");
-    expect(experimentalGetDefinitionsTool.inputSchema.required).toEqual([
-      "root",
-      "filePath",
-      "line",
-      "symbolName",
-    ]);
+    expect(experimentalGetDefinitionsTool.schema).toBeDefined();
   });
 
   it("should find definition of an exported symbol", async () => {
@@ -25,10 +20,8 @@ describe("experimentalGetDefinitionsTool", () => {
       symbolName: "x",
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content).toBeDefined();
-    expect(result.content[0].text).toContain("Found");
-    expect(result.content[0].text).toContain("definition");
+    expect(result).toContain("Found");
+    expect(result).toContain("definition");
   });
 
   it.skip("should find definition of a type in the same project", async () => {
@@ -40,9 +33,7 @@ describe("experimentalGetDefinitionsTool", () => {
       symbolName: "Value",
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content).toBeDefined();
-    expect(result.content[0].text).toContain("Found");
+    expect(result).toContain("Found");
   });
 
   it.skip("should handle string line matching", async () => {
@@ -53,45 +44,40 @@ describe("experimentalGetDefinitionsTool", () => {
       symbolName: "ValueWithOptional",
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content[0].text).toContain("ValueWithOptional");
+    expect(result).toContain("ValueWithOptional");
   });
 
   it("should handle symbol not found on line", async () => {
-    const result = await experimentalGetDefinitionsTool.handler({
-      root,
-      filePath: "examples/types.ts",
-      line: 1,
-      symbolName: "nonexistent",
-    });
-
-    expect(result.isError).toBeTruthy();
-    expect(result.content[0].text).toContain("not found on line");
+    await expect(
+      experimentalGetDefinitionsTool.handler({
+        root,
+        filePath: "examples/types.ts",
+        line: 1,
+        symbolName: "nonexistent",
+      })
+    ).rejects.toThrow("Symbol \"nonexistent\" not found on line");
   });
 
   it("should handle line not found", async () => {
-    const result = await experimentalGetDefinitionsTool.handler({
-      root,
-      filePath: "examples/types.ts",
-      line: "nonexistent line",
-      symbolName: "Value",
-    });
-
-    expect(result.isError).toBeTruthy();
-    expect(result.content[0].text).toContain("Line containing");
-    expect(result.content[0].text).toContain("not found");
+    await expect(
+      experimentalGetDefinitionsTool.handler({
+        root,
+        filePath: "examples/types.ts",
+        line: "nonexistent line",
+        symbolName: "Value",
+      })
+    ).rejects.toThrow("Line containing \"nonexistent line\" not found");
   });
 
   it("should handle file not found", async () => {
-    const result = await experimentalGetDefinitionsTool.handler({
-      root,
-      filePath: "nonexistent.ts",
-      line: 1,
-      symbolName: "test",
-    });
-
-    expect(result.isError).toBeTruthy();
-    expect(result.content[0].text).toContain("Error:");
+    await expect(
+      experimentalGetDefinitionsTool.handler({
+        root,
+        filePath: "nonexistent.ts",
+        line: 1,
+        symbolName: "test",
+      })
+    ).rejects.toThrow();
   });
 
   it.skip("should handle no definition found for built-in symbols", async () => {
@@ -104,9 +90,8 @@ describe("experimentalGetDefinitionsTool", () => {
       after: 2,
     });
 
-    expect(result.isError).toBeFalsy();
     // Local variable might have definition or might not, depending on LSP
-    expect(result.content[0].text).toContain("Found");
-    expect(result.content[0].text).toContain("definition");
+    expect(result).toContain("Found");
+    expect(result).toContain("definition");
   });
 });

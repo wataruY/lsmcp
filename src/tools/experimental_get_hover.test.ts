@@ -8,12 +8,11 @@ describe("experimentalGetHoverTool", () => {
   it("should have correct tool definition", () => {
     expect(experimentalGetHoverTool.name).toBe("experimental_get_hover");
     expect(experimentalGetHoverTool.description).toContain("hover information");
-    expect(experimentalGetHoverTool.inputSchema.required).toEqual([
-      "root",
-      "filePath",
-      "line",
-      "symbolName",
-    ]);
+    expect(experimentalGetHoverTool.schema.shape).toBeDefined();
+    expect(experimentalGetHoverTool.schema.shape.root).toBeDefined();
+    expect(experimentalGetHoverTool.schema.shape.filePath).toBeDefined();
+    expect(experimentalGetHoverTool.schema.shape.line).toBeDefined();
+    expect(experimentalGetHoverTool.schema.shape.target).toBeDefined();
   });
 
   it("should get hover information for a type", async () => {
@@ -21,15 +20,11 @@ describe("experimentalGetHoverTool", () => {
       root,
       filePath: "examples/types.ts",
       line: 1,
-      symbolName: "Value",
+      target: "Value",
     });
 
-    expect(result.isError).toBeUndefined();
-    expect(result.content).toHaveLength(2);
-    expect(result.content[0].type).toBe("text");
-    expect(result.content[0].text).toContain("Hover information for \"Value\"");
-    expect(result.content[1].type).toBe("text");
-    expect(result.content[1].text).toContain("type Value");
+    expect(result).toContain("Hover information for \"Value\"");
+    expect(result).toContain("type Value");
   });
 
   it("should get hover information using line string match", async () => {
@@ -37,13 +32,11 @@ describe("experimentalGetHoverTool", () => {
       root,
       filePath: "examples/types.ts",
       line: "ValueWithOptional",
-      symbolName: "ValueWithOptional",
+      target: "ValueWithOptional",
     });
 
-    expect(result.isError).toBeUndefined();
-    expect(result.content).toHaveLength(2);
-    expect(result.content[1].text).toContain("type ValueWithOptional");
-    expect(result.content[1].text).toContain("o?: string");
+    expect(result).toContain("type ValueWithOptional");
+    expect(result).toContain("o?: string");
   });
 
   it("should get hover information for a function", async () => {
@@ -51,70 +44,65 @@ describe("experimentalGetHoverTool", () => {
       root,
       filePath: "examples/types.ts",
       line: 10,
-      symbolName: "getValue",
+      target: "getValue",
     });
 
-    expect(result.isError).toBeUndefined();
-    expect(result.content).toHaveLength(2);
-    expect(result.content[1].text).toContain("function getValue");
-    expect(result.content[1].text).toContain("Value");
+    expect(result).toContain("function getValue");
+    expect(result).toContain("Value");
   });
 
   it("should handle no hover information gracefully", async () => {
-    const result = await experimentalGetHoverTool.handler({
-      root,
-      filePath: "examples/types.ts",
-      line: 3, // Empty line
-      symbolName: "v",
-    });
-
-    // Even with no hover info, it should not be an error
-    // The tool should handle this case gracefully
-    expect(result.content).toBeDefined();
-    expect(result.content[0].type).toBe("text");
+    await expect(
+      experimentalGetHoverTool.handler({
+        root,
+        filePath: "examples/types.ts",
+        line: 3, // Empty line
+        target: "v",
+      })
+    ).rejects.toThrow("Symbol \"v\" not found");
   });
 
   it("should handle non-existent symbol error", async () => {
-    const result = await experimentalGetHoverTool.handler({
-      root,
-      filePath: "examples/types.ts",
-      line: 1,
-      symbolName: "NonExistentSymbol",
-    });
-
-    expect(result.isError).toBe(true);
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].type).toBe("text");
-    expect(result.content[0].text).toContain("Error:");
-    expect(result.content[0].text).toContain("Symbol \"NonExistentSymbol\" not found");
+    await expect(
+      experimentalGetHoverTool.handler({
+        root,
+        filePath: "examples/types.ts",
+        line: 1,
+        target: "NonExistentSymbol",
+      })
+    ).rejects.toThrow("Symbol \"NonExistentSymbol\" not found");
   });
 
   it("should handle non-existent file error", async () => {
-    const result = await experimentalGetHoverTool.handler({
-      root,
-      filePath: "examples/does-not-exist.ts",
-      line: 1,
-      symbolName: "something",
-    });
-
-    expect(result.isError).toBe(true);
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].type).toBe("text");
-    expect(result.content[0].text).toContain("Error:");
-    expect(result.content[0].text).toContain("ENOENT");
+    await expect(
+      experimentalGetHoverTool.handler({
+        root,
+        filePath: "examples/does-not-exist.ts",
+        line: 1,
+        target: "something",
+      })
+    ).rejects.toThrow("ENOENT");
   });
 
   it("should handle line string not found error", async () => {
+    await expect(
+      experimentalGetHoverTool.handler({
+        root,
+        filePath: "examples/types.ts",
+        line: "NonExistentLine",
+        target: "something",
+      })
+    ).rejects.toThrow("Line containing \"NonExistentLine\" not found");
+  });
+
+  it("should get hover information without line specified", async () => {
     const result = await experimentalGetHoverTool.handler({
       root,
       filePath: "examples/types.ts",
-      line: "NonExistentLine",
-      symbolName: "something",
+      target: "Value",
     });
 
-    expect(result.isError).toBe(true);
-    expect(result.content).toHaveLength(1);
-    expect(result.content[0].text).toContain("Error:");
-    expect(result.content[0].text).toContain("Line containing \"NonExistentLine\" not found");
+    expect(result).toContain("Hover information for \"Value\"");
+    expect(result).toContain("type Value");
   });
 });

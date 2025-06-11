@@ -6,32 +6,40 @@ import { resolve } from "node:path";
 const schema = z.object({
   sourcePath: z.string().describe("The relative path of the directory to move"),
   targetPath: z.string().describe("The new relative path for the directory"),
-  overwrite: z.boolean().optional().describe("Whether to overwrite existing directory at target path")
+  overwrite: z
+    .boolean()
+    .optional()
+    .describe("Whether to overwrite existing directory at target path"),
 });
 
 export const move_directory: ToolDef<typeof schema> = {
-  name: "mcp__typescript__move_directory",
-  description: "Move a directory to a new location, updating all TypeScript imports and references automatically",
+  name: "move_directory",
+  description:
+    "Move a directory to a new location, updating all TypeScript imports and references automatically",
   schema,
   handler: async (input) => {
     const rootPath = process.cwd();
     const source = resolve(rootPath, input.sourcePath);
     const target = resolve(rootPath, input.targetPath);
-    
+
     const result = await moveDirectory(rootPath, source, target, {
-      overwrite: input.overwrite
+      overwrite: input.overwrite,
     });
-    
+
     if (!result.success) {
       throw new Error(result.error || "Failed to move directory");
     }
-    
-    return JSON.stringify({
-      success: true,
-      movedFiles: result.movedFiles.map(filePath => ({
-        path: filePath.replace(rootPath + "/", "")
-      })),
-      message: `Successfully moved directory from ${input.sourcePath} to ${input.targetPath}. Moved ${result.movedFiles.length} files.`
-    }, null, 2);
-  }
+
+    return JSON.stringify(
+      {
+        success: true,
+        movedFiles: result.movedFiles.map((filePath) => ({
+          path: filePath.replace(rootPath + "/", ""),
+        })),
+        message: `Successfully moved directory from ${input.sourcePath} to ${input.targetPath}. Moved ${result.movedFiles.length} files.`,
+      },
+      null,
+      2
+    );
+  },
 };

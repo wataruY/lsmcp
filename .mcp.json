@@ -2,7 +2,10 @@
   "mcpServers": {
     "typescript": {
       "command": "npx",
-      "args": ["-y", "typescript-mcp@latest"]
+      "env": {
+        "ENABLE_EXPERIMENTAL_TOOLS": "true"
+      },
+      "args": ["tsx", "src/mcp/server.ts"]
     },
     "readability": {
       "command": "npx",

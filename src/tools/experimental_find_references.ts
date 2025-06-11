@@ -1,14 +1,26 @@
+import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
 import { relative } from "path";
 import {
-  type LSPToolRequest,
-  type McpToolResult,
   setupLSPRequest,
-  formatMcpResult,
 } from "./lsp_common.ts";
+import type { ToolDef } from "../mcp/types.ts";
 
-interface FindReferencesRequest extends LSPToolRequest {}
+const schema = z.object({
+  root: z.string().describe("Root directory for resolving relative paths"),
+  filePath: z
+    .string()
+    .describe("File path containing the symbol (relative to root)"),
+  line: z
+    .union([z.number(), z.string()])
+    .describe("Line number (1-based) or string to match in the line"),
+  symbolName: z
+    .string()
+    .describe("Name of the symbol to find references for"),
+});
+
+type FindReferencesRequest = z.infer<typeof schema>;
 
 interface Reference {
   filePath: string;
@@ -89,35 +101,11 @@ async function findReferencesWithLSP(
   }
 }
 
-export const experimentalFindReferencesTool = {
+export const experimentalFindReferencesTool: ToolDef<typeof schema> = {
   name: "experimental_find_references",
   description: "Find all references to a TypeScript/JavaScript symbol across the codebase using LSP",
-  inputSchema: {
-    type: "object",
-    properties: {
-      root: {
-        type: "string",
-        description: "Root directory for resolving relative paths",
-      },
-      filePath: {
-        type: "string",
-        description: "File path containing the symbol (relative to root)",
-      },
-      line: {
-        oneOf: [
-          { type: "number", description: "Line number (1-based)" },
-          { type: "string", description: "String to match in the line" },
-        ],
-        description: "Line number (1-based) or string to match in the line",
-      },
-      symbolName: {
-        type: "string",
-        description: "Name of the symbol to find references for",
-      },
-    },
-    required: ["root", "filePath", "line", "symbolName"],
-  },
-  handler: async (args: FindReferencesRequest): Promise<McpToolResult> => {
+  schema,
+  handler: async (args) => {
     const result = await findReferencesWithLSP(args);
     if (result.isOk()) {
       const messages = [result.value.message];
@@ -130,9 +118,9 @@ export const experimentalFindReferencesTool = {
         );
       }
       
-      return formatMcpResult(true, messages);
+      return messages.join("\n\n");
     } else {
-      return formatMcpResult(false, [`Error: ${result.error}`]);
+      throw new Error(result.error);
     }
   },
 };

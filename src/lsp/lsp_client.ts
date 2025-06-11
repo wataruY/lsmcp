@@ -1,4 +1,4 @@
-import { spawn, ChildProcess } from "child_process";
+import { ChildProcess } from "child_process";
 import { EventEmitter } from "events";
 import {
   Position,
@@ -26,7 +26,7 @@ interface LSPMessage {
   };
 }
 
-// LSP Protocol types (vscode-languageserver-typesに含まれていない型を自前定義)
+// LSP Protocol types
 interface TextDocumentIdentifier {
   uri: DocumentUri;
 }
@@ -120,12 +120,12 @@ interface DidChangeTextDocumentParams {
   contentChanges: TextDocumentContentChangeEvent[];
 }
 
-// 型エイリアス
+// Type aliases
 export type HoverResult = Hover | null;
 export type DefinitionResult = Definition | Location | Location[] | null;
 export type ReferencesResult = Location[] | null;
 
-// Hover contents types (他のファイルで使用される)
+// Hover contents types
 export type HoverContents =
   | string
   | MarkedString
@@ -141,9 +141,18 @@ interface LSPClientState {
   diagnostics: Map<string, Diagnostic[]>;
   eventEmitter: EventEmitter;
   rootPath: string;
+  languageId: string;
 }
 
-export function createLSPClient(rootPath: string): LSPClientState & {
+export interface LSPClientConfig {
+  rootPath: string;
+  process: ChildProcess;
+  languageId?: string; // Default: "typescript"
+  clientName?: string; // Default: "lsp-client"
+  clientVersion?: string; // Default: "0.1.0"
+}
+
+export function createLSPClient(config: LSPClientConfig): LSPClientState & {
   start: () => Promise<void>;
   stop: () => Promise<void>;
   openDocument: (uri: string, text: string) => void;
@@ -153,20 +162,21 @@ export function createLSPClient(rootPath: string): LSPClientState & {
     uri: string,
     position: Position
   ) => Promise<Location | Location[]>;
-  getHover: (uri: string, position: Position) => Promise<unknown>;
+  getHover: (uri: string, position: Position) => Promise<HoverResult>;
   getDiagnostics: (uri: string) => Diagnostic[];
   on: (event: string, listener: (...args: unknown[]) => void) => void;
   emit: (event: string, ...args: unknown[]) => boolean;
 } {
   const state: LSPClientState = {
-    process: null,
+    process: config.process,
     messageId: 0,
     responseHandlers: new Map(),
     buffer: "",
     contentLength: -1,
     diagnostics: new Map(),
     eventEmitter: new EventEmitter(),
-    rootPath,
+    rootPath: config.rootPath,
+    languageId: config.languageId || "typescript",
   };
 
   function processBuffer(): void {
@@ -281,8 +291,8 @@ export function createLSPClient(rootPath: string): LSPClientState & {
     const initParams: InitializeParams = {
       processId: process.pid,
       clientInfo: {
-        name: "typescript-mcp-lsp-client",
-        version: "0.1.0",
+        name: config.clientName || "lsp-client",
+        version: config.clientVersion || "0.1.0",
       },
       locale: "en",
       rootPath: state.rootPath,
@@ -316,11 +326,9 @@ export function createLSPClient(rootPath: string): LSPClientState & {
   }
 
   async function start(): Promise<void> {
-    // Start TypeScript Language Server
-    state.process = spawn("npx", ["typescript-language-server", "--stdio"], {
-      cwd: state.rootPath,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
+    if (!state.process) {
+      throw new Error("No process provided to LSP client");
+    }
 
     state.process.stdout?.on("data", (data: Buffer) => {
       state.buffer += data.toString();
@@ -336,6 +344,10 @@ export function createLSPClient(rootPath: string): LSPClientState & {
       state.process = null;
     });
 
+    state.process.on("error", (error) => {
+      console.error("LSP server error:", error);
+    });
+
     // Initialize the LSP connection
     await initialize();
   }
@@ -344,7 +356,7 @@ export function createLSPClient(rootPath: string): LSPClientState & {
     const params: DidOpenTextDocumentParams = {
       textDocument: {
         uri,
-        languageId: "typescript",
+        languageId: state.languageId,
         version: 1,
         text,
       },
@@ -418,15 +430,12 @@ export function createLSPClient(rootPath: string): LSPClientState & {
   async function getHover(
     uri: string,
     position: Position
-  ): Promise<HoverResult | null> {
+  ): Promise<HoverResult> {
     const params: TextDocumentPositionParams = {
       textDocument: { uri },
       position,
     };
-    const result = await sendRequest<HoverResult | null>(
-      "textDocument/hover",
-      params
-    );
+    const result = await sendRequest<HoverResult>("textDocument/hover", params);
     return result;
   }
 

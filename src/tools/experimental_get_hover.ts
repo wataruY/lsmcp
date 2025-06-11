@@ -1,12 +1,34 @@
+import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
-import {
-  type LSPToolRequest,
-  type McpToolResult,
-  setupLSPRequest,
-  formatMcpResult,
-} from "./lsp_common.ts";
+import { setupLSPRequest, findTargetInFile } from "./lsp_common.ts";
+import type { ToolDef } from "../mcp/types.ts";
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import { spawn } from "child_process";
+import { createLSPClient } from "../lsp/lsp_client.ts";
 
-interface GetHoverRequest extends LSPToolRequest {}
+/**
+ * No-op function for catch handlers
+ */
+function noop(): void {
+  // Intentionally empty
+}
+
+const schema = z.object({
+  root: z.string().describe("Root directory for resolving relative paths"),
+  filePath: z
+    .string()
+    .describe("File path containing the symbol (relative to root)"),
+  line: z
+    .union([z.number(), z.string()])
+    .describe("Line number (1-based) or string to match in the line")
+    .optional(),
+  target: z
+    .string()
+    .describe("Text to find and get hover information for"),
+});
+
+type GetHoverRequest = z.infer<typeof schema>;
 
 /**
  * LSP Hover response types
@@ -38,12 +60,127 @@ interface GetHoverSuccess {
 }
 
 /**
+ * Helper to handle hover request when line is not provided
+ */
+async function getHoverWithoutLine(
+  request: GetHoverRequest
+): Promise<Result<GetHoverSuccess, string>> {
+  let client: ReturnType<typeof createLSPClient> | null = null;
+  
+  try {
+    // Start TypeScript Language Server
+    const process = spawn("npx", ["typescript-language-server", "--stdio"], {
+      cwd: request.root,
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    
+    // Create client with process
+    client = createLSPClient({ rootPath: request.root, process });
+    
+    // Start LSP server
+    await client.start();
+    
+    // Read file content
+    const absolutePath = resolve(request.root, request.filePath);
+    const fileContent = readFileSync(absolutePath, "utf-8");
+    const fileUri = `file://${absolutePath}`;
+    const lines = fileContent.split("\n");
+    
+    // Find target text in file
+    const targetResult = findTargetInFile(lines, request.target);
+    if ("error" in targetResult) {
+      await client?.stop().catch(noop);
+      return err(`${targetResult.error} in ${request.filePath}`);
+    }
+    
+    const { lineIndex: targetLine, characterIndex: symbolPosition } = targetResult;
+    
+    // Open document in LSP
+    client.openDocument(fileUri, fileContent);
+    await new Promise<void>((resolve) => setTimeout(resolve, 1000));
+    
+    // Get hover info
+    const result = (await client.getHover(fileUri, {
+      line: targetLine,
+      character: symbolPosition,
+    })) as HoverResult | null;
+    
+    await client?.stop();
+    
+    return formatHoverResult(result, request, targetLine, symbolPosition);
+  } catch (error) {
+    await client?.stop().catch(noop);
+    return err(error instanceof Error ? error.message : String(error));
+  }
+}
+
+/**
+ * Format hover result into GetHoverSuccess
+ */
+function formatHoverResult(
+  result: HoverResult | null,
+  request: GetHoverRequest,
+  targetLine: number,
+  symbolPosition: number
+): Result<GetHoverSuccess, string> {
+  if (!result) {
+    return ok({
+      message: `No hover information available for "${
+        request.target
+      }" at ${request.filePath}:${targetLine + 1}:${symbolPosition + 1}`,
+      hover: null,
+    });
+  }
+  
+  // Format hover contents
+  const formattedContents = formatHoverContents(result.contents);
+  
+  // Format range if available
+  let range = undefined;
+  if (result.range) {
+    range = {
+      start: {
+        line: result.range.start.line + 1,
+        character: result.range.start.character + 1,
+      },
+      end: {
+        line: result.range.end.line + 1,
+        character: result.range.end.character + 1,
+      },
+    };
+  }
+  
+  return ok({
+    message: `Hover information for "${request.target}" at ${
+      request.filePath
+    }:${targetLine + 1}:${symbolPosition + 1}`,
+    hover: {
+      contents: formattedContents,
+      range,
+    },
+  });
+}
+
+/**
  * Gets hover information for a TypeScript symbol using LSP
  */
 async function getHover(
   request: GetHoverRequest
 ): Promise<Result<GetHoverSuccess, string>> {
-  const setupResult = await setupLSPRequest(request);
+  // If line is not provided, we need to find the target text
+  if (request.line === undefined) {
+    return getHoverWithoutLine(request);
+  }
+  
+  // Convert target to LSPToolRequest format
+  const lspRequest = {
+    root: request.root,
+    filePath: request.filePath,
+    line: request.line,
+    symbolName: request.target,
+  };
+  
+  const setupResult = await setupLSPRequest(lspRequest);
   if ("error" in setupResult) {
     return err(setupResult.error);
   }
@@ -58,46 +195,11 @@ async function getHover(
       character: symbolPosition,
     })) as HoverResult | null;
 
-    await client.stop();
+    await client?.stop();
 
-    if (!result) {
-      return ok({
-        message: `No hover information available for "${
-          request.symbolName
-        }" at ${request.filePath}:${targetLine + 1}:${symbolPosition + 1}`,
-        hover: null,
-      });
-    }
-
-    // Format hover contents
-    const formattedContents = formatHoverContents(result.contents);
-
-    // Format range if available
-    let range = undefined;
-    if (result.range) {
-      range = {
-        start: {
-          line: result.range.start.line + 1, // Convert to 1-based
-          character: result.range.start.character + 1,
-        },
-        end: {
-          line: result.range.end.line + 1,
-          character: result.range.end.character + 1,
-        },
-      };
-    }
-
-    return ok({
-      message: `Hover information for "${request.symbolName}" at ${
-        request.filePath
-      }:${targetLine + 1}:${symbolPosition + 1}`,
-      hover: {
-        contents: formattedContents,
-        range,
-      },
-    });
+    return formatHoverResult(result, request, targetLine, symbolPosition);
   } catch (error) {
-    await client.stop().catch(() => {});
+    await client?.stop().catch(noop);
     return err(error instanceof Error ? error.message : String(error));
   }
 }
@@ -127,45 +229,21 @@ function formatHoverContents(
   return "";
 }
 
-export const experimentalGetHoverTool = {
+export const experimentalGetHoverTool: ToolDef<typeof schema> = {
   name: "experimental_get_hover",
   description:
     "Get hover information (type signature, documentation) for a TypeScript symbol using LSP",
-  inputSchema: {
-    type: "object",
-    properties: {
-      root: {
-        type: "string",
-        description: "Root directory for resolving relative paths",
-      },
-      filePath: {
-        type: "string",
-        description: "File path containing the symbol (relative to root)",
-      },
-      line: {
-        oneOf: [
-          { type: "number", description: "Line number (1-based)" },
-          { type: "string", description: "String to match in the line" },
-        ],
-        description: "Line number (1-based) or string to match in the line",
-      },
-      symbolName: {
-        type: "string",
-        description: "Name of the symbol to get hover information for",
-      },
-    },
-    required: ["root", "filePath", "line", "symbolName"],
-  },
-  handler: async (args: GetHoverRequest): Promise<McpToolResult> => {
+  schema,
+  handler: async (args) => {
     const result = await getHover(args);
     if (result.isOk()) {
       const messages = [result.value.message];
       if (result.value.hover) {
         messages.push(result.value.hover.contents);
       }
-      return formatMcpResult(true, messages);
+      return messages.join("\n\n");
     } else {
-      return formatMcpResult(false, [`Error: ${result.error}`]);
+      throw new Error(result.error);
     }
   },
 };

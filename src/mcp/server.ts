@@ -65,18 +65,7 @@ if (enableExperimental) {
   ];
 
   for (const tool of experimentalTools) {
-    server.tool(
-      tool.name,
-      tool.description,
-      tool.inputSchema.properties,
-      async (args: any) => {
-        const result = await tool.handler({
-          ...args,
-          root: args.root || projectRoot,
-        });
-        return result;
-      }
-    );
+    registerTool(server, tool, projectRoot);
   }
   
   console.error("Experimental LSP-based tools enabled");

@@ -8,12 +8,11 @@ describe("experimentalFindReferencesTool", () => {
   it("should have correct tool definition", () => {
     expect(experimentalFindReferencesTool.name).toBe("experimental_find_references");
     expect(experimentalFindReferencesTool.description).toContain("references");
-    expect(experimentalFindReferencesTool.inputSchema.required).toEqual([
-      "root",
-      "filePath",
-      "line",
-      "symbolName",
-    ]);
+    expect(experimentalFindReferencesTool.schema.shape).toBeDefined();
+    expect(experimentalFindReferencesTool.schema.shape.root).toBeDefined();
+    expect(experimentalFindReferencesTool.schema.shape.filePath).toBeDefined();
+    expect(experimentalFindReferencesTool.schema.shape.line).toBeDefined();
+    expect(experimentalFindReferencesTool.schema.shape.symbolName).toBeDefined();
   });
 
   it("should find references to a type", async () => {
@@ -24,10 +23,8 @@ describe("experimentalFindReferencesTool", () => {
       symbolName: "Value",
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content).toBeDefined();
-    expect(result.content[0].text).toContain("Found");
-    expect(result.content[0].text).toContain("reference");
+    expect(result).toContain("Found");
+    expect(result).toContain("reference");
   });
 
   it("should find references to a function", async () => {
@@ -38,10 +35,8 @@ describe("experimentalFindReferencesTool", () => {
       symbolName: "getValue",
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content).toBeDefined();
-    expect(result.content[0].text).toContain("Found");
-    expect(result.content[0].text).toContain("getValue");
+    expect(result).toContain("Found");
+    expect(result).toContain("getValue");
   });
 
   it("should handle string line matching", async () => {
@@ -52,46 +47,40 @@ describe("experimentalFindReferencesTool", () => {
       symbolName: "ValueWithOptional",
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content).toBeDefined();
-    expect(result.content[0].text).toContain("ValueWithOptional");
+    expect(result).toContain("ValueWithOptional");
   });
 
   it("should handle symbol not found on line", async () => {
-    const result = await experimentalFindReferencesTool.handler({
-      root,
-      filePath: "examples/types.ts",
-      line: 1,
-      symbolName: "nonexistent",
-    });
-
-    expect(result.isError).toBeTruthy();
-    expect(result.content[0].text).toContain("not found on line");
+    await expect(
+      experimentalFindReferencesTool.handler({
+        root,
+        filePath: "examples/types.ts",
+        line: 1,
+        symbolName: "nonexistent",
+      })
+    ).rejects.toThrow("not found on line");
   });
 
   it("should handle line not found", async () => {
-    const result = await experimentalFindReferencesTool.handler({
-      root,
-      filePath: "examples/types.ts",
-      line: "nonexistent line",
-      symbolName: "Value",
-    });
-
-    expect(result.isError).toBeTruthy();
-    expect(result.content[0].text).toContain("Line containing");
-    expect(result.content[0].text).toContain("not found");
+    await expect(
+      experimentalFindReferencesTool.handler({
+        root,
+        filePath: "examples/types.ts",
+        line: "nonexistent line",
+        symbolName: "Value",
+      })
+    ).rejects.toThrow("Line containing");
   });
 
   it("should handle file not found", async () => {
-    const result = await experimentalFindReferencesTool.handler({
-      root,
-      filePath: "nonexistent.ts",
-      line: 1,
-      symbolName: "test",
-    });
-
-    expect(result.isError).toBeTruthy();
-    expect(result.content[0].text).toContain("Error:");
+    await expect(
+      experimentalFindReferencesTool.handler({
+        root,
+        filePath: "nonexistent.ts",
+        line: 1,
+        symbolName: "test",
+      })
+    ).rejects.toThrow();
   });
 
   it("should include preview context in results", async () => {
@@ -102,12 +91,8 @@ describe("experimentalFindReferencesTool", () => {
       symbolName: "v",
     });
 
-    expect(result.isError).toBeFalsy();
-    if (result.content.length > 1) {
-      const referencesText = result.content[1].text;
-      // Should include preview lines
-      expect(referencesText).toContain(":");
-    }
+    // Should include preview lines with colon separator
+    expect(result).toContain(":");
   });
 
   it("should find references in the same file", async () => {
@@ -119,13 +104,8 @@ describe("experimentalFindReferencesTool", () => {
       symbolName: "Value",
     });
 
-    expect(result.isError).toBeFalsy();
-    expect(result.content[0].text).toContain("Found");
-    
-    if (result.content.length > 1) {
-      const referencesText = result.content[1].text;
-      // Should find references to Value type
-      expect(referencesText).toContain("types.ts");
-    }
+    expect(result).toContain("Found");
+    // Should find references to Value type
+    expect(result).toContain("types.ts");
   });
 });
