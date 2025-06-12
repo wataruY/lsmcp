@@ -5,7 +5,8 @@ import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
 } from "../project_cache";
-import { resolveLineParameter, findSymbolInLine } from "../../mcp/line_utils";
+import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../text_utils/resolveLineParameterForSourceFile.ts";
+import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../text_utils/findSymbolInLineForSourceFile.ts";
 import type { ToolDef } from "../../mcp/types";
 import { ts, type SourceFile, type Node, type Symbol } from "ts-morph";
 

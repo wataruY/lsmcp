@@ -3,7 +3,8 @@ import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
 import { relative, resolve } from "path";
 import { getActiveClient } from "../lsp_client.ts";
-import { parseLineNumber, findSymbolInLine } from "../text_utils.ts";
+import { parseLineNumber } from "../../text_utils/parseLineNumber.ts";
+import { findSymbolInLine } from "../../text_utils/findSymbolInLine.ts";
 import type { ToolDef } from "../../mcp/types.ts";
 
 const schema = z.object({

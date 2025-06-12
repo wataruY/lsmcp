@@ -7,7 +7,7 @@ import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
 } from "../project_cache";
-import { resolveLineParameter } from "../../mcp/line_utils";
+import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../text_utils/resolveLineParameterForSourceFile.ts";
 import type { ToolDef } from "../../mcp/types";
 
 const schema = z.object({

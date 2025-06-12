@@ -120,6 +120,8 @@ export default tseslint.config(
 
       "@typescript-eslint/await-thenable": "warn",
       "@typescript-eslint/require-await": "warn",
+      "@typescript-eslint/no-unsafe-assignment": "warn",
+
       "@typescript-eslint/restrict-template-expressions": "off",
       "@typescript-eslint/consistent-type-imports": [
         "warn",
@@ -146,6 +148,16 @@ export default tseslint.config(
     files: ["examples/*.ts", "playground/*.ts"],
     rules: {
       "no-console": "off",
+    },
+  },
+  {
+    // in-source testing overrides
+    files: ["src/**/*.ts"],
+    rules: {
+      // Allow unsafe operations in test blocks
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
     },
   }
 );

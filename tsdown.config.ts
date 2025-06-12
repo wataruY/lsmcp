@@ -5,4 +5,7 @@ export default defineConfig({
     "typescript-mcp": "src/mcp/typescript-mcp.ts",
     "lsp-mcp": "src/mcp/lsp-mcp.ts",
   },
+  define: {
+    "import.meta.vitest": "undefined",
+  },
 });
