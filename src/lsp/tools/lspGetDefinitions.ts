@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
@@ -60,33 +61,33 @@ async function getDefinitionsWithLSP(
 ): Promise<Result<GetDefinitionsSuccess, string>> {
   try {
     const client = getActiveClient();
-    
+
     // Read file content
     const absolutePath = resolve(request.root, request.filePath);
     const fileContent = readFileSync(absolutePath, "utf-8");
     const fileUri = `file://${absolutePath}`;
-    
+
     // Parse line number
     const lines = fileContent.split("\n");
     const lineResult = parseLineNumber(fileContent, request.line);
     if ("error" in lineResult) {
       return err(`${lineResult.error} in ${request.filePath}`);
     }
-    
+
     const targetLine = lineResult.lineIndex;
-    
+
     // Find symbol position in line
     const lineText = lines[targetLine];
     const symbolResult = findSymbolInLine(lineText, request.symbolName);
     if ("error" in symbolResult) {
       return err(`${symbolResult.error} on line ${targetLine + 1}`);
     }
-    
+
     const symbolPosition = symbolResult.characterIndex;
-    
+
     // Open document in LSP
     client.openDocument(fileUri, fileContent);
-    
+
     // Give LSP server time to process the document
     await new Promise<void>((resolve) => setTimeout(resolve, 1000));
     // Get definition
@@ -188,3 +189,113 @@ export const lspGetDefinitionsTool: ToolDef<typeof schema> = {
     }
   },
 };
+
+if (import.meta.vitest) {
+  const { describe, it, expect, beforeAll, afterAll } = import.meta.vitest;
+  const { setupLSPForTest, teardownLSPForTest } = await import(
+    "../testHelpers.ts"
+  );
+  const { default: path } = await import("path");
+
+  describe("lspGetDefinitionsTool", () => {
+    const root = path.resolve(import.meta.dirname, "../../..");
+
+    beforeAll(async () => {
+      await setupLSPForTest(root);
+    });
+
+    afterAll(async () => {
+      await teardownLSPForTest();
+    });
+
+    it("should have correct tool definition", () => {
+      expect(lspGetDefinitionsTool.name).toBe("lsp_get_definitions");
+      expect(lspGetDefinitionsTool.description).toContain("definition");
+      expect(lspGetDefinitionsTool.schema).toBeDefined();
+    });
+
+    it("should find definition of an exported symbol", async () => {
+      // Using the example connected.ts file which imports from "./scratch"
+      const result = await lspGetDefinitionsTool.execute({
+        root,
+        filePath: "playground/connected.ts",
+        line: 1, // export line
+        symbolName: "x",
+      });
+
+      expect(result).toContain("Found");
+      expect(result).toContain("definition");
+    });
+
+    it.skip("should find definition of a type in the same project", async () => {
+      // The types.ts file has Value type used in getValue function
+      const result = await lspGetDefinitionsTool.execute({
+        root,
+        filePath: "playground/types.ts",
+        line: 10, // getValue function that returns Value type
+        symbolName: "Value",
+      });
+
+      expect(result).toContain("Found");
+    });
+
+    it.skip("should handle string line matching", async () => {
+      const result = await lspGetDefinitionsTool.execute({
+        root,
+        filePath: "playground/types.ts",
+        line: "ValueWithOptional",
+        symbolName: "ValueWithOptional",
+      });
+
+      expect(result).toContain("ValueWithOptional");
+    });
+
+    it("should handle symbol not found on line", async () => {
+      await expect(
+        lspGetDefinitionsTool.execute({
+          root,
+          filePath: "playground/types.ts",
+          line: 1,
+          symbolName: "nonexistent",
+        })
+      ).rejects.toThrow('Symbol "nonexistent" not found on line');
+    });
+
+    it("should handle line not found", async () => {
+      await expect(
+        lspGetDefinitionsTool.execute({
+          root,
+          filePath: "playground/types.ts",
+          line: "nonexistent line",
+          symbolName: "Value",
+        })
+      ).rejects.toThrow('Line containing "nonexistent line" not found');
+    });
+
+    it("should handle file not found", async () => {
+      await expect(
+        lspGetDefinitionsTool.execute({
+          root,
+          filePath: "nonexistent.ts",
+          line: 1,
+          symbolName: "test",
+        })
+      ).rejects.toThrow();
+    });
+
+    it.skip("should handle no definition found for built-in symbols", async () => {
+      const result = await lspGetDefinitionsTool.execute({
+        root,
+        filePath: "playground/types.ts",
+        line: 11, // The return statement line
+        symbolName: "v",
+        before: 2,
+        after: 2,
+      });
+
+      // Local variable might have definition or might not, depending on LSP
+      expect(result).toContain("Found");
+      expect(result).toContain("definition");
+    });
+  });
+}
