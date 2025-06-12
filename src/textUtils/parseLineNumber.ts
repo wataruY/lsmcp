@@ -1,13 +1,15 @@
 /**
  * Parses a line number from either a number or a string match
- * @param lines Array of file lines
+ * @param fullText Full text content of the file
  * @param line Line number (1-based) or string to match
  * @returns 0-based line index or error message
  */
 export function parseLineNumber(
-  lines: string[],
+  fullText: string,
   line: number | string
 ): { lineIndex: number } | { error: string } {
+  const lines = fullText.split('\n');
+  
   if (typeof line === "string") {
     const lineIndex = lines.findIndex((l) => l.includes(line));
     if (lineIndex === -1) {
@@ -24,23 +26,23 @@ if (import.meta.vitest) {
 
   describe("parseLineNumber", () => {
     it("should parse line number to 0-based index", () => {
-      const lines = ["line 1", "line 2", "line 3"];
+      const fullText = "line 1\nline 2\nline 3";
       
-      const result = parseLineNumber(lines, 2);
+      const result = parseLineNumber(fullText, 2);
       expect(result).toEqual({ lineIndex: 1 });
     });
 
     it("should find line by string match", () => {
-      const lines = ["const foo = 1;", "const bar = 2;", "const baz = 3;"];
+      const fullText = "const foo = 1;\nconst bar = 2;\nconst baz = 3;";
       
-      const result = parseLineNumber(lines, "bar = 2");
+      const result = parseLineNumber(fullText, "bar = 2");
       expect(result).toEqual({ lineIndex: 1 });
     });
 
     it("should return error if string not found", () => {
-      const lines = ["const foo = 1;", "const bar = 2;"];
+      const fullText = "const foo = 1;\nconst bar = 2;";
       
-      const result = parseLineNumber(lines, "not found");
+      const result = parseLineNumber(fullText, "not found");
       expect(result).toEqual({ error: 'Line containing "not found" not found' });
     });
   });

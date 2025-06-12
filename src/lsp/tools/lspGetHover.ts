@@ -174,7 +174,7 @@ async function getHover(
     
     // Parse line number
     const lines = fileContent.split("\n");
-    const lineResult = parseLineNumber(lines, request.line);
+    const lineResult = parseLineNumber(fileContent, request.line);
     if ("error" in lineResult) {
       return err(`${lineResult.error} in ${request.filePath}`);
     }

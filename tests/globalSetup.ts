@@ -1,4 +1,4 @@
-import { lspProcessPool } from "./src/lsp/lspProcessPool.ts";
+import { lspProcessPool } from "../src/lsp/lspProcessPool";
 
 export function setup() {
   // Pre-warm the LSP process pool can be done here if needed
