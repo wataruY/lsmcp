@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolDef } from "./types.ts";
-import { type z, type ZodObject } from "zod";
+import { type z, ZodObject } from "zod";
 
 interface ToolResult {
   content: { type: "text"; text: string; [x: string]: unknown }[];
@@ -52,7 +52,6 @@ export function registerTool<S extends z.ZodType>(
   defaultRoot?: string
 ) {
   // Check if the schema is a ZodObject to extract shape
-  // @ts-expect-error - ZodObject is a specific type of ZodType
   if (tool.schema instanceof ZodObject) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const schemaShape = tool.schema.shape;
