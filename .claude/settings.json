@@ -1,12 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(pnpm typecheck)",
-      "Bash(pnpm test)",
-      "Bash(pnpm lint)",
-      "Bash(pnpm test:*)",
-      "Bash(pnpm build)",
-      "Bash(pnpm run:*)",
+      "Bash(pnpm:*)",
       "Bash(ls:*)",
       "Bash(grep:*)",
       "mcp__readability__read_url_content_as_markdown",
@@ -25,6 +20,6 @@
       "mcp__typescript__lsp_get_definitions",
       "mcp__typescript__lsp_get_diagnostics"
     ],
-    "deny": []
+    "deny": ["Bash(npm:*)"]
   }
 }

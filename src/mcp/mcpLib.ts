@@ -1,3 +1,7 @@
+/**
+ * MCP (Model Context Protocol) library - helper functions for MCP server implementation
+ */
+
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolDef } from "./types.ts";
 import { type z, ZodObject } from "zod";
@@ -79,4 +83,57 @@ export function registerTool<S extends z.ZodType>(
     // For non-ZodObject schemas, register without shape
     server.tool(tool.name, tool.description, toMcpToolHandler(tool.execute));
   }
+}
+
+if (import.meta.vitest) {
+  const { describe, it, expect } = import.meta.vitest;
+
+  describe("toMcpHandler", () => {
+    it("should convert string to MCP format when no error occurs", async () => {
+      const handler = toMcpToolHandler(() => {
+        return "Success message";
+      });
+
+      const result = await handler({});
+      expect(result).toEqual({
+        content: [{ type: "text", text: "Success message" }],
+      });
+    });
+
+    it("should catch and format errors", async () => {
+      const handler = toMcpToolHandler(() => {
+        throw new Error("Test error message");
+      });
+
+      const result = await handler({});
+      expect(result).toEqual({
+        content: [{ type: "text", text: "Error: Test error message" }],
+        isError: true,
+      });
+    });
+
+    it("should handle non-Error thrown values", async () => {
+      const handler = toMcpToolHandler(() => {
+        // eslint-disable-next-line @typescript-eslint/only-throw-error
+        throw "String error";
+      });
+
+      const result = await handler({});
+      expect(result).toEqual({
+        content: [{ type: "text", text: "Error: String error" }],
+        isError: true,
+      });
+    });
+
+    it("should work with synchronous handlers", async () => {
+      const handler = toMcpToolHandler(() => {
+        return "Sync result message";
+      });
+
+      const result = await handler({});
+      expect(result).toEqual({
+        content: [{ type: "text", text: "Sync result message" }],
+      });
+    });
+  });
 }

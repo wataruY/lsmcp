@@ -3,7 +3,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerTool } from "./mcpServerUtils.ts";
+import { registerTool } from "./mcpLib.ts";
 import { moveFileTool } from "../ts/tools/tsMoveFile.ts";
 import { moveDirectoryTool } from "../ts/tools/tsMoveDirectory.ts";
 import { renameSymbolTool } from "../ts/tools/tsRenameSymbol.ts";

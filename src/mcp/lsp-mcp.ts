@@ -6,7 +6,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerTool } from "./mcpServerUtils.ts";
+import { registerTool } from "./mcpLib.ts";
 import { lspGetHoverTool } from "../lsp/tools/lspGetHover.ts";
 import { lspFindReferencesTool } from "../lsp/tools/lspFindReferences.ts";
 import { lspGetDefinitionsTool } from "../lsp/tools/lspGetDefinitions.ts";
