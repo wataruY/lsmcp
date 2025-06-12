@@ -3,27 +3,27 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { registerTool } from "./mcp_server_utils.ts";
-import { moveFileTool } from "../ts/tools/ts_move_file.ts";
-import { move_directory } from "../ts/tools/ts_move_directory.ts";
-import { renameSymbolTool } from "../ts/tools/ts_rename_symbol.ts";
-import { deleteSymbolTool } from "../ts/tools/ts_delete_symbol.ts";
-import { findReferencesTool } from "../ts/tools/ts_find_references.ts";
-import { getDefinitionsTool } from "../ts/tools/ts_get_definitions.ts";
-import { getDiagnosticsTool } from "../ts/tools/ts_get_diagnostics.ts";
-import { getModuleSymbolsTool } from "../ts/tools/ts_get_module_symbols.ts";
-import { getTypeInModuleTool } from "../ts/tools/ts_get_type_in_module.ts";
-import { getTypeAtSymbolTool } from "../ts/tools/ts_get_type_at_symbol.ts";
-import { getSymbolsInScopeTool } from "../ts/tools/ts_get_symbols_in_scope.ts";
-import { lspGetHoverTool } from "../lsp/tools/lsp_get_hover.ts";
-import { lspFindReferencesTool } from "../lsp/tools/lsp_find_references.ts";
-import { lspGetDefinitionsTool } from "../lsp/tools/lsp_get_definitions.ts";
-import { lspGetDiagnosticsTool } from "../lsp/tools/lsp_get_diagnostics.ts";
+import { registerTool } from "./mcpServerUtils.ts";
+import { moveFileTool } from "../ts/tools/tsMoveFile.ts";
+import { moveDirectoryTool } from "../ts/tools/tsMoveDirectory.ts";
+import { renameSymbolTool } from "../ts/tools/tsRenameSymbol.ts";
+import { deleteSymbolTool } from "../ts/tools/tsDeleteSymbol.ts";
+import { findReferencesTool } from "../ts/tools/tsFindReferences.ts";
+import { getDefinitionsTool } from "../ts/tools/tsGetDefinitions.ts";
+import { getDiagnosticsTool } from "../ts/tools/tsGetDiagnostics.ts";
+import { getModuleSymbolsTool } from "../ts/tools/tsGetModuleSymbols.ts";
+import { getTypeInModuleTool } from "../ts/tools/tsGetTypeInModule.ts";
+import { getTypeAtSymbolTool } from "../ts/tools/tsGetTypeAtSymbol.ts";
+import { getSymbolsInScopeTool } from "../ts/tools/tsGetSymbolsInScope.ts";
+import { lspGetHoverTool } from "../lsp/tools/lspGetHover.ts";
+import { lspFindReferencesTool } from "../lsp/tools/lspFindReferences.ts";
+import { lspGetDefinitionsTool } from "../lsp/tools/lspGetDefinitions.ts";
+import { lspGetDiagnosticsTool } from "../lsp/tools/lspGetDiagnostics.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
 import { spawn } from "child_process";
-import { initialize as initializeLSPClient } from "../lsp/lsp_client.ts";
+import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 
 // Get project root from environment variable or use current directory
 const projectRoot = process.env.PROJECT_ROOT || process.cwd();
@@ -38,7 +38,7 @@ const server = new McpServer({
 // Register all tools
 const tools = [
   moveFileTool,
-  move_directory,
+  moveDirectoryTool,
   renameSymbolTool,
   deleteSymbolTool,
   getModuleSymbolsTool,

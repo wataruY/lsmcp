@@ -3,7 +3,7 @@ import {
   createProject,
   renameSymbol,
   addSourceFile,
-} from "../src/ts/commands/rename_symbol.ts";
+} from "../src/ts/commands/renameSymbol.ts";
 import fs from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";

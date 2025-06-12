@@ -10,4 +10,4 @@ export {
   type ReferencesResult,
   type HoverContents,
   type LSPClient,
-} from "./lsp_client.ts";
+} from "./lspClient.ts";
