@@ -6,7 +6,7 @@ import { findSymbolInLine } from "../../textUtils/findSymbolInLine";
 import { findTargetInFile } from "../../textUtils/findTargetInFile";
 import type { ToolDef } from "../../mcp/types.ts";
 import { readFileSync } from "fs";
-import { resolve } from "path";
+import path from "path";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -61,7 +61,7 @@ async function getHoverWithoutLine(
     const client = getActiveClient();
 
     // Read file content
-    const absolutePath = resolve(request.root, request.filePath);
+    const absolutePath = path.resolve(request.root, request.filePath);
     const fileContent = readFileSync(absolutePath, "utf-8");
     const fileUri = `file://${absolutePath}`;
     const lines = fileContent.split("\n");
@@ -127,7 +127,7 @@ function formatHoverResult(
     };
   } else {
     // If range is null, specify all lines
-    const absolutePath = resolve(request.root, request.filePath);
+    const absolutePath = path.resolve(request.root, request.filePath);
     const fileContent = readFileSync(absolutePath, "utf-8");
     const lines = fileContent.split("\n");
     range = {
@@ -168,7 +168,7 @@ async function getHover(
     const client = getActiveClient();
     
     // Read file content
-    const absolutePath = resolve(request.root, request.filePath);
+    const absolutePath = path.resolve(request.root, request.filePath);
     const fileContent = readFileSync(absolutePath, "utf-8");
     const fileUri = `file://${absolutePath}`;
     
@@ -254,10 +254,10 @@ export const lspGetHoverTool: ToolDef<typeof schema> = {
 if (import.meta.vitest) {
   const { describe, it, expect, beforeAll, afterAll } = import.meta.vitest;
   const { setupLSPForTest, teardownLSPForTest } = await import("../testHelpers.ts");
-  const { resolve } = await import("path");
+  const { default: path } = await import("path");
 
   describe("lspGetHoverTool", () => {
-    const root = resolve(import.meta.dirname!, "../../..");
+    const root = path.resolve(import.meta.dirname!, "../../..");
     
     beforeAll(async () => {
       await setupLSPForTest(root);
@@ -371,7 +371,7 @@ if (import.meta.vitest) {
 
   // @typescript/native-preview
   describe("lspGetHoverTool with fresh LSP instance", () => {
-    const root = resolve(import.meta.dirname!, "../../..");
+    const root = path.resolve(import.meta.dirname!, "../../..");
     
     beforeAll(async () => {
       await setupLSPForTest(root);

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
-import { relative, resolve } from "path";
+import path from "path";
 import { getActiveClient } from "../lspClient.ts";
 import { parseLineNumber } from "../../textUtils/parseLineNumber";
 import { findSymbolInLine } from "../../textUtils/findSymbolInLine";
@@ -43,7 +43,7 @@ async function findReferencesWithLSP(
     const client = getActiveClient();
     
     // Read file content
-    const absolutePath = resolve(request.root, request.filePath);
+    const absolutePath = path.resolve(request.root, request.filePath);
     const fileContent = readFileSync(absolutePath, "utf-8");
     const fileUri = `file://${absolutePath}`;
     
@@ -104,7 +104,7 @@ async function findReferencesWithLSP(
         .join("\n");
 
       references.push({
-        filePath: relative(request.root, refPath),
+        filePath: path.relative(request.root, refPath),
         line: startLine + 1, // Convert to 1-based
         column: startCol + 1, // Convert to 1-based
         text,
@@ -152,11 +152,11 @@ export const lspFindReferencesTool: ToolDef<typeof schema> = {
 
 if (import.meta.vitest) {
   const { describe, it, expect, beforeAll, afterAll } = import.meta.vitest;
-  const { resolve } = await import("path");
+  const { default: path } = await import("path");
   const { setupLSPForTest, teardownLSPForTest } = await import("../testHelpers.ts");
 
   describe("lspFindReferencesTool", () => {
-    const root = resolve(__dirname, "../../..");
+    const root = path.resolve(__dirname, "../../..");
 
     beforeAll(async () => {
       await setupLSPForTest(root);

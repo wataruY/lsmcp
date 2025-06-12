@@ -2,7 +2,7 @@
 import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
-import { relative, resolve } from "path";
+import path from "path";
 import { getActiveClient } from "../lspClient.ts";
 import { parseLineNumber } from "../../textUtils/parseLineNumber";
 import { findSymbolInLine } from "../../textUtils/findSymbolInLine";
@@ -63,7 +63,7 @@ async function getDefinitionsWithLSP(
     const client = getActiveClient();
 
     // Read file content
-    const absolutePath = resolve(request.root, request.filePath);
+    const absolutePath = path.resolve(request.root, request.filePath);
     const fileContent = readFileSync(absolutePath, "utf-8");
     const fileUri = `file://${absolutePath}`;
 
@@ -147,7 +147,7 @@ async function getDefinitionsWithLSP(
       const preview = previewLines.join("\n");
 
       definitions.push({
-        filePath: relative(request.root, defPath),
+        filePath: path.relative(request.root, defPath),
         line: startLine + 1, // Convert to 1-based
         column: startCol + 1, // Convert to 1-based
         symbolName,

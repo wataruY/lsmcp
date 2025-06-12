@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
-import { resolve } from "path";
+import path from "path";
 import { getActiveClient } from "../lspClient.ts";
 import type { ToolDef } from "../../mcp/types.ts";
 
@@ -63,7 +63,7 @@ async function getDiagnosticsWithLSP(
     const client = getActiveClient();
 
     // Read file content or use virtual content
-    const absolutePath = resolve(request.root, request.filePath);
+    const absolutePath = path.resolve(request.root, request.filePath);
     const fileContent =
       request.virtualContent || readFileSync(absolutePath, "utf-8");
     const fileUri = `file://${absolutePath}`;
@@ -158,10 +158,10 @@ export const lspGetDiagnosticsTool: ToolDef<typeof schema> = {
 if (import.meta.vitest) {
   const { describe, it, expect, beforeAll, afterAll } = import.meta.vitest;
   const { setupLSPForTest, teardownLSPForTest } = await import("../testHelpers.ts");
-  const { resolve } = await import("path");
+  const { default: path } = await import("path");
 
   describe("lspGetDiagnosticsTool", { timeout: 10000 }, () => {
-    const root = resolve(import.meta.dirname!, "../../..");
+    const root = path.resolve(import.meta.dirname!, "../../..");
     
     beforeAll(async () => {
       await setupLSPForTest(root);
