@@ -49,7 +49,7 @@ if (import.meta.vitest) {
   const { describe, it, expect, beforeEach, afterEach } = import.meta.vitest;
   const { Project } = await import("ts-morph");
   const { mkdir, writeFile, rm } = await import("node:fs/promises");
-  const { join } = await import("node:path");
+  const path = await import("node:path");
   const { existsSync } = await import("node:fs");
   const { clearProjectCache } = await import("../projectCache.ts");
 
@@ -60,34 +60,34 @@ if (import.meta.vitest) {
   }
 
   describe("move_directory", () => {
-    const testDir = join(process.cwd(), "test-tmp-move-dir");
-    let project: Project;
+    const testDir = path.join(process.cwd(), "test-tmp-move-dir");
+    let project: InstanceType<typeof Project>;
 
     beforeEach(async () => {
       await mkdir(testDir, { recursive: true });
-      await mkdir(join(testDir, "src", "components"), { recursive: true });
-      await mkdir(join(testDir, "src", "utils"), { recursive: true });
+      await mkdir(path.join(testDir, "src", "components"), { recursive: true });
+      await mkdir(path.join(testDir, "src", "utils"), { recursive: true });
 
       // Create test files
       await writeFile(
-        join(testDir, "src", "components", "Button.ts"),
+        path.join(testDir, "src", "components", "Button.ts"),
         `export const Button = () => "Button";`
       );
 
       await writeFile(
-        join(testDir, "src", "components", "Card.ts"),
+        path.join(testDir, "src", "components", "Card.ts"),
         `import { Button } from "./Button.ts";
 export const Card = () => Button();`
       );
 
       await writeFile(
-        join(testDir, "src", "utils", "helpers.ts"),
+        path.join(testDir, "src", "utils", "helpers.ts"),
         `import { Button } from "../components/Button.ts";
 export const useButton = () => Button();`
       );
 
       await writeFile(
-        join(testDir, "tsconfig.json"),
+        path.join(testDir, "tsconfig.json"),
         JSON.stringify({
           compilerOptions: {
             target: "ES2020",
@@ -99,9 +99,9 @@ export const useButton = () => Button();`
 
       // Initialize project and add source files
       project = new Project({
-        tsConfigFilePath: join(testDir, "tsconfig.json"),
+        tsConfigFilePath: path.join(testDir, "tsconfig.json"),
       });
-      project.addSourceFilesAtPaths(join(testDir, "src", "**", "*.ts"));
+      project.addSourceFilesAtPaths(path.join(testDir, "src", "**", "*.ts"));
     });
 
     afterEach(async () => {
@@ -128,15 +128,15 @@ export const useButton = () => Button();`
         });
 
         // Verify directory was moved
-        expect(existsSync(join(testDir, "src", "components"))).toBe(false);
-        expect(existsSync(join(testDir, "src", "ui", "components"))).toBe(true);
+        expect(existsSync(path.join(testDir, "src", "components"))).toBe(false);
+        expect(existsSync(path.join(testDir, "src", "ui", "components"))).toBe(true);
 
         // Verify imports were updated
         const project = new Project({
-          tsConfigFilePath: join(testDir, "tsconfig.json"),
+          tsConfigFilePath: path.join(testDir, "tsconfig.json"),
         });
         const helpersFile = project.getSourceFileOrThrow(
-          join(testDir, "src", "utils", "helpers.ts")
+          path.join(testDir, "src", "utils", "helpers.ts")
         );
         const helpersText = helpersFile.getFullText();
         // Helper file content should contain updated import
@@ -155,9 +155,9 @@ export const useButton = () => Button();`
 
     it("should handle overwrite option", async () => {
       // Create target directory
-      await mkdir(join(testDir, "src", "ui", "components"), { recursive: true });
+      await mkdir(path.join(testDir, "src", "ui", "components"), { recursive: true });
       await writeFile(
-        join(testDir, "src", "ui", "components", "existing.ts"),
+        path.join(testDir, "src", "ui", "components", "existing.ts"),
         `export const existing = true;`
       );
 

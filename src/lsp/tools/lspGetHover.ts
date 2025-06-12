@@ -257,7 +257,7 @@ if (import.meta.vitest) {
   const { default: path } = await import("path");
 
   describe("lspGetHoverTool", () => {
-    const root = path.resolve(import.meta.dirname!, "../../..");
+    const root = path.resolve(import.meta.dirname, "../../..");
     
     beforeAll(async () => {
       await setupLSPForTest(root);
@@ -371,7 +371,7 @@ if (import.meta.vitest) {
 
   // @typescript/native-preview
   describe("lspGetHoverTool with fresh LSP instance", () => {
-    const root = path.resolve(import.meta.dirname!, "../../..");
+    const root = path.resolve(import.meta.dirname, "../../..");
     
     beforeAll(async () => {
       await setupLSPForTest(root);

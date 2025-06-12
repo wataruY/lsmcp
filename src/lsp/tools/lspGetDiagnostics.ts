@@ -161,7 +161,7 @@ if (import.meta.vitest) {
   const { default: path } = await import("path");
 
   describe("lspGetDiagnosticsTool", { timeout: 10000 }, () => {
-    const root = path.resolve(import.meta.dirname!, "../../..");
+    const root = path.resolve(import.meta.dirname, "../../..");
     
     beforeAll(async () => {
       await setupLSPForTest(root);
