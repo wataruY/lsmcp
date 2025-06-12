@@ -15,10 +15,8 @@ interface MoveDirectoryResult {
 describe("move_directory", () => {
   const testDir = join(process.cwd(), "test-tmp-move-dir");
   let project: Project;
-  let originalCwd: string;
 
   beforeEach(async () => {
-    originalCwd = process.cwd();
     await mkdir(testDir, { recursive: true });
     await mkdir(join(testDir, "src", "components"), { recursive: true });
     await mkdir(join(testDir, "src", "utils"), { recursive: true });
@@ -60,23 +58,17 @@ export const useButton = () => Button();`
   });
 
   afterEach(async () => {
-    // Restore original working directory first
-    process.chdir(originalCwd);
     await rm(testDir, { recursive: true, force: true });
     clearProjectCache();
   });
 
   it("should move directory and update imports", async () => {
-    // Change working directory to test directory
-    const originalCwd = process.cwd();
-    process.chdir(testDir);
-
-    try {
-      const result = await move_directory.execute({
-        sourcePath: "src/components",
-        targetPath: "src/ui/components",
-        overwrite: false,
-      });
+    const result = await move_directory.execute({
+      root: testDir,
+      sourcePath: "src/components",
+      targetPath: "src/ui/components",
+      overwrite: false,
+    });
 
       const parsed = JSON.parse(result) as MoveDirectoryResult;
       expect(parsed.success).toBe(true);
@@ -102,25 +94,16 @@ export const useButton = () => Button();`
       const helpersText = helpersFile.getFullText();
       // Helper file content should contain updated import
       expect(helpersText).toContain("../ui/components/Button");
-    } finally {
-      process.chdir(originalCwd);
-    }
   });
 
   it("should throw error for non-existent directory", async () => {
-    const originalCwd = process.cwd();
-    process.chdir(testDir);
-
-    try {
-      await expect(
-        move_directory.execute({
-          sourcePath: "src/nonexistent",
-          targetPath: "src/moved",
-        })
-      ).rejects.toThrow("Directory not found");
-    } finally {
-      process.chdir(originalCwd);
-    }
+    await expect(
+      move_directory.execute({
+        root: testDir,
+        sourcePath: "src/nonexistent",
+        targetPath: "src/moved",
+      })
+    ).rejects.toThrow("Directory not found");
   });
 
   it("should handle overwrite option", async () => {
@@ -131,21 +114,15 @@ export const useButton = () => Button();`
       `export const existing = true;`
     );
 
-    const originalCwd = process.cwd();
-    process.chdir(testDir);
+    const result = await move_directory.execute({
+      root: testDir,
+      sourcePath: "src/components",
+      targetPath: "src/ui/components",
+      overwrite: true,
+    });
 
-    try {
-      const result = await move_directory.execute({
-        sourcePath: "src/components",
-        targetPath: "src/ui/components",
-        overwrite: true,
-      });
-
-      const parsed = JSON.parse(result) as MoveDirectoryResult;
-      expect(parsed.success).toBe(true);
-      expect(parsed.movedFiles).toHaveLength(2);
-    } finally {
-      process.chdir(originalCwd);
-    }
+    const parsed = JSON.parse(result) as MoveDirectoryResult;
+    expect(parsed.success).toBe(true);
+    expect(parsed.movedFiles).toHaveLength(2);
   });
 });

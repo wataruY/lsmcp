@@ -1,23 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { lspGetDefinitionsTool } from "./lsp_get_definitions.ts";
 import { resolve } from "path";
-import { spawn } from "child_process";
-import { initialize, shutdown } from "../lsp_client.ts";
+
+import { setupLSPForTest, teardownLSPForTest } from "../test_helpers.ts";
 
 describe("lspGetDefinitionsTool", () => {
   const root = resolve(__dirname, "../../..");
   
   beforeAll(async () => {
-    // Initialize LSP client for tests
-    const process = spawn("npx", ["typescript-language-server", "--stdio"], {
-      cwd: root,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    await initialize(root, process);
+    await setupLSPForTest(root);
   });
   
   afterAll(async () => {
-    await shutdown();
+    await teardownLSPForTest();
   });
 
   it("should have correct tool definition", () => {

@@ -4,6 +4,7 @@ import { moveDirectory } from "../commands/move_directory";
 import { resolve } from "node:path";
 
 const schema = z.object({
+  root: z.string().optional().describe("Root directory for resolving relative paths"),
   sourcePath: z.string().describe("The relative path of the directory to move"),
   targetPath: z.string().describe("The new relative path for the directory"),
   overwrite: z
@@ -18,7 +19,7 @@ export const move_directory: ToolDef<typeof schema> = {
     "Move a directory to a new location, updating all TypeScript imports and references automatically",
   schema,
   execute: async (input) => {
-    const rootPath = process.cwd();
+    const rootPath = input.root || process.cwd();
     const source = resolve(rootPath, input.sourcePath);
     const target = resolve(rootPath, input.targetPath);
 

@@ -34,6 +34,14 @@ export type {
 let activeClient: LSPClient | null = null;
 
 /**
+ * Set the active LSP client (for testing purposes)
+ * @param client The LSP client to set as active
+ */
+export function setActiveClient(client: LSPClient | null): void {
+  activeClient = client;
+}
+
+/**
  * Initialize a global LSP client with the given process
  * @param rootPath The root path of the project
  * @param process The LSP server process

@@ -3,13 +3,15 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     includeSource: ["src/**/*.{ts}"],
-    // Run tests sequentially to avoid race conditions with file system operations
-    pool: "forks",
+    // Enable parallel test execution with shared LSP processes
+    pool: "threads",
     silent: true,
     poolOptions: {
-      forks: {
-        singleFork: true,
+      threads: {
+        minThreads: 2,
+        maxThreads: 4,
       },
     },
+    globalSetup: "./vitest.global-setup.ts",
   },
 });
