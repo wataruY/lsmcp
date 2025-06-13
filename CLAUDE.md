@@ -32,6 +32,17 @@ Provide typescript LSP features as MCP.
 - file: snake_case
 - add `.ts` extensions to import. eg. `import {} from "./x.ts"` for deno compatibility.
 
+## Git Workflow
+
+Claude Code follows this Git workflow:
+
+1. **Auto-staging after tests pass**: When tests pass successfully, automatically stage changes using `git add`
+2. **Smart commit on user request**: When user requests a commit, analyze the current staged diff to generate an appropriate commit message, then commit
+3. **Commit all on request**: When user says "commit all" with no staged changes:
+   - Check current `git status` to identify all changes
+   - Stage all changes using `git add -A`
+   - Generate commit message based on all changes and commit
+
 ## Directory Patterns
 
 ```
