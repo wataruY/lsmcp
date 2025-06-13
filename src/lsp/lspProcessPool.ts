@@ -48,7 +48,7 @@ async function createClient(root: string): Promise<PooledLSPClient> {
 async function cleanup(pooledClient: PooledLSPClient): Promise<void> {
   try {
     await pooledClient.client.stop();
-  } catch (error) {
+  } catch {
     // Ignore errors during cleanup
   }
 }

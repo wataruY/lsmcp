@@ -10,7 +10,14 @@
     "forceConsistentCasingInFileNames": true,
     "allowImportingTsExtensions": true,
     "lib": ["esnext", "dom"],
-    "types": ["vitest/importMeta"]
+    "types": ["vitest/importMeta"],
+    
+    // Type checking options
+    "noImplicitAny": true,
+    
+    // Unused code detection
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "exclude": ["tests/fixtures/**/*", "playground/**/*"]
 }

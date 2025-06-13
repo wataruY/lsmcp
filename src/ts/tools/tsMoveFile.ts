@@ -54,7 +54,6 @@ export async function handleMoveFile({
   }
   
   // Load all TypeScript/JavaScript files in the project directory to ensure imports are resolved
-  const projectDir = path.dirname(absoluteOldPath);
   const rootDir = root;
   
   // Try to add source files from the root directory

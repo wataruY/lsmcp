@@ -262,18 +262,18 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
       processBuffer();
     });
 
-    state.process.stderr?.on("data", (data: Buffer) => {
+    state.process.stderr?.on("data", (_data: Buffer) => {
       // Uncomment for debugging LSP stderr output
       // debug("LSP stderr:", data.toString());
     });
 
-    state.process.on("exit", (code) => {
+    state.process.on("exit", (_code) => {
       // Uncomment for debugging LSP process lifecycle
       // debug(`LSP server exited with code ${code}`);
       state.process = null;
     });
 
-    state.process.on("error", (error) => {
+    state.process.on("error", (_error) => {
       // Uncomment for debugging LSP errors
       // debug("LSP server error:", error);
     });

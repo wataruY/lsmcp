@@ -1,0 +1,71 @@
+{
+  "$schema": "https://oxc-project.github.io/oxlint/v0/schemas/oxlintrc.json",
+  "ignorePatterns": [
+    "dist/**",
+    "node_modules/**",
+    ".claude/**",
+    "examples/**",
+    "tests/fixtures/**",
+    "playground/**",
+    "tmp/**"
+  ],
+  "rules": {
+    "no-throw-literal": "error",
+    "no-unused-vars": ["warn", {
+      "vars": "all",
+      "varsIgnorePattern": "^_",
+      "args": "after-used",
+      "argsIgnorePattern": "^_"
+    }],
+    "no-redeclare": "error",
+    "no-console": "warn",
+    "prefer-const": "warn",
+    "complexity": ["warn", { "max": 7 }],
+    "require-await": "error",
+    "no-empty-function": "warn",
+    "no-explicit-any": "warn",
+    "no-empty": "warn",
+    "no-debugger": "error",
+    "no-undef": "error",
+    "no-unreachable": "error",
+    "no-constant-condition": "error",
+    "typescript/no-unused-vars": ["warn", {
+      "vars": "all",
+      "varsIgnorePattern": "^_",
+      "args": "after-used",
+      "argsIgnorePattern": "^_"
+    }],
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-floating-promises": "error",
+    "typescript/await-thenable": "warn",
+    "typescript/require-await": "warn",
+    "typescript/ban-ts-comment": ["error", {
+      "ts-ignore": true,
+      "ts-expect-error": "allow-with-description"
+    }],
+    "typescript/prefer-ts-expect-error": "error",
+    "typescript/consistent-type-imports": ["warn", {
+      "prefer": "type-imports",
+      "disallowTypeAnnotations": false,
+      "fixStyle": "inline-type-imports"
+    }],
+    "typescript/no-extraneous-class": "error",
+    "unicorn/no-static-only-class": "error"
+  },
+  "overrides": [
+    {
+      "files": ["examples/*.ts", "playground/*.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["src/**/*.ts"],
+      "rules": {
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off"
+      }
+    }
+  ]
+}
