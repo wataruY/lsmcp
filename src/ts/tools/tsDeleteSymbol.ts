@@ -27,12 +27,12 @@ const schemaShape = {
 
 const schema = z.object(schemaShape);
 
-export interface DeleteSymbolResult {
+interface DeleteSymbolResult {
   message: string;
   removedFromFiles: string[];
 }
 
-export async function handleDeleteSymbol({
+async function handleDeleteSymbol({
   root,
   filePath,
   line,
@@ -71,7 +71,7 @@ export async function handleDeleteSymbol({
   return result.value;
 }
 
-export function formatDeleteSymbolResult(result: DeleteSymbolResult): string {
+function formatDeleteSymbolResult(result: DeleteSymbolResult): string {
   const { message, removedFromFiles } = result;
   return `${message} from ${removedFromFiles.length} file(s).`;
 }

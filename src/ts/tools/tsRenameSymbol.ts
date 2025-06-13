@@ -22,7 +22,7 @@ const schema = z.object({
   newName: z.string().describe("New name for the symbol"),
 });
 
-export interface RenameSymbolResult {
+interface RenameSymbolResult {
   message: string;
   changedFiles: {
     filePath: string;
@@ -35,7 +35,7 @@ export interface RenameSymbolResult {
   }[];
 }
 
-export async function handleRenameSymbol({
+async function handleRenameSymbol({
   root,
   filePath,
   line,
@@ -140,7 +140,7 @@ async function formatFileChanges(
   return ok(output);
 }
 
-export async function formatRenameSymbolResult(
+async function formatRenameSymbolResult(
   result: RenameSymbolResult,
   root: string
 ): Promise<Result<string, string>> {

@@ -21,7 +21,7 @@ const schema = z.object({
   symbolName: z.string().describe("Name of the symbol to find references for"),
 });
 
-export interface FindReferencesResult {
+interface FindReferencesResult {
   message: string;
   symbol: {
     name: string;
@@ -35,7 +35,7 @@ export interface FindReferencesResult {
   }[];
 }
 
-export async function handleFindReferences({
+async function handleFindReferences({
   root,
   filePath,
   line,
@@ -72,7 +72,7 @@ export async function handleFindReferences({
   return result.value;
 }
 
-export function formatFindReferencesResult(
+function formatFindReferencesResult(
   result: FindReferencesResult,
   root: string
 ): string {

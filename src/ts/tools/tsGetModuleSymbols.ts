@@ -15,12 +15,12 @@ const schema = z.object({
     .describe("Context file for resolving relative imports"),
 });
 
-export interface ModuleSymbol {
+interface ModuleSymbol {
   name: string;
   kind: string;
 }
 
-export interface GetModuleSymbolsResult {
+interface GetModuleSymbolsResult {
   message: string;
   symbols: {
     types: ModuleSymbol[];
@@ -32,7 +32,7 @@ export interface GetModuleSymbolsResult {
   };
 }
 
-export function handleGetModuleSymbols({
+function handleGetModuleSymbols({
   root,
   moduleName,
   filePath,
@@ -54,7 +54,7 @@ export function handleGetModuleSymbols({
   return result.value;
 }
 
-export function formatGetModuleSymbolsResult(
+function formatGetModuleSymbolsResult(
   result: GetModuleSymbolsResult
 ): string {
   const { message, symbols } = result;

@@ -19,11 +19,11 @@ const schema = z.object({
     .describe("Virtual content to use for diagnostics instead of file content"),
 });
 
-export interface GetDiagnosticsResult {
+interface GetDiagnosticsResult {
   message: string;
 }
 
-export async function handleGetDiagnostics({
+async function handleGetDiagnostics({
   root,
   filePath,
   virtualContent,
@@ -66,7 +66,7 @@ export async function handleGetDiagnostics({
   }
 }
 
-export function formatGetDiagnosticsResult(
+function formatGetDiagnosticsResult(
   result: GetDiagnosticsResult
 ): string {
   // Return ts-morph's formatted output directly

@@ -30,7 +30,7 @@ const schema = z.object({
     ),
 });
 
-export interface GetTypeAtSymbolResult {
+interface GetTypeAtSymbolResult {
   symbol: {
     name: string;
     kind: string;
@@ -131,7 +131,7 @@ function getSymbolFromNode(
   return symbol;
 }
 
-export async function handleGetTypeAtSymbol({
+async function handleGetTypeAtSymbol({
   root,
   filePath,
   line,
@@ -184,7 +184,7 @@ export async function handleGetTypeAtSymbol({
   };
 }
 
-export function formatGetTypeAtSymbolResult(
+function formatGetTypeAtSymbolResult(
   result: GetTypeAtSymbolResult,
   root: string
 ): string {

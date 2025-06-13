@@ -58,7 +58,7 @@ const meaningMap: Record<SymbolMeaning, ts.SymbolFlags> = {
   [SymbolMeaning.Module]: ts.SymbolFlags.Module,
 };
 
-export interface SymbolInfo {
+interface SymbolInfo {
   name: string;
   kind: string;
   type?: string;
@@ -69,7 +69,7 @@ export interface SymbolInfo {
   };
 }
 
-export interface GetSymbolsInScopeResult {
+interface GetSymbolsInScopeResult {
   location: {
     filePath: string;
     line: number;
@@ -201,7 +201,7 @@ function createSymbolInfo(
   };
 }
 
-export async function handleGetSymbolsInScope({
+async function handleGetSymbolsInScope({
   root,
   filePath,
   line,
@@ -313,7 +313,7 @@ function formatSymbolLine(symbol: SymbolInfo): string {
   return line;
 }
 
-export function formatGetSymbolsInScopeResult(
+function formatGetSymbolsInScopeResult(
   result: GetSymbolsInScopeResult,
   root: string
 ): string {

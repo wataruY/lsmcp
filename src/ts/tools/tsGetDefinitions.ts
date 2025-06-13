@@ -29,7 +29,7 @@ const schema = z.object({
     .describe("Number of lines to show after the definition"),
 });
 
-export interface GetDefinitionsResult {
+interface GetDefinitionsResult {
   message: string;
   symbol: {
     name: string;
@@ -43,7 +43,7 @@ export interface GetDefinitionsResult {
   }[];
 }
 
-export async function handleGetDefinitions({
+async function handleGetDefinitions({
   root,
   filePath,
   line,
@@ -80,7 +80,7 @@ export async function handleGetDefinitions({
   return result.value;
 }
 
-export function formatGetDefinitionsResult(
+function formatGetDefinitionsResult(
   result: GetDefinitionsResult,
   root: string,
   options?: { before?: number; after?: number }

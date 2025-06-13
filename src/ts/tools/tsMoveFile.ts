@@ -22,12 +22,12 @@ const schemaShape = {
 
 const schema = z.object(schemaShape);
 
-export interface MoveFileResult {
+interface MoveFileResult {
   message: string;
   changedFiles: string[];
 }
 
-export async function handleMoveFile({
+async function handleMoveFile({
   root,
   oldPath,
   newPath,
@@ -172,7 +172,7 @@ async function analyzeImportChanges(
   );
 }
 
-export async function formatMoveFileResult(
+async function formatMoveFileResult(
   result: MoveFileResult,
   oldPath: string,
   newPath: string,

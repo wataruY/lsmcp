@@ -20,9 +20,9 @@ const schema = z.object({
     .describe("Context file for resolving relative imports"),
 });
 
-export type GetTypeInModuleResult = FormatTypeSignatureInput;
+type GetTypeInModuleResult = FormatTypeSignatureInput;
 
-export function handleGetTypeInModule({
+function handleGetTypeInModule({
   root,
   moduleName,
   typeName,
