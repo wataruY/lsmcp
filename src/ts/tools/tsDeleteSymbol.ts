@@ -37,6 +37,7 @@ export async function handleDeleteSymbol({
   filePath,
   line,
   symbolName,
+  removeReferences = true,
 }: z.infer<typeof schema>): Promise<DeleteSymbolResult> {
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);
@@ -57,6 +58,7 @@ export async function handleDeleteSymbol({
     filePath: absolutePath,
     line: resolvedLine,
     symbolName,
+    removeReferences,
   });
 
   if (result.isErr()) {

@@ -90,55 +90,35 @@ export function useOldName() {
   });
 
   describe("move_file", () => {
-    it.skip("should move a file and update imports", async () => {
+    it("should move a file and update imports", async () => {
       // Create test files
       const srcFile = path.join(tmpDir, "src.ts");
       const importerFile = path.join(tmpDir, "importer.ts");
       
       await fs.writeFile(srcFile, `export const value = 42;`);
-      await fs.writeFile(importerFile, `import { value } from "./src.ts";\nconsole.log(value);`);
+      await fs.writeFile(importerFile, `import { value } from "./src";\nconsole.log(value);`);
       
       // Verify files exist before calling tool
       await expect(fs.access(srcFile)).resolves.toBeUndefined();
       await expect(fs.access(importerFile)).resolves.toBeUndefined();
-      
-      console.log("Test files created in:", tmpDir);
-      console.log("Source file:", srcFile);
-      console.log("Importer file:", importerFile);
 
-      let result;
-      try {
-        result = await client.callTool({
-          name: "move_file",
-          arguments: {
-            root: tmpDir,
-            oldPath: "src.ts",
-            newPath: "moved/src.ts",
-          }
-        });
-      } catch (error) {
-        console.error("Error calling move_file:", error);
-        throw error;
-      }
+      const result = await client.callTool({
+        name: "move_file",
+        arguments: {
+          root: tmpDir,
+          oldPath: "src.ts",
+          newPath: "moved/src.ts",
+        }
+      });
 
       expect(result).toBeDefined();
       expect(result.content).toBeDefined();
       
-      // Check if there's an error in the result
-      if (result.isError) {
-        console.error("Tool returned error:", result);
-      }
-      
-      // Log the result for debugging
+      // Check for errors in the result
       if (result.content && Array.isArray(result.content)) {
         const content = result.content[0];
-        if (content && 'text' in content) {
-          console.log("Move file result:", content.text);
-          
-          // If the result indicates an error, fail the test with the error message
-          if (content.text.startsWith("Error:")) {
-            throw new Error(`Tool error: ${content.text}`);
-          }
+        if (content && 'text' in content && content.text.startsWith("Error:")) {
+          throw new Error(`Tool error: ${content.text}`);
         }
       }
       
@@ -148,7 +128,7 @@ export function useOldName() {
       
       // Verify import was updated
       const importerContent = await fs.readFile(importerFile, "utf-8");
-      expect(importerContent).toContain(`import { value } from "./moved/src.ts"`);
+      expect(importerContent).toContain(`import { value } from "./moved/src"`);
     });
   });
 
@@ -222,7 +202,7 @@ function testFunction() {
   });
 
   describe("delete_symbol", () => {
-    it.skip("should delete a symbol and its references", async () => {
+    it("should delete a symbol and its references", async () => {
       const testFile = path.join(tmpDir, "test.ts");
       await fs.writeFile(testFile, `
 export const toDelete = "value";
@@ -246,11 +226,11 @@ export const keepThis = "keep";
       expect(result).toBeDefined();
       expect(result.content).toBeDefined();
       
-      // Log the result for debugging
+      // Check for errors in the result
       if (result.content && Array.isArray(result.content)) {
         const content = result.content[0];
-        if (content && 'text' in content) {
-          console.log("Delete symbol result:", content.text);
+        if (content && 'text' in content && content.text.includes("Error")) {
+          throw new Error(`Tool error: ${content.text}`);
         }
       }
       

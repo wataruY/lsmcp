@@ -152,7 +152,7 @@ export const toolNameTool: ToolDef<typeof schema> = {
 
 - [ ] Multi Project support
 - [ ] Extract function refactoring
-- [ ] Fix MCP client tests for move_file and delete_symbol
+- [x] Fix MCP client tests for move_file and delete_symbol ✅ 2025-01-13
 
 ## LICENSE
 
