@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ToolDef } from "../../mcp/types";
+import type { ToolDef } from "../../mcp/_mcplib";
 import { Project } from "ts-morph";
 import { getRelatedModules } from "../navigations/getRelatedModules";
 

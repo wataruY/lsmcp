@@ -3,7 +3,7 @@ import { type Result, ok, err } from "neverthrow";
 import { readFileSync } from "fs";
 import path from "path";
 import { getActiveClient } from "../lspClient.ts";
-import type { ToolDef } from "../../mcp/types.ts";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -130,7 +130,7 @@ export const lspGetDiagnosticsTool: ToolDef<typeof schema> = {
   description:
     "Get TypeScript diagnostics (errors, warnings) for a file using LSP",
   schema,
-  execute: async (args) => {
+  execute: async (args: z.infer<typeof schema>) => {
     const result = await getDiagnosticsWithLSP(args);
     if (result.isOk()) {
       const messages = [result.value.message];

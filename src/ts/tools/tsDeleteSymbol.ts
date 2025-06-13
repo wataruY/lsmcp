@@ -7,7 +7,7 @@ import {
   getOrCreateSourceFileWithRefresh,
 } from "../projectCache";
 import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
-import type { ToolDef } from "../../mcp/types";
+import type { ToolDef } from "../../mcp/_mcplib";
 
 const schemaShape = {
   root: z.string().describe("Root directory for resolving relative paths"),

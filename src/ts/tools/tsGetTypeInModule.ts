@@ -6,7 +6,7 @@ import {
   formatTypeSignature,
   type FormatTypeSignatureInput,
 } from "../signatureFormatter";
-import type { ToolDef } from "../../mcp/types";
+import type { ToolDef } from "../../mcp/_mcplib";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),

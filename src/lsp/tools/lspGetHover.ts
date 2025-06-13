@@ -4,7 +4,7 @@ import { getActiveClient } from "../lspClient.ts";
 import { parseLineNumber } from "../../textUtils/parseLineNumber";
 import { findSymbolInLine } from "../../textUtils/findSymbolInLine";
 import { findTargetInFile } from "../../textUtils/findTargetInFile";
-import type { ToolDef } from "../../mcp/types.ts";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
 import { readFileSync } from "fs";
 import path from "path";
 
@@ -237,7 +237,7 @@ export const lspGetHoverTool: ToolDef<typeof schema> = {
   description:
     "Get hover information (type signature, documentation) for a TypeScript symbol using LSP",
   schema,
-  execute: async (args) => {
+  execute: async (args: z.infer<typeof schema>) => {
     const result = await getHover(args);
     if (result.isOk()) {
       const messages = [result.value.message];

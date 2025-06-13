@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ToolDef } from "../../mcp/types";
+import type { ToolDef } from "../../mcp/_mcplib";
 import { moveDirectory } from "../commands/moveDirectory";
 import { resolve } from "node:path";
 

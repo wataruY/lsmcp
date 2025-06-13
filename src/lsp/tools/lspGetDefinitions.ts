@@ -6,7 +6,7 @@ import path from "path";
 import { getActiveClient } from "../lspClient.ts";
 import { parseLineNumber } from "../../textUtils/parseLineNumber";
 import { findSymbolInLine } from "../../textUtils/findSymbolInLine";
-import type { ToolDef } from "../../mcp/types.ts";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -170,7 +170,7 @@ export const lspGetDefinitionsTool: ToolDef<typeof schema> = {
   name: "lsp_get_definitions",
   description: "Get the definition(s) of a TypeScript symbol using LSP",
   schema,
-  execute: async (args) => {
+  execute: async (args: z.infer<typeof schema>) => {
     const result = await getDefinitionsWithLSP(args);
     if (result.isOk()) {
       const messages = [result.value.message];

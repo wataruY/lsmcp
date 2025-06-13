@@ -7,7 +7,7 @@ import {
 } from "../projectCache";
 import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
 import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../textUtils/findSymbolInLineForSourceFile";
-import type { ToolDef } from "../../mcp/types";
+import type { ToolDef } from "../../mcp/_mcplib";
 import { ts, type SourceFile, type Node, type Symbol } from "ts-morph";
 
 const schema = z.object({

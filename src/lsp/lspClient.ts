@@ -19,6 +19,7 @@ import {
   LSPClientConfig,
   LSPClient,
 } from "./lspTypes";
+import { debug } from "../mcp/_mcplib.ts";
 
 // Re-export types for backward compatibility
 export type {
@@ -117,7 +118,7 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
         const header = state.buffer.substring(0, headerEnd);
         const contentLengthMatch = header.match(/Content-Length: (\d+)/);
         if (!contentLengthMatch) {
-          console.error("Invalid LSP header:", header);
+          debug("Invalid LSP header:", header);
           state.buffer = state.buffer.substring(headerEnd + 4);
           continue;
         }
@@ -139,7 +140,7 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
         const message = JSON.parse(messageBody) as LSPMessage;
         handleMessage(message);
       } catch (error) {
-        console.error("Failed to parse LSP message:", messageBody, error);
+        debug("Failed to parse LSP message:", messageBody, error);
       }
     }
   }
@@ -262,16 +263,19 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     });
 
     state.process.stderr?.on("data", (data: Buffer) => {
-      // console.error("LSP stderr:", data.toString());
+      // Uncomment for debugging LSP stderr output
+      // debug("LSP stderr:", data.toString());
     });
 
     state.process.on("exit", (code) => {
-      // console.error(`LSP server exited with code ${code}`);
+      // Uncomment for debugging LSP process lifecycle
+      // debug(`LSP server exited with code ${code}`);
       state.process = null;
     });
 
     state.process.on("error", (error) => {
-      // console.error("LSP server error:", error);
+      // Uncomment for debugging LSP errors
+      // debug("LSP server error:", error);
     });
 
     // Initialize the LSP connection

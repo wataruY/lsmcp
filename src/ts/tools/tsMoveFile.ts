@@ -7,7 +7,7 @@ import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
 } from "../projectCache";
-import type { ToolDef } from "../../mcp/types";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
 
 const schemaShape = {
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -51,6 +51,46 @@ export async function handleMoveFile({
 
   if (sourceFileResult.isErr()) {
     return err(sourceFileResult.error);
+  }
+  
+  // Load all TypeScript/JavaScript files in the project directory to ensure imports are resolved
+  const projectDir = path.dirname(absoluteOldPath);
+  const rootDir = root;
+  
+  // Try to add source files from the root directory
+  try {
+    const files = await fs.readdir(rootDir, { recursive: true, withFileTypes: true });
+    for (const file of files) {
+      if (file.isFile() && (file.name.endsWith('.ts') || file.name.endsWith('.tsx') || file.name.endsWith('.js') || file.name.endsWith('.jsx'))) {
+        const filePath = path.join(file.path, file.name);
+        if (!project.getSourceFile(filePath)) {
+          try {
+            project.addSourceFileAtPath(filePath);
+          } catch {
+            // Ignore errors for files that can't be added
+          }
+        }
+      }
+    }
+  } catch {
+    // If recursive readdir fails, try just the immediate directory
+    try {
+      const files = await fs.readdir(rootDir);
+      for (const file of files) {
+        if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') || file.endsWith('.jsx')) {
+          const filePath = path.join(rootDir, file);
+          if (!project.getSourceFile(filePath)) {
+            try {
+              project.addSourceFileAtPath(filePath);
+            } catch {
+              // Ignore errors for files that can't be added
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignore directory read errors
+    }
   }
 
   // Perform the move

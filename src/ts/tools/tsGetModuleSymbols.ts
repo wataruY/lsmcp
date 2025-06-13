@@ -2,7 +2,7 @@ import { z } from "zod";
 import path from "path";
 import { getModuleSymbols } from "../navigations/getModuleSymbols";
 import { findProjectForFile } from "../projectCache";
-import type { ToolDef } from "../../mcp/types";
+import type { ToolDef } from "../../mcp/_mcplib";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
