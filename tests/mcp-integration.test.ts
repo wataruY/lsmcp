@@ -1,0 +1,132 @@
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { spawn } from "child_process";
+import { fileURLToPath } from "url";
+import path from "path";
+import fs from "fs/promises";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const SERVER_PATH = path.join(__dirname, "../dist/typescript-mcp.js");
+
+describe("MCP Server Integration", () => {
+  let client: Client;
+  let transport: StdioClientTransport;
+
+  beforeAll(async () => {
+    // Build the server first
+    await new Promise<void>((resolve, reject) => {
+      const buildProcess = spawn("pnpm", ["build"], {
+        cwd: path.join(__dirname, ".."),
+        shell: true,
+      });
+      
+      buildProcess.on("close", (code) => {
+        if (code === 0) resolve();
+        else reject(new Error(`Build failed with code ${code}`));
+      });
+    });
+
+    // Verify the server file exists
+    await fs.access(SERVER_PATH);
+
+    // Create transport with server parameters
+    transport = new StdioClientTransport({
+      command: "node",
+      args: [SERVER_PATH],
+      env: process.env as Record<string, string>,
+    });
+
+    // Create and connect client
+    client = new Client({
+      name: "test-client",
+      version: "1.0.0",
+    });
+
+    await client.connect(transport);
+  }, 30000);
+
+  afterAll(async () => {
+    if (client) {
+      await client.close();
+    }
+  });
+
+  it("should list available tools", async () => {
+    const response = await client.listTools();
+    const tools = response.tools;
+
+    expect(tools).toBeDefined();
+    expect(Array.isArray(tools)).toBe(true);
+    expect(tools.length).toBeGreaterThan(0);
+
+    // Check for some expected tools
+    const toolNames = tools.map(tool => tool.name);
+    expect(toolNames).toContain("rename_symbol");
+    expect(toolNames).toContain("move_file");
+    expect(toolNames).toContain("get_type_in_module");
+  });
+
+  it("should call get_module_symbols tool", async () => {
+    const result = await client.callTool({
+      name: "get_module_symbols",
+      arguments: {
+        root: path.join(__dirname, ".."),
+        moduleName: "neverthrow",
+      }
+    });
+
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(Array.isArray(result.content)).toBe(true);
+    
+    if (result.content.length > 0) {
+      const content = result.content[0];
+      expect(content.type).toBe("text");
+      if (content.type === "text") {
+        expect(content.text).toContain("Result");
+        expect(content.text).toContain("Ok");
+        expect(content.text).toContain("Err");
+      }
+    }
+  });
+
+  it("should handle get_type_in_module tool", async () => {
+    const result = await client.callTool({
+      name: "get_type_in_module",
+      arguments: {
+        root: path.join(__dirname, ".."),
+        moduleName: "neverthrow",
+        typeName: "Result",
+      }
+    });
+
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(Array.isArray(result.content)).toBe(true);
+    
+    if (result.content.length > 0) {
+      const content = result.content[0];
+      expect(content.type).toBe("text");
+      if (content.type === "text") {
+        expect(content.text).toContain("Result");
+        expect(content.text).toContain("type");
+      }
+    }
+  });
+
+  it("should handle errors gracefully", async () => {
+    const result = await client.callTool({
+      name: "get_module_symbols",
+      arguments: {
+        root: "/non/existent/path",
+        moduleName: "non-existent-module",
+      }
+    });
+
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result).toBeDefined();
+    // Error should be thrown for invalid paths
+  });
+});
