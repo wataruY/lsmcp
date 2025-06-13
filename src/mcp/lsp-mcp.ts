@@ -2,7 +2,6 @@
 /**
  * Generic MCP server for LSP-based tools.
  */
-/* eslint-disable no-console */
 
 import { 
   BaseMcpServer,

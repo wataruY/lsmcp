@@ -19,7 +19,6 @@ let defaultProject: Project | null = null;
 async function findTsConfig(startPath: string): Promise<string | null> {
   let currentPath = resolve(startPath);
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     const tsconfigPath = join(currentPath, "tsconfig.json");
     try {
@@ -140,7 +139,6 @@ export function findProjectForFile(filePath: string): Project {
   const directory = dirname(absolutePath);
   currentPath = directory;
 
-  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   while (true) {
     const tsconfigPath = join(currentPath, "tsconfig.json");
     const cachedProject = projectCache.get(tsconfigPath);

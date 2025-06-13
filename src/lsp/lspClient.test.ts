@@ -195,9 +195,7 @@ describe("LSP Client Error Handling", () => {
         await crashClient.start();
 
         // Force kill the process to simulate crash
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         if ((crashClient as any).process) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
           (crashClient as any).process.kill("SIGKILL");
         }
 

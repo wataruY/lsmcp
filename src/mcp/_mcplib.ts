@@ -67,7 +67,6 @@ export interface McpServerOptions {
 /**
  * Base class for MCP servers with common functionality
  */
-// eslint-disable-next-line local/no-class
 export class BaseMcpServer {
   protected server: McpServer;
   protected tools: Map<string, ToolDef<any>> = new Map();
@@ -125,7 +124,6 @@ export class BaseMcpServer {
   private _registerToolWithServer<S extends ZodType>(tool: ToolDef<S>): void {
     // Check if the schema is a ZodObject to extract shape
     if (tool.schema instanceof ZodObject) {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const schemaShape = tool.schema.shape;
 
       // Create a wrapper handler that adds default root if not provided
@@ -342,7 +340,6 @@ if (import.meta.vitest) {
 
     it("should handle non-Error thrown values", async () => {
       const handler = toMcpToolHandler(() => {
-        // eslint-disable-next-line @typescript-eslint/only-throw-error
         throw "String error";
       });
 

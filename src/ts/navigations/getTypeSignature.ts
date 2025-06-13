@@ -1,11 +1,4 @@
 // FIXME later
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   type Project,
   Node,
@@ -495,7 +488,6 @@ function extractProperties(type: Type, contextNode: Node): PropertyInfo[] {
       continue;
 
     const propDeclarations = prop.getDeclarations();
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!propDeclarations || propDeclarations.length === 0) {
       // For interfaces and types, we might not have declarations
       // Try to get the type directly
@@ -855,8 +847,6 @@ export function getTypeSignature(
 }
 
 if (import.meta.vitest) {
-  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-  /* eslint-disable @typescript-eslint/no-non-null-assertion */
   const { describe, expect, it } = await import("vitest");
   const { Project } = await import("ts-morph");
 

@@ -82,7 +82,6 @@ export function getModuleGraph(
     const queue = [...resolvedEntryPoints];
 
     while (queue.length > 0) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const filePath = queue.shift()!;
       if (visited.has(filePath)) continue;
       visited.add(filePath);

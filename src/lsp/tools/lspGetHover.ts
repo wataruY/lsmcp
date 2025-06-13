@@ -225,7 +225,6 @@ function formatHoverContents(
         }
       })
       .join("\n");
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   } else if (typeof contents === "object" && contents && "value" in contents) {
     return (contents as MarkupContent).value;
   }
