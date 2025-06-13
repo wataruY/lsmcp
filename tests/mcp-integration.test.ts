@@ -47,9 +47,7 @@ describe("MCP Server Integration", () => {
   }, 30000);
 
   afterAll(async () => {
-    if (client) {
-      await client.close();
-    }
+    await client.close();
   });
 
   it("should list available tools", async () => {
@@ -78,12 +76,12 @@ describe("MCP Server Integration", () => {
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(Array.isArray(result.content)).toBe(true);
+    const contents = result.content as Array<{ type: string; text?: string }>;
+    expect(Array.isArray(contents)).toBe(true);
     
-    if (result.content.length > 0) {
-      const content = result.content[0];
-      expect(content.type).toBe("text");
-      if (content.type === "text") {
+    if (contents.length > 0) {
+      const content = contents[0];
+      if (content.type === "text" && content.text) {
         expect(content.text).toContain("Result");
         expect(content.text).toContain("Ok");
         expect(content.text).toContain("Err");
@@ -103,12 +101,12 @@ describe("MCP Server Integration", () => {
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(Array.isArray(result.content)).toBe(true);
+    const contents = result.content as Array<{ type: string; text?: string }>;
+    expect(Array.isArray(contents)).toBe(true);
     
-    if (result.content.length > 0) {
-      const content = result.content[0];
-      expect(content.type).toBe("text");
-      if (content.type === "text") {
+    if (contents.length > 0) {
+      const content = contents[0];
+      if (content.type === "text" && content.text) {
         expect(content.text).toContain("Result");
         expect(content.text).toContain("type");
       }

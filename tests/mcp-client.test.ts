@@ -37,12 +37,8 @@ describe("MCP TypeScript Tools", () => {
   });
 
   afterEach(async () => {
-    if (client) {
-      await client.close();
-    }
-    if (tmpDir) {
-      await fs.rm(tmpDir, { recursive: true, force: true });
-    }
+    await client.close();
+    await fs.rm(tmpDir, { recursive: true, force: true });
   });
 
   describe("rename_symbol", () => {
@@ -130,8 +126,12 @@ const arr = [1, 2, 3];
 
       expect(result).toBeDefined();
       expect(result.content).toBeDefined();
-      if (result.content.length > 0 && result.content[0].type === "text") {
-        expect(result.content[0].text).toContain("42");
+      const contents = result.content as Array<{ type: string; text?: string }>;
+      if (contents.length > 0) {
+        const content = contents[0];
+        if (content.type === "text" && content.text) {
+          expect(content.text).toContain("42");
+        }
       }
     });
   });
@@ -162,11 +162,14 @@ function testFunction() {
 
       expect(result).toBeDefined();
       expect(result.content).toBeDefined();
-      if (result.content.length > 0 && result.content[0].type === "text") {
-        const text = result.content[0].text;
-        expect(text).toContain("innerVar");
-        expect(text).toContain("testFunction");
-        expect(text).toContain("localVar");
+      const contents = result.content as Array<{ type: string; text?: string }>;
+      if (contents.length > 0) {
+        const content = contents[0];
+        if (content.type === "text" && content.text) {
+          expect(content.text).toContain("innerVar");
+          expect(content.text).toContain("testFunction");
+          expect(content.text).toContain("localVar");
+        }
       }
     });
   });
