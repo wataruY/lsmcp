@@ -1,1 +1,1 @@
-export { add, calculateDiff } from './math.ts';
+export { add, calculateDiff } from './math';
