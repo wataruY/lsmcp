@@ -421,6 +421,7 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     getDefinition,
     getHover,
     getDiagnostics,
+    sendRequest,
     on: (event: string, listener: (...args: unknown[]) => void) =>
       state.eventEmitter.on(event, listener),
     emit: (event: string, ...args: unknown[]) =>

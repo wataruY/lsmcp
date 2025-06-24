@@ -15,6 +15,7 @@ import { lspGetHoverTool } from "../lsp/tools/lspGetHover.ts";
 import { lspFindReferencesTool } from "../lsp/tools/lspFindReferences.ts";
 import { lspGetDefinitionsTool } from "../lsp/tools/lspGetDefinitions.ts";
 import { lspGetDiagnosticsTool } from "../lsp/tools/lspGetDiagnostics.ts";
+import { lspRenameSymbolTool } from "../lsp/tools/lspRenameSymbol.ts";
 import { parseArgs } from "node:util";
 import { spawn } from "child_process";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
@@ -25,6 +26,7 @@ const tools: ToolDef<any>[] = [
   lspFindReferencesTool,
   lspGetDefinitionsTool,
   lspGetDiagnosticsTool,
+  lspRenameSymbolTool,
 ];
 
 async function main() {

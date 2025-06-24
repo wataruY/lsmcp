@@ -169,6 +169,7 @@ export type LSPClient = {
   ) => Promise<Location | Location[]>;
   getHover: (uri: string, position: Position) => Promise<HoverResult>;
   getDiagnostics: (uri: string) => Diagnostic[];
+  sendRequest: <T = unknown>(method: string, params?: unknown) => Promise<T>;
   on: (event: string, listener: (...args: unknown[]) => void) => void;
   emit: (event: string, ...args: unknown[]) => boolean;
 };
