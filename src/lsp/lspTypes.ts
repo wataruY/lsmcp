@@ -214,6 +214,8 @@ export type LSPClient = {
   getCodeActions: (uri: string, range: Range, context?: { diagnostics?: Diagnostic[] }) => Promise<(Command | CodeAction)[]>;
   formatDocument: (uri: string, options: FormattingOptions) => Promise<TextEdit[]>;
   formatRange: (uri: string, range: Range, options: FormattingOptions) => Promise<TextEdit[]>;
+  prepareRename: (uri: string, position: Position) => Promise<Range | null>;
+  rename: (uri: string, position: Position, newName: string) => Promise<WorkspaceEdit | null>;
   applyEdit: (edit: WorkspaceEdit, label?: string) => Promise<ApplyWorkspaceEditResponse>;
   sendRequest: <T = unknown>(method: string, params?: unknown) => Promise<T>;
   on: (event: string, listener: (...args: unknown[]) => void) => void;

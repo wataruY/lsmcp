@@ -14,6 +14,8 @@ import {
   Position,
   Range,
 } from "vscode-languageserver-types";
+import { renameSymbolTool as tsRenameSymbolTool } from "../../ts/tools/tsRenameSymbol.ts";
+import { debug } from "../../mcp/_mcplib.ts";
 
 // Define PrepareRenameParams and RenameParams locally
 interface PrepareRenameParams {
@@ -155,6 +157,7 @@ async function performRenameAtPosition(
 ): Promise<Result<RenameSymbolSuccess, string>> {
   try {
     const client = getActiveClient();
+    const absolutePath = path.resolve(request.root, request.filePath);
 
     // Open document in LSP
     client.openDocument(fileUri, fileContent);
@@ -167,15 +170,7 @@ async function performRenameAtPosition(
 
     // Optional: Check if rename is possible at this position
     try {
-      const prepareParams: PrepareRenameParams = {
-        textDocument: { uri: fileUri },
-        position,
-      };
-      
-      const prepareResult = await client.sendRequest<PrepareRenameResult>(
-        "textDocument/prepareRename",
-        prepareParams
-      );
+      const prepareResult = await client.prepareRename(fileUri, position);
 
       if (prepareResult === null) {
         return err(
@@ -195,13 +190,80 @@ async function performRenameAtPosition(
       newName: request.newName,
     };
 
-    const workspaceEdit = await client.sendRequest<WorkspaceEdit | null>(
-      "textDocument/rename",
-      renameParams
-    );
+    let workspaceEdit: WorkspaceEdit | null = null;
+    
+    try {
+      // Use the client's rename method which handles errors properly
+      workspaceEdit = await client.rename(
+        fileUri,
+        position,
+        request.newName
+      );
+    } catch (error: any) {
+      // Check if LSP doesn't support rename (e.g., TypeScript Native Preview)
+      if (error.code === -32601 || 
+          error.message?.includes("Unhandled method") ||
+          error.message?.includes("Method not found")) {
+        debug("LSP server doesn't support rename, falling back to TypeScript rename tool");
+        
+        // Fall back to TypeScript rename tool
+        try {
+          const tsResult = await tsRenameSymbolTool.execute({
+            root: request.root,
+            filePath: request.filePath,
+            line: request.line || (targetLine + 1),
+            oldName: request.target,
+            newName: request.newName,
+          });
+          
+          // Return success with a note about the fallback
+          return ok({
+            message: `Renamed "${request.target}" to "${request.newName}" using TypeScript tool (LSP rename not supported)`,
+            changedFiles: [{
+              filePath: absolutePath,
+              changes: [{
+                line: targetLine + 1,
+                oldText: request.target,
+                newText: request.newName,
+              }],
+            }],
+          });
+        } catch (tsError: any) {
+          return err(`LSP rename not supported and TypeScript fallback failed: ${tsError.message}`);
+        }
+      }
+      // Re-throw other errors
+      throw error;
+    }
 
     if (!workspaceEdit) {
-      return err("No changes were made");
+      // LSP returned null, try TypeScript tool as fallback
+      debug("LSP rename returned null, falling back to TypeScript rename tool");
+      
+      try {
+        const tsResult = await tsRenameSymbolTool.execute({
+          root: request.root,
+          filePath: request.filePath,
+          line: request.line || (targetLine + 1),
+          oldName: request.target,
+          newName: request.newName,
+        });
+        
+        // Return success with a note about the fallback
+        return ok({
+          message: `Renamed "${request.target}" to "${request.newName}" using TypeScript tool (LSP returned no changes)`,
+          changedFiles: [{
+            filePath: absolutePath,
+            changes: [{
+              line: targetLine + 1,
+              oldText: request.target,
+              newText: request.newName,
+            }],
+          }],
+        });
+      } catch (tsError: any) {
+        return err(`No changes from LSP and TypeScript fallback failed: ${tsError.message}`);
+      }
     }
 
     // Apply changes and format result

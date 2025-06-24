@@ -531,6 +531,57 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     return result ?? [];
   }
 
+  async function prepareRename(
+    uri: string,
+    position: Position
+  ): Promise<Range | null> {
+    const params = {
+      textDocument: { uri },
+      position,
+    };
+    try {
+      const result = await sendRequest<Range | { range: Range } | null>(
+        "textDocument/prepareRename",
+        params
+      );
+      if (result && "range" in result) {
+        return result.range;
+      }
+      return result;
+    } catch (error) {
+      // Some LSP servers don't support prepareRename
+      return null;
+    }
+  }
+
+  async function rename(
+    uri: string,
+    position: Position,
+    newName: string
+  ): Promise<WorkspaceEdit | null> {
+    const params = {
+      textDocument: { uri },
+      position,
+      newName,
+    };
+    try {
+      const result = await sendRequest<WorkspaceEdit>(
+        "textDocument/rename",
+        params
+      );
+      return result ?? null;
+    } catch (error: any) {
+      // Check if this is a TypeScript Native Preview LSP that doesn't support rename
+      if (error.message?.includes("Unhandled method") || 
+          error.message?.includes("Method not found") ||
+          error.code === -32601) {
+        debug("LSP server doesn't support rename, will use fallback");
+        return null;
+      }
+      throw error;
+    }
+  }
+
   async function applyEdit(
     edit: WorkspaceEdit,
     label?: string
@@ -588,6 +639,8 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     getCodeActions,
     formatDocument,
     formatRange,
+    prepareRename,
+    rename,
     applyEdit,
     sendRequest,
     on: (event: string, listener: (...args: unknown[]) => void) =>
