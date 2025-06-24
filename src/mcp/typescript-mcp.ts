@@ -24,6 +24,7 @@ import { lspGetHoverTool } from "../lsp/tools/lspGetHover.ts";
 import { lspFindReferencesTool } from "../lsp/tools/lspFindReferences.ts";
 import { lspGetDefinitionsTool } from "../lsp/tools/lspGetDefinitions.ts";
 import { lspGetDiagnosticsTool } from "../lsp/tools/lspGetDiagnostics.ts";
+import { listToolsTool } from "./tools/listTools.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { parseArgs } from "node:util";
@@ -34,6 +35,7 @@ const USE_TSGO: boolean = process.env.TSGO != null;
 
 // Define tools based on configuration
 const tools: ToolDef<any>[] = [
+  listToolsTool, // Help tool to list all available tools
   moveFileTool,
   moveDirectoryTool,
   renameSymbolTool,

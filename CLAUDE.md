@@ -148,6 +148,10 @@ export const toolNameTool: ToolDef<typeof schema> = {
 };
 ```
 
+## Memories
+
+- AI はワードカウントが苦手なので、LSPのLine Character ではなく、一致する行と、一致するコードでインターフェースを調整する必要があります。既存のコードを参考に、そうなってないMCPサーバーのインターフェースを調整します。
+
 ## TODO
 
 - [ ] Multi Project support

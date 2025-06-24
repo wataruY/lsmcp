@@ -15,9 +15,10 @@ const schemaShape = {
   line: z
     .union([z.number(), z.string()])
     .describe("Line number (1-based) or string to match in the line"),
-  character: z
-    .number()
-    .describe("Character position in the line (0-based)"),
+  target: z
+    .string()
+    .describe("Function call or text at the position to get signature help for")
+    .optional(),
 };
 
 const schema = z.object(schemaShape);
@@ -96,7 +97,7 @@ async function handleGetSignatureHelp({
   root,
   filePath,
   line,
-  character,
+  target,
 }: z.infer<typeof schema>): Promise<string> {
   const client = getLSPClient();
   if (!client) {
@@ -125,6 +126,32 @@ async function handleGetSignatureHelp({
   }
   
   const lineIndex = resolveResult.lineIndex;
+  
+  // Determine character position
+  const lines = content.split("\n");
+  const lineText = lines[lineIndex];
+  let character = 0;
+  
+  if (target) {
+    // Find the position within or after the target text
+    const targetIndex = lineText.indexOf(target);
+    if (targetIndex !== -1) {
+      // Position cursor inside the function call (usually after the opening parenthesis)
+      character = targetIndex + target.length;
+      // Look for opening parenthesis after the target
+      const afterTarget = lineText.substring(character);
+      const parenIndex = afterTarget.indexOf("(");
+      if (parenIndex !== -1) {
+        character += parenIndex + 1;
+      }
+    }
+  } else {
+    // Default to first non-whitespace character
+    const match = lineText.match(/\S/);
+    if (match) {
+      character = match.index || 0;
+    }
+  }
 
   // Open the document in LSP
   client.openDocument(fileUri, content);

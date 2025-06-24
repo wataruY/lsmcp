@@ -24,9 +24,11 @@ import { lspFormatDocumentTool } from "../lsp/tools/lspFormatDocument.ts";
 import { spawn } from "child_process";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 import { handleMcpInit } from "./mcpInit.ts";
+import { listToolsTool } from "./tools/listTools.ts";
 
 // Register all tools
 const tools: ToolDef<any>[] = [
+  listToolsTool, // Help tool to list all available tools
   lspGetHoverTool,
   lspFindReferencesTool,
   lspGetDefinitionsTool,

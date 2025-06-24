@@ -9,7 +9,7 @@ const schema = z.object({
   root: commonSchemas.root,
   filePath: commonSchemas.filePath,
   line: commonSchemas.line,
-  character: commonSchemas.character,
+  target: z.string().describe("Text at the position to get completions for").optional(),
 });
 
 function getCompletionItemKindName(kind?: CompletionItemKind): string {
@@ -75,10 +75,23 @@ async function handleGetCompletion({
   root,
   filePath,
   line,
-  character,
+  target,
 }: z.infer<typeof schema>): Promise<string> {
   const { fileUri, content } = await prepareFileContext(root, filePath);
   const lineIndex = resolveLineOrThrow(content, line, filePath);
+  
+  // Determine character position
+  const lines = content.split("\n");
+  const lineText = lines[lineIndex];
+  let character = lineText.length; // Default to end of line
+  
+  if (target) {
+    // Find the position after the target text
+    const targetIndex = lineText.indexOf(target);
+    if (targetIndex !== -1) {
+      character = targetIndex + target.length;
+    }
+  }
 
   return withLSPDocument(fileUri, content, async () => {
     const client = getLSPClient();
