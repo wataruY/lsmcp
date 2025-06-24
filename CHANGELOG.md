@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.14] - 2025-01-24
+
 ### Added
 
 #### 🔄 Automatic TypeScript Fallback for LSP Rename (2025-01-24)
@@ -109,6 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP server infrastructure
 - Comprehensive test suite
 
-[Unreleased]: https://github.com/mizchi/typescript-mcp/compare/v0.0.13...HEAD
+[Unreleased]: https://github.com/mizchi/typescript-mcp/compare/v0.0.14...HEAD
+[0.0.14]: https://github.com/mizchi/typescript-mcp/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/mizchi/typescript-mcp/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/mizchi/typescript-mcp/releases/tag/v0.0.12
