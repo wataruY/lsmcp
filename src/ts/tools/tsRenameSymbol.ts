@@ -9,18 +9,12 @@ import {
 } from "../projectCache";
 import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
 import type { ToolDef } from "../../mcp/_mcplib";
+import { symbolLocationSchema, commonSchemas } from "../../common/schemas";
 
-const schema = z.object({
-  root: z.string().describe("Root directory for resolving relative paths"),
-  filePath: z
-    .string()
-    .describe("File path containing the symbol (relative to root)"),
-  line: z
-    .union([z.number(), z.string()])
-    .describe("Line number (1-based) or string to match in the line"),
+const schema = symbolLocationSchema.extend({
   oldName: z.string().describe("Current name of the symbol"),
   newName: z.string().describe("New name for the symbol"),
-});
+}).omit({ symbolName: true });
 
 interface RenameSymbolResult {
   message: string;

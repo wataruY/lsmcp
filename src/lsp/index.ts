@@ -3,6 +3,7 @@ export {
   createLSPClient,
   initialize,
   getActiveClient,
+  getLSPClient,
   shutdown,
   type LSPClientConfig,
   type HoverResult,

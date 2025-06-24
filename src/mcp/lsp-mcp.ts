@@ -6,8 +6,6 @@
 import { 
   BaseMcpServer,
   StdioServerTransport,
-  generatePermissions,
-  initializeMcpConfig,
   debug,
   type ToolDef 
 } from "./_mcplib.ts";
@@ -16,9 +14,16 @@ import { lspFindReferencesTool } from "../lsp/tools/lspFindReferences.ts";
 import { lspGetDefinitionsTool } from "../lsp/tools/lspGetDefinitions.ts";
 import { lspGetDiagnosticsTool } from "../lsp/tools/lspGetDiagnostics.ts";
 import { lspRenameSymbolTool } from "../lsp/tools/lspRenameSymbol.ts";
-import { parseArgs } from "node:util";
+import { lspDeleteSymbolTool } from "../lsp/tools/lspDeleteSymbol.ts";
+import { lspGetDocumentSymbolsTool } from "../lsp/tools/lspGetDocumentSymbols.ts";
+import { lspGetWorkspaceSymbolsTool } from "../lsp/tools/lspGetWorkspaceSymbols.ts";
+import { lspGetCompletionTool } from "../lsp/tools/lspGetCompletion.ts";
+import { lspGetSignatureHelpTool } from "../lsp/tools/lspGetSignatureHelp.ts";
+import { lspGetCodeActionsTool } from "../lsp/tools/lspGetCodeActions.ts";
+import { lspFormatDocumentTool } from "../lsp/tools/lspFormatDocument.ts";
 import { spawn } from "child_process";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
+import { handleMcpInit } from "./mcpInit.ts";
 
 // Register all tools
 const tools: ToolDef<any>[] = [
@@ -27,76 +32,38 @@ const tools: ToolDef<any>[] = [
   lspGetDefinitionsTool,
   lspGetDiagnosticsTool,
   lspRenameSymbolTool,
+  lspDeleteSymbolTool,
+  lspGetDocumentSymbolsTool,
+  lspGetWorkspaceSymbolsTool,
+  lspGetCompletionTool,
+  lspGetSignatureHelpTool,
+  lspGetCodeActionsTool,
+  lspFormatDocumentTool,
 ];
 
 async function main() {
   try {
-    // Parse command line arguments
-    const { values } = parseArgs({
-      options: {
-        init: {
-          type: "string",
-        },
-        "project-root": {
-          type: "string",
-        },
+    // Handle initialization
+    const initialized = await handleMcpInit(tools, {
+      projectName: "lsp-mcp",
+      toolPrefix: "lsp",
+      globalCommand: "lsp-mcp@latest",
+      envConfig: {
+        LSP_COMMAND: "${LSP_COMMAND}" // Placeholder for user configuration
       },
-      strict: true,
-      allowPositionals: false,
     });
 
-    const projectRoot = values["project-root"] || 
-                       process.env.PROJECT_ROOT || 
-                       process.cwd();
-
-    // Handle initialization
-    if (values.init !== undefined) {
-      const target = values.init || "claude";
-      const validTargets = ["claude", "global"];
-      
-      if (!validTargets.includes(target)) {
-        console.error(
-          `Unknown init target: ${target}. Supported: ${validTargets.join(", ")}`
-        );
-        process.exit(1);
-      }
-
-      const isGlobal = target === "global";
-      
-      // For LSP server, we need to configure the LSP_COMMAND environment variable
-      const config = {
-        command: "node",
-        args: isGlobal 
-          ? ["npx", "-y", "lsp-mcp@latest"]
-          : ["dist/lsp-mcp.js"],
-        env: {
-          LSP_COMMAND: "${LSP_COMMAND}" // Placeholder for user configuration
-        }
-      };
-
-      // Generate permissions from tool definitions
-      const permissions = generatePermissions("lsp", tools);
-
-      initializeMcpConfig(
-        projectRoot,
-        "lsp",
-        config,
-        permissions
-      );
-
-      console.log(
-        `✓ Created/updated .mcp.json with lsp-mcp configuration`
-      );
-      console.log(`✓ Created/updated .claude/settings.json with permissions`);
+    if (initialized) {
       console.log(
         `\n⚠️  Important: Set the LSP_COMMAND environment variable in .mcp.json`
       );
       console.log(
         `   Example: "LSP_COMMAND": "typescript-language-server --stdio"`
       );
-      
       process.exit(0);
     }
+
+    const projectRoot = process.env.PROJECT_ROOT || process.cwd();
 
     // Start MCP server with LSP
     const LSP_COMMAND = process.env.LSP_COMMAND;

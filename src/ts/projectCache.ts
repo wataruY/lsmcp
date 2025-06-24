@@ -13,6 +13,25 @@ const projectCache = new Map<string, Project>();
 // Cache for default project (synchronous access)
 let defaultProject: Project | null = null;
 
+// Common configuration constants
+const DEFAULT_COMPILER_OPTIONS = {
+  allowJs: true,
+  target: ScriptTarget.ESNext,
+  module: ModuleKind.ESNext,
+  moduleResolution: ModuleResolutionKind.Bundler,
+  esModuleInterop: true,
+  noEmit: true,
+  skipLibCheck: true,
+  strict: true,
+} as const;
+
+const DEFAULT_PROJECT_OPTIONS = {
+  skipFileDependencyResolution: true,
+  manipulationSettings: {
+    usePrefixAndSuffixTextForRename: true,
+  },
+} as const;
+
 /**
  * Find the nearest tsconfig.json file starting from the given directory
  */
@@ -65,29 +84,14 @@ export async function getOrCreateProject(
   if (tsconfigPath) {
     // Create project with tsconfig
     project = new Project({
+      ...DEFAULT_PROJECT_OPTIONS,
       tsConfigFilePath: tsconfigPath,
-      skipFileDependencyResolution: true,
-      manipulationSettings: {
-        usePrefixAndSuffixTextForRename: true,
-      },
     });
   } else {
     // Create default project without tsconfig
     project = new Project({
-      skipFileDependencyResolution: true,
-      manipulationSettings: {
-        usePrefixAndSuffixTextForRename: true,
-      },
-      compilerOptions: {
-        allowJs: true,
-        target: ScriptTarget.ESNext,
-        module: ModuleKind.ESNext,
-        moduleResolution: ModuleResolutionKind.Bundler,
-        esModuleInterop: true,
-        noEmit: true,
-        skipLibCheck: true,
-        strict: true,
-      },
+      ...DEFAULT_PROJECT_OPTIONS,
+      compilerOptions: DEFAULT_COMPILER_OPTIONS,
     });
   }
 
@@ -104,19 +108,9 @@ export async function getOrCreateProject(
 function getOrCreateDefaultProjectSync(): Project {
   if (!defaultProject) {
     defaultProject = new Project({
-      skipFileDependencyResolution: true,
-      manipulationSettings: {
-        usePrefixAndSuffixTextForRename: true,
-      },
+      ...DEFAULT_PROJECT_OPTIONS,
       compilerOptions: {
-        allowJs: true,
-        target: ScriptTarget.ESNext,
-        module: ModuleKind.ESNext,
-        moduleResolution: ModuleResolutionKind.Bundler,
-        esModuleInterop: true,
-        noEmit: true,
-        skipLibCheck: true,
-        strict: true,
+        ...DEFAULT_COMPILER_OPTIONS,
         allowImportingTsExtensions: true,
       },
     });

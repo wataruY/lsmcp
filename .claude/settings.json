@@ -18,8 +18,22 @@
       "mcp__typescript__get_symbols_in_scope",
       "mcp__typescript__lsp_find_references",
       "mcp__typescript__lsp_get_definitions",
-      "mcp__typescript__lsp_get_diagnostics"
+      "mcp__typescript__lsp_get_diagnostics",
+      "mcp__lsp__lsp_get_hover",
+      "mcp__lsp__lsp_find_references",
+      "mcp__lsp__lsp_get_definitions",
+      "mcp__lsp__lsp_get_diagnostics",
+      "mcp__lsp__lsp_rename_symbol",
+      "mcp__lsp__lsp_delete_symbol",
+      "mcp__lsp__lsp_get_document_symbols",
+      "mcp__lsp__lsp_get_workspace_symbols",
+      "mcp__lsp__lsp_get_completion",
+      "mcp__lsp__lsp_get_signature_help",
+      "mcp__lsp__lsp_get_code_actions",
+      "mcp__lsp__lsp_format_document"
     ],
-    "deny": ["Bash(npm:*)"]
+    "deny": [
+      "Bash(npm:*)"
+    ]
   }
 }

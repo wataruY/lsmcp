@@ -5,11 +5,27 @@
       "env": {
         "TSGO": "true"
       },
-      "args": ["tsx", "src/mcp/typescript-mcp.ts"]
+      "args": [
+        "tsx",
+        "src/mcp/typescript-mcp.ts"
+      ]
     },
     "readability": {
       "command": "npx",
-      "args": ["-y", "@mizchi/readability", "--mcp"]
+      "args": [
+        "-y",
+        "@mizchi/readability",
+        "--mcp"
+      ]
+    },
+    "lsp": {
+      "command": "node",
+      "args": [
+        "dist/lsp-mcp.js"
+      ],
+      "env": {
+        "LSP_COMMAND": "deno lsp"
+      }
     }
   }
 }

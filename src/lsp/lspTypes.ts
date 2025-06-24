@@ -8,6 +8,17 @@ import {
   integer,
   MarkupContent,
   MarkedString,
+  WorkspaceEdit,
+  TextEdit,
+  Range,
+  DocumentSymbol,
+  SymbolInformation,
+  CompletionItem,
+  CompletionList,
+  SignatureHelp,
+  CodeAction,
+  Command,
+  FormattingOptions,
 } from "vscode-languageserver-types";
 import { ChildProcess } from "child_process";
 import { EventEmitter } from "events";
@@ -67,6 +78,14 @@ export interface ClientCapabilities {
     hover?: {
       contentFormat?: string[];
     };
+    completion?: {
+      completionItem?: {
+        snippetSupport?: boolean;
+      };
+    };
+    documentSymbol?: {
+      hierarchicalDocumentSymbolSupport?: boolean;
+    };
   };
 }
 
@@ -80,6 +99,7 @@ export interface InitializeParams {
   rootPath?: string | null;
   rootUri: DocumentUri | null;
   capabilities: ClientCapabilities;
+  initializationOptions?: any;
 }
 
 export interface InitializeResult {
@@ -124,10 +144,28 @@ export interface DidCloseTextDocumentParams {
   textDocument: TextDocumentIdentifier;
 }
 
+// Workspace Edit types
+export interface ApplyWorkspaceEditParams {
+  label?: string;
+  edit: WorkspaceEdit;
+}
+
+export interface ApplyWorkspaceEditResponse {
+  applied: boolean;
+  failureReason?: string;
+  failedChange?: integer;
+}
+
 // Type aliases
 export type HoverResult = Hover | null;
 export type DefinitionResult = Definition | Location | Location[] | null;
 export type ReferencesResult = Location[] | null;
+export type DocumentSymbolResult = DocumentSymbol[] | SymbolInformation[] | null;
+export type WorkspaceSymbolResult = SymbolInformation[] | null;
+export type CompletionResult = CompletionItem[] | CompletionList | null;
+export type SignatureHelpResult = SignatureHelp | null;
+export type CodeActionResult = (Command | CodeAction)[] | null;
+export type FormattingResult = TextEdit[] | null;
 
 // Hover contents types
 export type HoverContents =
@@ -169,6 +207,14 @@ export type LSPClient = {
   ) => Promise<Location | Location[]>;
   getHover: (uri: string, position: Position) => Promise<HoverResult>;
   getDiagnostics: (uri: string) => Diagnostic[];
+  getDocumentSymbols: (uri: string) => Promise<DocumentSymbol[] | SymbolInformation[]>;
+  getWorkspaceSymbols: (query: string) => Promise<SymbolInformation[]>;
+  getCompletion: (uri: string, position: Position) => Promise<CompletionItem[]>;
+  getSignatureHelp: (uri: string, position: Position) => Promise<SignatureHelp | null>;
+  getCodeActions: (uri: string, range: Range, context?: { diagnostics?: Diagnostic[] }) => Promise<(Command | CodeAction)[]>;
+  formatDocument: (uri: string, options: FormattingOptions) => Promise<TextEdit[]>;
+  formatRange: (uri: string, range: Range, options: FormattingOptions) => Promise<TextEdit[]>;
+  applyEdit: (edit: WorkspaceEdit, label?: string) => Promise<ApplyWorkspaceEditResponse>;
   sendRequest: <T = unknown>(method: string, params?: unknown) => Promise<T>;
   on: (event: string, listener: (...args: unknown[]) => void) => void;
   emit: (event: string, ...args: unknown[]) => boolean;

@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { Position, Location, Diagnostic } from "vscode-languageserver-types";
+import { Position, Location, Diagnostic, WorkspaceEdit, DocumentSymbol, SymbolInformation, CompletionItem, SignatureHelp, CodeAction, Command, Range, TextEdit, FormattingOptions } from "vscode-languageserver-types";
 import { ChildProcess } from "child_process";
 import {
   LSPMessage,
@@ -18,6 +18,14 @@ import {
   LSPClientState,
   LSPClientConfig,
   LSPClient,
+  ApplyWorkspaceEditParams,
+  ApplyWorkspaceEditResponse,
+  DocumentSymbolResult,
+  WorkspaceSymbolResult,
+  CompletionResult,
+  SignatureHelpResult,
+  CodeActionResult,
+  FormattingResult,
 } from "./lspTypes";
 import { debug } from "../mcp/_mcplib.ts";
 
@@ -40,6 +48,14 @@ let activeClient: LSPClient | null = null;
  */
 export function setActiveClient(client: LSPClient | null): void {
   activeClient = client;
+}
+
+/**
+ * Get the active LSP client
+ * @returns The active LSP client or undefined if not initialized
+ */
+export function getLSPClient(): LSPClient | undefined {
+  return activeClient ?? undefined;
 }
 
 /**
@@ -242,8 +258,22 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
           hover: {
             contentFormat: ["markdown", "plaintext"],
           },
+          completion: {
+            completionItem: {
+              snippetSupport: true,
+            },
+          },
+          documentSymbol: {
+            hierarchicalDocumentSymbolSupport: true,
+          },
         },
       },
+      // Add Deno-specific initialization options
+      initializationOptions: state.languageId === "deno" ? {
+        enable: true,
+        lint: true,
+        unstable: true,
+      } : undefined,
     };
 
     await sendRequest<InitializeResult>("initialize", initParams);
@@ -386,6 +416,136 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     return state.diagnostics.get(uri) || [];
   }
 
+  async function getDocumentSymbols(
+    uri: string
+  ): Promise<DocumentSymbol[] | SymbolInformation[]> {
+    const params = {
+      textDocument: { uri }
+    };
+    const result = await sendRequest<DocumentSymbolResult>(
+      "textDocument/documentSymbol",
+      params
+    );
+    return result ?? [];
+  }
+
+  async function getWorkspaceSymbols(
+    query: string
+  ): Promise<SymbolInformation[]> {
+    const params = { query };
+    const result = await sendRequest<WorkspaceSymbolResult>(
+      "workspace/symbol",
+      params
+    );
+    return result ?? [];
+  }
+
+  async function getCompletion(
+    uri: string,
+    position: Position
+  ): Promise<CompletionItem[]> {
+    const params: TextDocumentPositionParams = {
+      textDocument: { uri },
+      position,
+    };
+    const result = await sendRequest<CompletionResult>(
+      "textDocument/completion",
+      params
+    );
+    
+    if (!result) {
+      return [];
+    }
+    
+    // Handle both CompletionItem[] and CompletionList
+    if (Array.isArray(result)) {
+      return result;
+    } else if ("items" in result) {
+      return result.items;
+    }
+    
+    return [];
+  }
+
+  async function getSignatureHelp(
+    uri: string,
+    position: Position
+  ): Promise<SignatureHelp | null> {
+    const params: TextDocumentPositionParams = {
+      textDocument: { uri },
+      position,
+    };
+    const result = await sendRequest<SignatureHelpResult>(
+      "textDocument/signatureHelp",
+      params
+    );
+    return result;
+  }
+
+  async function getCodeActions(
+    uri: string,
+    range: Range,
+    context?: { diagnostics?: Diagnostic[] }
+  ): Promise<(Command | CodeAction)[]> {
+    const params = {
+      textDocument: { uri },
+      range,
+      context: context || { diagnostics: [] },
+    };
+    const result = await sendRequest<CodeActionResult>(
+      "textDocument/codeAction",
+      params
+    );
+    return result ?? [];
+  }
+
+  async function formatDocument(
+    uri: string,
+    options: FormattingOptions
+  ): Promise<TextEdit[]> {
+    const params = {
+      textDocument: { uri },
+      options,
+    };
+    const result = await sendRequest<FormattingResult>(
+      "textDocument/formatting",
+      params
+    );
+    return result ?? [];
+  }
+
+  async function formatRange(
+    uri: string,
+    range: Range,
+    options: FormattingOptions
+  ): Promise<TextEdit[]> {
+    const params = {
+      textDocument: { uri },
+      range,
+      options,
+    };
+    const result = await sendRequest<FormattingResult>(
+      "textDocument/rangeFormatting",
+      params
+    );
+    return result ?? [];
+  }
+
+  async function applyEdit(
+    edit: WorkspaceEdit,
+    label?: string
+  ): Promise<ApplyWorkspaceEditResponse> {
+    const params: ApplyWorkspaceEditParams = {
+      edit,
+      label,
+    };
+    const result = await sendRequest<ApplyWorkspaceEditResponse>(
+      "workspace/applyEdit",
+      params
+    );
+    return result ?? { applied: false, failureReason: "No response from server" };
+  }
+
   async function stop(): Promise<void> {
     if (state.process) {
       // Send shutdown request
@@ -421,6 +581,14 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     getDefinition,
     getHover,
     getDiagnostics,
+    getDocumentSymbols,
+    getWorkspaceSymbols,
+    getCompletion,
+    getSignatureHelp,
+    getCodeActions,
+    formatDocument,
+    formatRange,
+    applyEdit,
     sendRequest,
     on: (event: string, listener: (...args: unknown[]) => void) =>
       state.eventEmitter.on(event, listener),

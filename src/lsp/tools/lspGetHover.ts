@@ -17,7 +17,11 @@ const schema = z.object({
     .union([z.number(), z.string()])
     .describe("Line number (1-based) or string to match in the line")
     .optional(),
-  target: z.string().describe("Text to find and get hover information for"),
+  character: z
+    .number()
+    .describe("Character position in the line (0-based)")
+    .optional(),
+  target: z.string().describe("Text to find and get hover information for").optional(),
 });
 
 type GetHoverRequest = z.infer<typeof schema>;
@@ -67,7 +71,7 @@ async function getHoverWithoutLine(
     const lines = fileContent.split("\n");
 
     // Find target text in file
-    const targetResult = findTargetInFile(lines, request.target);
+    const targetResult = findTargetInFile(lines, request.target || "");
     if ("error" in targetResult) {
       return err(`${targetResult.error} in ${request.filePath}`);
     }
@@ -102,7 +106,7 @@ function formatHoverResult(
 ): Result<GetHoverSuccess, string> {
   if (!result) {
     return ok({
-      message: `No hover information available for "${request.target}" at ${
+      message: `No hover information available${request.target ? ` for "${request.target}"` : ""} at ${
         request.filePath
       }:${targetLine + 1}:${symbolPosition + 1}`,
       hover: null,
@@ -143,7 +147,7 @@ function formatHoverResult(
   }
 
   return ok({
-    message: `Hover information for "${request.target}" at ${
+    message: `Hover information for ${request.target ? `"${request.target}" at ` : ""}${
       request.filePath
     }:${targetLine + 1}:${symbolPosition + 1}`,
     hover: {
@@ -181,14 +185,23 @@ async function getHover(
     
     const targetLine = lineResult.lineIndex;
     
-    // Find symbol position in line
-    const lineText = lines[targetLine];
-    const symbolResult = findSymbolInLine(lineText, request.target);
-    if ("error" in symbolResult) {
-      return err(`${symbolResult.error} on line ${targetLine + 1}`);
+    // Determine character position
+    let symbolPosition: number;
+    if (request.character !== undefined) {
+      // Use provided character position
+      symbolPosition = request.character;
+    } else if (request.target) {
+      // Find symbol position in line
+      const lineText = lines[targetLine];
+      const symbolResult = findSymbolInLine(lineText, request.target);
+      if ("error" in symbolResult) {
+        return err(`${symbolResult.error} on line ${targetLine + 1}`);
+      }
+      symbolPosition = symbolResult.characterIndex;
+    } else {
+      // Default to beginning of line if neither character nor target is provided
+      symbolPosition = 0;
     }
-    
-    const symbolPosition = symbolResult.characterIndex;
     
     // Open document in LSP
     client.openDocument(fileUri, fileContent);
