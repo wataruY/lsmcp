@@ -12,22 +12,10 @@ import {
   TextDocumentEdit,
   TextEdit,
   Position,
-  Range,
 } from "vscode-languageserver-types";
 import { renameSymbolTool as tsRenameSymbolTool } from "../../ts/tools/tsRenameSymbol.ts";
 import { debug } from "../../mcp/_mcplib.ts";
 
-// Define PrepareRenameParams and RenameParams locally
-interface PrepareRenameParams {
-  textDocument: { uri: string };
-  position: Position;
-}
-
-interface RenameParams {
-  textDocument: { uri: string };
-  position: Position;
-  newName: string;
-}
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -57,12 +45,6 @@ interface RenameSymbolSuccess {
   }[];
 }
 
-type PrepareRenameResult = Range | {
-  range: Range;
-  placeholder: string;
-} | {
-  defaultBehavior: boolean;
-} | null;
 
 /**
  * Helper to handle rename request when line is not provided
@@ -157,7 +139,6 @@ async function performRenameAtPosition(
 ): Promise<Result<RenameSymbolSuccess, string>> {
   try {
     const client = getActiveClient();
-    const absolutePath = path.resolve(request.root, request.filePath);
 
     // Open document in LSP
     client.openDocument(fileUri, fileContent);
@@ -184,12 +165,6 @@ async function performRenameAtPosition(
     }
 
     // Perform rename
-    const renameParams: RenameParams = {
-      textDocument: { uri: fileUri },
-      position,
-      newName: request.newName,
-    };
-
     let workspaceEdit: WorkspaceEdit | null = null;
     
     try {
@@ -208,7 +183,7 @@ async function performRenameAtPosition(
         
         // Fall back to TypeScript rename tool
         try {
-          const tsResult = await tsRenameSymbolTool.execute({
+          await tsRenameSymbolTool.execute({
             root: request.root,
             filePath: request.filePath,
             line: request.line || (targetLine + 1),
@@ -217,12 +192,14 @@ async function performRenameAtPosition(
           });
           
           // Return success with a note about the fallback
+          const absolutePath = path.resolve(request.root, request.filePath);
           return ok({
-            message: `Renamed "${request.target}" to "${request.newName}" using TypeScript tool (LSP rename not supported)`,
+            message: `Renamed "${request.target}" to "${request.newName}" using TypeScript fallback`,
             changedFiles: [{
               filePath: absolutePath,
               changes: [{
                 line: targetLine + 1,
+                column: symbolPosition + 1,
                 oldText: request.target,
                 newText: request.newName,
               }],
@@ -241,7 +218,7 @@ async function performRenameAtPosition(
       debug("LSP rename returned null, falling back to TypeScript rename tool");
       
       try {
-        const tsResult = await tsRenameSymbolTool.execute({
+        await tsRenameSymbolTool.execute({
           root: request.root,
           filePath: request.filePath,
           line: request.line || (targetLine + 1),
@@ -250,12 +227,14 @@ async function performRenameAtPosition(
         });
         
         // Return success with a note about the fallback
+        const absolutePath = path.resolve(request.root, request.filePath);
         return ok({
-          message: `Renamed "${request.target}" to "${request.newName}" using TypeScript tool (LSP returned no changes)`,
+          message: `Renamed "${request.target}" to "${request.newName}" using TypeScript fallback`,
           changedFiles: [{
             filePath: absolutePath,
             changes: [{
               line: targetLine + 1,
+              column: symbolPosition + 1,
               oldText: request.target,
               newText: request.newName,
             }],

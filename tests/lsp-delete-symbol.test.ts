@@ -9,7 +9,7 @@ import fs from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
 
-const FIXTURES_DIR = path.join(__dirname, "fixtures/lsp-delete");
+// const FIXTURES_DIR = path.join(__dirname, "fixtures/lsp-delete");
 
 describe("lsp delete symbol", () => {
   let lspProcess: ChildProcess;

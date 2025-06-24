@@ -121,8 +121,8 @@ console.log(message);
       },
     });
 
-    expect(result.content[0].text).toContain("message");
-    expect(result.content[0].text).toContain("string");
+    expect((result.content[0] as any).text).toContain("message");
+    expect((result.content[0] as any).text).toContain("string");
   });
 
   it("should execute find references tool via MCP", async () => {
@@ -158,9 +158,9 @@ const greeting = greet("Bob");
       },
     });
 
-    expect(result.content[0].text).toContain("Found");
-    expect(result.content[0].text).toMatch(/reference/); // matches "reference" or "references"
-    expect(result.content[0].text).toContain("module.ts");
+    expect((result.content[0] as any).text).toContain("Found");
+    expect((result.content[0] as any).text).toMatch(/reference/); // matches "reference" or "references"
+    expect((result.content[0] as any).text).toContain("module.ts");
     // Note: main.ts references are not found by LSP in this test setup
   });
 
@@ -192,8 +192,8 @@ console.log(calculateSum(10, 20));
       },
     });
 
-    expect(result.content[0].text).toContain("Successfully renamed symbol");
-    expect(result.content[0].text).toContain('"calculateSum" → "computeSum"');
+    expect((result.content[0] as any).text).toContain("Successfully renamed symbol");
+    expect((result.content[0] as any).text).toContain('"calculateSum" → "computeSum"');
 
     // Verify the file was updated
     const updatedContent = await fs.readFile(testPath, "utf-8");
@@ -237,7 +237,7 @@ function addEmployee(emp: Employee): void {
       },
     });
 
-    const text = result.content[0].text;
+    const text = (result.content[0] as any).text;
     expect(text).toContain("Person [Interface]");
     expect(text).toContain("Employee [Class]");
     expect(text).toContain("employees [Constant]");
@@ -262,6 +262,6 @@ function addEmployee(emp: Employee): void {
     });
 
     expect(result.isError).toBe(true);
-    expect(result.content[0].text).toContain("Error");
+    expect((result.content[0] as any).text).toContain("Error");
   });
 });

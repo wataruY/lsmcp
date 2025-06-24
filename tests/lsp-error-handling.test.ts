@@ -2,8 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { spawn, ChildProcess } from "child_process";
 import { 
   initialize as initializeLSPClient, 
-  shutdown as shutdownLSPClient,
-  getLSPClient
+  shutdown as shutdownLSPClient
 } from "../src/lsp/lspClient.ts";
 import { lspGetHoverTool } from "../src/lsp/tools/lspGetHover.ts";
 import { lspFindReferencesTool } from "../src/lsp/tools/lspFindReferences.ts";
@@ -79,7 +78,7 @@ describe("LSP error handling tests", () => {
           root: tmpDir,
           filePath: "non-existent.ts",
           line: 1,
-          target: "foo",
+          symbolName: "foo",
         })
       ).rejects.toThrow(/ENOENT/);
 
@@ -88,7 +87,7 @@ describe("LSP error handling tests", () => {
           root: tmpDir,
           filePath: "non-existent.ts",
           line: 1,
-          target: "foo",
+          symbolName: "foo",
         })
       ).rejects.toThrow(/ENOENT/);
 
@@ -198,7 +197,7 @@ describe("LSP error handling tests", () => {
           root: tmpDir,
           filePath: "test.ts",
           line: 1,
-          target: "",
+          symbolName: "",
         })
       ).rejects.toThrow(/Symbol.*not found|empty/i);
     });
@@ -279,7 +278,7 @@ const y = process();
           root: tmpDir,
           filePath: "ambiguous.ts",
           line: "process()",
-          target: "process",
+          symbolName: "process",
         })
       ).rejects.toThrow(/Multiple lines found|ambiguous/i);
     });

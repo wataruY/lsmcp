@@ -9,20 +9,19 @@ import {
 } from "../projectCache";
 import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
 import type { ToolDef } from "../../mcp/_mcplib";
-import { symbolLocationSchema, commonSchemas } from "../../common/schemas";
+import { symbolLocationSchema } from "../../common/schemas";
 
 const schema = symbolLocationSchema.extend({
   oldName: z.string().describe("Current name of the symbol"),
   newName: z.string().describe("New name for the symbol"),
 }).omit({ symbolName: true });
 
-interface RenameSymbolResult {
+export interface RenameSymbolResult {
   message: string;
   changedFiles: {
     filePath: string;
     changes: {
       line: number;
-      column: number;
       oldText: string;
       newText: string;
     }[];
@@ -110,16 +109,11 @@ async function formatFileChanges(
       if (lineIndex < 0 || lineIndex >= lines.length) return [];
 
       const oldLine = lines[lineIndex];
-      // Sort changes by column in reverse order to avoid position shifts
-      const sortedChanges = [...lineChanges].sort(
-        (a, b) => b.column - a.column
-      );
-
-      // Apply all changes to the line
-      const newLine = sortedChanges.reduce((line, change) => {
-        const before = line.substring(0, change.column - 1);
-        const after = line.substring(change.column - 1 + change.oldText.length);
-        return before + change.newText + after;
+      
+      // Simply replace old text with new text in the line
+      // Note: This assumes only one change per line in current implementation
+      const newLine = lineChanges.reduce((line, change) => {
+        return line.replace(change.oldText, change.newText);
       }, oldLine);
 
       return [
@@ -221,7 +215,6 @@ if (import.meta.vitest) {
               changes: [
                 {
                   line: 10,
-                  column: 5,
                   oldText: "getUserId",
                   newText: "getUserID",
                 },
@@ -251,13 +244,11 @@ if (import.meta.vitest) {
               changes: [
                 {
                   line: 5,
-                  column: 14,
                   oldText: "Component",
                   newText: "BaseComponent",
                 },
                 {
                   line: 15,
-                  column: 22,
                   oldText: "Component",
                   newText: "BaseComponent",
                 },
@@ -268,7 +259,6 @@ if (import.meta.vitest) {
               changes: [
                 {
                   line: 3,
-                  column: 14,
                   oldText: "Component",
                   newText: "BaseComponent",
                 },
@@ -279,7 +269,6 @@ if (import.meta.vitest) {
               changes: [
                 {
                   line: 1,
-                  column: 10,
                   oldText: "Component",
                   newText: "BaseComponent",
                 },
@@ -309,7 +298,6 @@ if (import.meta.vitest) {
               changes: [
                 {
                   line: 5,
-                  column: 14,
                   oldText: "User",
                   newText: "UserModel",
                 },
@@ -320,19 +308,16 @@ if (import.meta.vitest) {
               changes: [
                 {
                   line: 8,
-                  column: 22,
                   oldText: "User",
                   newText: "UserModel",
                 },
                 {
                   line: 15,
-                  column: 16,
                   oldText: "User",
                   newText: "UserModel",
                 },
                 {
                   line: 20,
-                  column: 12,
                   oldText: "User",
                   newText: "UserModel",
                 },
@@ -343,13 +328,11 @@ if (import.meta.vitest) {
               changes: [
                 {
                   line: 3,
-                  column: 10,
                   oldText: "User",
                   newText: "UserModel",
                 },
                 {
                   line: 10,
-                  column: 25,
                   oldText: "User",
                   newText: "UserModel",
                 },

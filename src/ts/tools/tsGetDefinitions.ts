@@ -125,6 +125,8 @@ export const getDefinitionsTool: ToolDef<typeof schema> = {
       filePath,
       line,
       symbolName,
+      before,
+      after,
     });
     return Promise.resolve(
       formatGetDefinitionsResult(result, root, { before, after })
