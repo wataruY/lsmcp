@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### 🎯 Unified CLI Entry Point (2025-01-26)
+- **New `mcp` Command**: Single entry point for all language servers
+  - Auto-detects project language based on config files
+  - Supports `--language` flag for explicit language selection
+  - Example: `mcp -l rust` or `mcp --language typescript`
+- **Centralized Initialization**: Common initialization logic for all language servers
+  - Shared tool registration with language-specific prefixes
+  - Consistent error handling and LSP setup
+  - Reduced code duplication across language servers
+- **Simplified Language Server Files**: 
+  - `moonbit-mcp.ts` and `rust-mcp.ts` now use shared initialization
+  - Each language server reduced to ~25 lines of code
+- **Help and Discovery**:
+  - `mcp --help` shows all options and supported languages
+  - `mcp --list` displays all supported languages
+  - `mcp --init claude` works with auto-detection or explicit language
+
+### Changed
+- **Refactored Architecture**:
+  - New `languageServerInit.ts` module for shared initialization logic
+  - Centralized language configurations in `LANGUAGE_SERVER_CONFIGS`
+  - Tool descriptions are now generated dynamically based on language
+
+### Added
+
 #### 🌍 Multi-Language Support (2025-01-25)
 - **New Language-Specific MCP Servers**:
   - `moonbit-mcp` - Dedicated Moonbit language support

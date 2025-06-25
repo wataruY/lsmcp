@@ -2,6 +2,29 @@
 
 This project now supports multiple programming languages through Language Server Protocol (LSP) integration.
 
+## Unified CLI
+
+The new unified `mcp` command automatically detects your project language or allows you to specify one:
+
+```bash
+# Auto-detect project language
+npx mcp
+
+# Specify language explicitly
+npx mcp --language rust
+npx mcp -l typescript
+
+# Initialize for Claude
+npx mcp --init claude
+npx mcp -l moonbit --init claude
+
+# List supported languages
+npx mcp --list
+
+# Show help
+npx mcp --help
+```
+
 ## Supported Languages
 
 - **TypeScript/JavaScript** - Full semantic refactoring support via TypeScript Compiler API
