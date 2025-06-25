@@ -5,6 +5,41 @@
     {
       "is-main": false,
       "is-third-party": false,
+      "root-path": "/home/mizchi/mizchi/typescript-mcp/playground/moonbit-project/src/test",
+      "root": "moonbit-test",
+      "rel": "src/test",
+      "files": {
+        "/home/mizchi/mizchi/typescript-mcp/playground/moonbit-project/src/test/error.mbt": {
+          "backend": [
+            "Wasm",
+            "WasmGC",
+            "Js",
+            "Native",
+            "LLVM"
+          ],
+          "optlevel": [
+            "Debug",
+            "Release"
+          ]
+        }
+      },
+      "wbtest-files": {},
+      "test-files": {},
+      "mbt-md-files": {},
+      "deps": [
+        {
+          "path": "moonbit-test/src/lib",
+          "alias": "lib",
+          "fspath": "/home/mizchi/mizchi/typescript-mcp/playground/moonbit-project/src/lib"
+        }
+      ],
+      "wbtest-deps": [],
+      "test-deps": [],
+      "artifact": "/home/mizchi/mizchi/typescript-mcp/playground/moonbit-project/target/wasm-gc/release/check/src/test/test.mi"
+    },
+    {
+      "is-main": false,
+      "is-third-party": false,
       "root-path": "/home/mizchi/mizchi/typescript-mcp/playground/moonbit-project/src/lib",
       "root": "moonbit-test",
       "rel": "src/lib",

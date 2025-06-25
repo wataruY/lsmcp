@@ -27,6 +27,7 @@ claude
 Use moonbit_get_hover on the hello function in src/lib/hello.mbt
 Use moonbit_find_references to find all uses of the User struct
 Use moonbit_get_diagnostics on src/main/main.mbt
+Use moonbit_get_diagnostics on src/test/error.mbt to see all errors
 ```
 
 4. Test TypeScript tools on mixed files:
