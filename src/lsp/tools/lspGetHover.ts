@@ -247,7 +247,7 @@ function formatHoverContents(
 export const lspGetHoverTool: ToolDef<typeof schema> = {
   name: "lsp_get_hover",
   description:
-    "Get hover information (type signature, documentation) for a TypeScript symbol using LSP",
+    "Get hover information (type signature, documentation) for a symbol using LSP",
   schema,
   execute: async (args: z.infer<typeof schema>) => {
     const result = await getHover(args);

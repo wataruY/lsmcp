@@ -128,7 +128,7 @@ async function getDiagnosticsWithLSP(
 export const lspGetDiagnosticsTool: ToolDef<typeof schema> = {
   name: "lsp_get_diagnostics",
   description:
-    "Get TypeScript diagnostics (errors, warnings) for a file using LSP",
+    "Get diagnostics (errors, warnings) for a file using LSP",
   schema,
   execute: async (args: z.infer<typeof schema>) => {
     const result = await getDiagnosticsWithLSP(args);

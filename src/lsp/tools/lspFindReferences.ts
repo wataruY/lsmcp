@@ -34,7 +34,7 @@ interface FindReferencesSuccess {
 }
 
 /**
- * Finds all references to a TypeScript symbol using LSP
+ * Finds all references to a symbol using LSP
  */
 async function findReferencesWithLSP(
   request: FindReferencesRequest

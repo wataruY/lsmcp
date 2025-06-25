@@ -167,7 +167,7 @@ async function getDefinitionsWithLSP(
 
 export const lspGetDefinitionsTool: ToolDef<typeof schema> = {
   name: "lsp_get_definitions",
-  description: "Get the definition(s) of a TypeScript symbol using LSP",
+  description: "Get the definition(s) of a symbol using LSP",
   schema,
   execute: async (args: z.infer<typeof schema>) => {
     const result = await getDefinitionsWithLSP(args);

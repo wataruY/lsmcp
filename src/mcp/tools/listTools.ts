@@ -184,8 +184,8 @@ function formatToolsList(tools: ToolInfo[], category: string): string {
   
   if (lsp.length > 0 && (category === "all" || category === "lsp")) {
     result += "## 🌐 LSP Tools (Language Server Protocol)\n";
-    result += "These tools require a running TypeScript Language Server.\n";
-    result += "Install with: `npm install -g typescript-language-server`\n\n";
+    result += "These tools require a running Language Server.\n";
+    result += "Make sure the appropriate LSP server is installed for your language.\n\n";
     lsp.forEach(tool => {
       result += `### ${tool.name}\n`;
       result += `${tool.description}\n\n`;
