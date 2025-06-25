@@ -472,7 +472,7 @@ if (import.meta.vitest) {
 
       server.setDefaultRoot("/default/root");
 
-      let executedArgs: any = null;
+      let _executedArgs: any = null;
       const tool: ToolDef<any> = {
         name: "root_tool",
         description: "Tool with root parameter",
@@ -481,7 +481,7 @@ if (import.meta.vitest) {
           file: z.string() 
         }),
         execute: (args) => {
-          executedArgs = args;
+          _executedArgs = args;
           return `File: ${args.file} in ${args.root}`;
         },
       };

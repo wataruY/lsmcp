@@ -83,8 +83,6 @@ Environment Variables:
 }
 
 async function runLanguageServer(language: string, args: string[] = []) {
-  const projectRoot = process.env.PROJECT_ROOT || process.cwd();
-  
   // Map language to specific MCP server
   const languageServers: Record<string, string> = {
     typescript: "typescript-mcp.js",
@@ -95,7 +93,7 @@ async function runLanguageServer(language: string, args: string[] = []) {
   };
 
   let serverFile = languageServers[language];
-  let env = { ...process.env };
+  let env: Record<string, string | undefined> = { ...process.env };
 
   if (!serverFile) {
     // Use multi-language MCP for other languages
@@ -176,7 +174,7 @@ async function main() {
   if (values.bin) {
     debug(`Using custom LSP command: ${values.bin}`);
     // Use generic LSP MCP with custom command
-    const env = { ...process.env, LSP_COMMAND: values.bin };
+    const env: Record<string, string | undefined> = { ...process.env, LSP_COMMAND: values.bin };
     const __filename = fileURLToPath(import.meta.url);
     const __dirname = dirname(__filename);
     // When running from dist/lsmcp.js, we're already in the dist directory
@@ -241,7 +239,7 @@ async function main() {
               files.push(relative(projectRoot, fullPath));
             }
           }
-        } catch (error) {
+        } catch {
           // Directory doesn't exist, skip
         }
       }
@@ -259,7 +257,7 @@ async function main() {
             files.push(join(dir, entry.name));
           }
         }
-      } catch (error) {
+      } catch {
         // Directory doesn't exist
       }
     } else {
@@ -278,7 +276,6 @@ async function main() {
     console.log("Getting diagnostics...\n");
     
     // Import and use TypeScript diagnostics directly
-    const { Project } = await import("ts-morph");
     const { getDiagnostics } = await import("../ts/navigations/getDiagnostics.ts");
     const { findProjectForFile } = await import("../ts/projectCache.ts");
     

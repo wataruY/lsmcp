@@ -85,11 +85,81 @@ Add permissions in `.claude/settings.json`:
 }
 ```
 
+## Using lsmcp - Unified Language Server MCP
+
+`lsmcp` is a unified CLI that supports multiple language servers through the `--language` flag or automatic detection.
+
+### Basic Usage
+
+```bash
+# Auto-detect project language
+npx lsmcp
+
+# Specify language explicitly
+npx lsmcp --language typescript
+npx lsmcp -l rust
+npx lsmcp -l moonbit
+
+# Use custom LSP server
+npx lsmcp --bin "deno lsp"
+npx lsmcp --bin "rust-analyzer"
+
+# Initialize for Claude Desktop
+npx lsmcp --init claude
+
+# Get diagnostics for multiple files using glob pattern
+npx lsmcp --include "src/**/*.ts"
+npx lsmcp --include "**/*.ts" --language typescript
+```
+
+### Batch Diagnostics with --include
+
+The `--include` option allows you to get diagnostics for multiple files matching a glob pattern:
+
+```bash
+# Check all TypeScript files in src directory
+npx lsmcp --include "src/**/*.ts"
+
+# Check all TypeScript files in the project
+npx lsmcp --include "**/*.ts"
+
+# Check specific directory
+npx lsmcp --include "src/components/*.ts"
+```
+
+Note: The `--include` option currently only supports TypeScript/JavaScript files.
+
+### Custom LSP Server Examples
+
+```bash
+# Use Deno LSP for TypeScript
+npx lsmcp --bin "deno lsp"
+
+# Use TypeScript Native Preview (TSGO) for faster performance
+npm install -g @typescript/native-preview
+npx lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
+
+# Use custom rust-analyzer path
+npx lsmcp --bin "/usr/local/bin/rust-analyzer"
+
+# Use TypeScript LSP with custom tsserver path
+npx lsmcp --bin "typescript-language-server --stdio --tsserver-path=/usr/local/lib/node_modules/typescript/lib"
+```
+
 ### Experimental TSGO
 
-`npm add @typescript/native-preview`
+For faster TypeScript performance, you can use TypeScript Native Preview:
 
-.mcp.json
+```bash
+npm install -g @typescript/native-preview
+```
+
+Then use it with lsmcp:
+```bash
+npx lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
+```
+
+Or configure it in .mcp.json:
 
 ```json
 {
@@ -105,11 +175,28 @@ Add permissions in `.claude/settings.json`:
 }
 ```
 
-```json
-      "mcp__typescript__lsp_find_references",
-      "mcp__typescript__lsp_get_definitions",
-      "mcp__typescript__lsp_zget_diagnostics",
-```
+## Supported Languages
+
+`lsmcp` supports multiple programming languages through their respective Language Server Protocol implementations:
+
+### Built-in Language Support
+
+| Language | Detection | LSP Server | Installation |
+|----------|-----------|------------|--------------|
+| TypeScript/JavaScript | `tsconfig.json`, `package.json` | typescript-language-server | `npm install -g typescript-language-server` |
+| Rust | `Cargo.toml` | rust-analyzer | `rustup component add rust-analyzer` |
+| Moonbit | `moon.mod.json` | Moonbit LSP | Included with Moonbit SDK |
+| Go | `go.mod` | gopls | `go install golang.org/x/tools/gopls@latest` |
+| Python | `pyproject.toml`, `setup.py` | pylsp | `pip install python-lsp-server` |
+| Java | `pom.xml`, `build.gradle` | jdtls | See [jdtls installation](https://github.com/eclipse/eclipse.jdt.ls) |
+| C/C++ | `.c`, `.cpp`, `.h` | clangd | `apt install clangd` or `brew install llvm` |
+
+### Language-Specific MCP Servers
+
+- **TypeScript**: `npx typescript-mcp` - Full TypeScript compiler API support
+- **Rust**: `npx rust-mcp` - Rust-specific tools via rust-analyzer
+- **Moonbit**: `npx moonbit-mcp` - Moonbit language support
+- **Others**: Use `npx lsmcp` with auto-detection or `--language` flag
 
 ## Usage Examples
 
