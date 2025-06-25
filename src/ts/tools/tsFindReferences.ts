@@ -1,15 +1,15 @@
 import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
-import { findReferences } from "../navigations/findReferences";
+import { findReferences } from "../navigations/findReferences.ts";
 import {
   getOrCreateProject,
   getOrCreateSourceFileWithRefresh,
-} from "../projectCache";
-import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
-import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../textUtils/findSymbolInLineForSourceFile";
-import type { ToolDef } from "../../mcp/_mcplib";
-import { symbolLocationSchema } from "../../common/schemas";
+} from "../projectCache.ts";
+import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
+import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../textUtils/findSymbolInLineForSourceFile.ts";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
+import { symbolLocationSchema } from "../../common/schemas.ts";
 
 const schema = symbolLocationSchema;
 

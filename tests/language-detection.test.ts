@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { spawn, ChildProcess } from "child_process";
+import { spawn } from "child_process";
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs/promises";

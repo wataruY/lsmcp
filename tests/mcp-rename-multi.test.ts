@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs/promises";
 import { randomBytes } from "crypto";
-import { parseRenameComments } from "./helpers/extract-ops";
+import { parseRenameComments } from "./helpers/extract-ops.ts";
 import { globSync } from "fs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

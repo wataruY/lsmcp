@@ -4,7 +4,7 @@ import { moveFile } from "../src/ts/commands/moveFile.ts";
 import fs from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
-import { parseMoveComments } from "./helpers/extract-move-ops";
+import { parseMoveComments } from "./helpers/extract-move-ops.ts";
 
 const FIXTURES_DIR = path.join(__dirname, "fixtures/01-move");
 

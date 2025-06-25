@@ -3,6 +3,8 @@
  */
 
 import { extname } from "path";
+import { existsSync } from "fs";
+import { join } from "path";
 
 export interface LanguageInfo {
   languageId: string;
@@ -107,4 +109,32 @@ export function isFileSupported(filePath: string, languageId: string): boolean {
 export function getSupportedExtensions(languageId: string): string[] {
   const langInfo = getLanguageInfo(languageId);
   return langInfo?.fileExtensions || [];
+}
+
+/**
+ * Detect project language based on configuration files
+ */
+export function detectProjectLanguage(projectRoot: string): LanguageInfo | null {
+  // Check for language-specific configuration files
+  const configChecks = [
+    { file: "tsconfig.json", language: "typescript" },
+    { file: "package.json", language: "javascript" },
+    { file: "moon.mod.json", language: "moonbit" },
+    { file: "Cargo.toml", language: "rust" },
+    { file: "pyproject.toml", language: "python" },
+    { file: "requirements.txt", language: "python" },
+    { file: "go.mod", language: "go" },
+    { file: "pom.xml", language: "java" },
+    { file: "build.gradle", language: "java" },
+    { file: "CMakeLists.txt", language: "cpp" },
+    { file: "Makefile", language: "c" },
+  ];
+
+  for (const { file, language } of configChecks) {
+    if (existsSync(join(projectRoot, file))) {
+      return getLanguageInfo(language);
+    }
+  }
+
+  return null;
 }

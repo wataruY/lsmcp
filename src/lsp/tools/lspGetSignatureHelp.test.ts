@@ -5,8 +5,8 @@ import fs from "fs/promises";
 import {
   initialize as initializeLSPClient,
   shutdown as shutdownLSPClient,
-} from "../lspClient";
-import { lspGetSignatureHelpTool } from "./lspGetSignatureHelp";
+} from "../lspClient.ts";
+import { lspGetSignatureHelpTool } from "./lspGetSignatureHelp.ts";
 import { randomBytes } from "crypto";
 
 describe("lspGetSignatureHelpTool", () => {

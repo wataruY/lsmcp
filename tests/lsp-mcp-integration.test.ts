@@ -16,9 +16,9 @@ describe("LSP MCP integration tests", () => {
   beforeAll(async () => {
     // Skip test if required tools are not available
     try {
-      await fs.access(path.join(__dirname, "../dist/lsp-mcp.js"));
+      await fs.access(path.join(__dirname, "../dist/generic-lsp-mcp.js"));
     } catch {
-      console.log("Skipping LSP MCP tests: dist/lsp-mcp.js not found. Run 'pnpm build' first.");
+      console.log("Skipping LSP MCP tests: dist/generic-lsp-mcp.js not found. Run 'pnpm build' first.");
       return;
     }
 
@@ -31,7 +31,7 @@ describe("LSP MCP integration tests", () => {
     await fs.mkdir(tmpDir, { recursive: true });
 
     // Start MCP server with TypeScript LSP
-    mcpProcess = spawn("node", [path.join(__dirname, "../dist/lsp-mcp.js")], {
+    mcpProcess = spawn("node", [path.join(__dirname, "../dist/generic-lsp-mcp.js")], {
       env: {
         ...process.env,
         LSP_COMMAND: "typescript-language-server --stdio",
@@ -43,7 +43,7 @@ describe("LSP MCP integration tests", () => {
     // Initialize MCP client
     const transport = new StdioClientTransport({
       command: "node",
-      args: [path.join(__dirname, "../dist/lsp-mcp.js")],
+      args: [path.join(__dirname, "../dist/generic-lsp-mcp.js")],
       env: {
         ...process.env,
         LSP_COMMAND: "typescript-language-server --stdio",

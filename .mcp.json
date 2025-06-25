@@ -1,14 +1,13 @@
 {
   "mcpServers": {
     "typescript": {
-      "command": "npx",
+      "command": "node",
+      "args": [
+        "dist/typescript-mcp.js"
+      ],
       "env": {
         "TSGO": "true"
-      },
-      "args": [
-        "tsx",
-        "src/mcp/typescript-mcp.ts"
-      ]
+      }
     },
     "readability": {
       "command": "npx",

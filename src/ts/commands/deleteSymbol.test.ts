@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { Project } from "ts-morph";
-import { deleteSymbol } from "./deleteSymbol";
+import { deleteSymbol } from "./deleteSymbol.ts";
 
 describe("deleteSymbol", () => {
   function createTestProject() {
@@ -374,7 +374,7 @@ console.log(helper());`
         expect(result.value.removedFromFiles.some(f => f.includes("main.ts"))).toBe(true);
       }
 
-      const mainContent = project.getSourceFile("main.ts")!.getFullText();
+      // const mainContent = project.getSourceFile("main.ts")!.getFullText();
       // Import removal is not fully implemented
       // expect(mainContent).not.toContain("import { helper }");
       // expect(mainContent).not.toContain("helper()");

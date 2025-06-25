@@ -1,4 +1,4 @@
-import { findTextInFile } from "./findTextInFile";
+import { findTextInFile } from "./findTextInFile.ts";
 
 /**
  * Finds the first occurrence of target text across all lines

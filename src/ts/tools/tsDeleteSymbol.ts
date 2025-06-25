@@ -1,13 +1,13 @@
 import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
-import { deleteSymbol } from "../commands/deleteSymbol";
+import { deleteSymbol } from "../commands/deleteSymbol.ts";
 import {
   getOrCreateProject,
   getOrCreateSourceFileWithRefresh,
-} from "../projectCache";
-import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
-import type { ToolDef } from "../../mcp/_mcplib";
+} from "../projectCache.ts";
+import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
 
 const schemaShape = {
   root: z.string().describe("Root directory for resolving relative paths"),

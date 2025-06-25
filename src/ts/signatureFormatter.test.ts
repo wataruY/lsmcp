@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { formatTypeSignature, type FormatTypeSignatureInput } from "./signatureFormatter";
-import type { TypeSignature, Definition } from "./navigations/getTypeSignature";
+import { formatTypeSignature, type FormatTypeSignatureInput } from "./signatureFormatter.ts";
+import type { Definition } from "./navigations/getTypeSignature.ts";
 
 describe("signatureFormatter", () => {
   describe("formatTypeSignature", () => {
@@ -143,9 +143,9 @@ describe("signatureFormatter", () => {
         signature: {
           kind: "interface",
           properties: [
-            { name: "id", type: "number", optional: false },
-            { name: "name", type: "string", optional: false },
-            { name: "email", type: "string", optional: true },
+            { name: "id", type: "number", optional: false, readonly: false },
+            { name: "name", type: "string", optional: false, readonly: false },
+            { name: "email", type: "string", optional: true, readonly: false },
           ],
           methods: [
             {
@@ -179,7 +179,7 @@ describe("signatureFormatter", () => {
         signature: {
           kind: "class",
           properties: [
-            { name: "result", type: "number", optional: false },
+            { name: "result", type: "number", optional: false, readonly: false },
           ],
           methods: [
             {
@@ -340,8 +340,8 @@ describe("signatureFormatter", () => {
           kind: "interface",
           typeParameters: ["T", "K extends keyof T"],
           properties: [
-            { name: "value", type: "T", optional: false },
-            { name: "key", type: "K", optional: false },
+            { name: "value", type: "T", optional: false, readonly: false },
+            { name: "key", type: "K", optional: false, readonly: false },
           ],
         },
         root: "/project",

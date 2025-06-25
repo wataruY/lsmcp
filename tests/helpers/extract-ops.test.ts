@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseRenameCommentsFromContent, removeRenameComments } from "./extract-ops";
+import { parseRenameCommentsFromContent, removeRenameComments } from "./extract-ops.ts";
 
 describe("extract-ops", () => {
   describe("parseRenameCommentsFromContent", () => {

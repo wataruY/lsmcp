@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { applyTextEdits } from "./applyTextEdits";
+import { applyTextEdits } from "./applyTextEdits.ts";
 import { TextEdit } from "vscode-languageserver-types";
 
 describe("applyTextEdits", () => {

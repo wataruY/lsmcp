@@ -2,11 +2,11 @@ import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { type Result, ok, err } from "neverthrow";
-import { moveFile } from "../commands/moveFile";
+import { moveFile } from "../commands/moveFile.ts";
 import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
-} from "../projectCache";
+} from "../projectCache.ts";
 import type { ToolDef } from "../../mcp/_mcplib.ts";
 
 const schemaShape = {

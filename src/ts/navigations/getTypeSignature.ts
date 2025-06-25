@@ -1136,7 +1136,7 @@ if (import.meta.vitest) {
     it("should handle type parameters in functions", () => {
       const project = new Project();
 
-      const sourceFile = project.createSourceFile(
+      project.createSourceFile(
         "test.ts",
         `
           export function identity<T>(value: T): T {
@@ -1153,7 +1153,6 @@ if (import.meta.vitest) {
       const result = getTypeSignature(project, {
         moduleName: "./test",
         typeName: "map",
-        contextFilePath: process.cwd(),
       });
 
       expect(result.isOk()).toBe(true);
@@ -1189,7 +1188,6 @@ if (import.meta.vitest) {
       const result = getTypeSignature(project, {
         moduleName: "./index",
         typeName: "DB",
-        contextFilePath: process.cwd(),
       });
 
       expect(result.isOk()).toBe(true);
@@ -1202,7 +1200,7 @@ if (import.meta.vitest) {
     it("should extract documentation from JSDoc comments", () => {
       const project = new Project();
 
-      const sourceFile = project.createSourceFile(
+      project.createSourceFile(
         "test.ts",
         `
           /**
@@ -1221,7 +1219,6 @@ if (import.meta.vitest) {
       const result = getTypeSignature(project, {
         moduleName: "./test",
         typeName: "add",
-        contextFilePath: process.cwd(),
       });
 
       expect(result.isOk()).toBe(true);
@@ -1236,7 +1233,7 @@ if (import.meta.vitest) {
       const project = new Project();
       
       // Create a file with a const assertion
-      const sourceFile = project.createSourceFile(
+      project.createSourceFile(
         "test.ts",
         `
           export const config = {
@@ -1250,7 +1247,6 @@ if (import.meta.vitest) {
       const result = getTypeSignature(project, {
         moduleName: "./test",
         typeName: "config",
-        contextFilePath: process.cwd(),
       });
       
       expect(result.isOk()).toBe(true);

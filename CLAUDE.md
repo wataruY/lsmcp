@@ -87,7 +87,11 @@ Before committing, always run:
 ```
 dist/               # Build output directory
   typescript-mcp.js # Main MCP server executable
-  lsp-mcp.js       # LSP MCP server executable
+  lsmcp.js         # Unified LSP MCP CLI executable
+  generic-lsp-mcp.js # Generic LSP MCP server executable
+  moonbit-mcp.js   # Moonbit MCP server executable
+  rust-mcp.js      # Rust MCP server executable
+  multi-language-mcp.js # Multi-language MCP server executable
 
 src/
   lsp/             # LSP client implementation
@@ -104,7 +108,12 @@ src/
   mcp/             # MCP server implementations
     _mcplib.ts     # Generic MCP server library
     typescript-mcp.ts # TypeScript MCP server
-    lsp-mcp.ts     # Generic LSP MCP server
+    unified-mcp.ts # Unified LSP MCP CLI (outputs as lsmcp.js)
+    generic-lsp-mcp.ts # Generic LSP MCP server
+    moonbit-mcp.ts # Moonbit MCP server
+    rust-mcp.ts    # Rust MCP server
+    multi-language-mcp.ts # Multi-language MCP server
+    languageServerInit.ts # Shared language server initialization
     
   textUtils/       # Text manipulation utilities
 

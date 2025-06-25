@@ -23,7 +23,7 @@ pnpm build
 - **Best for**: Refactoring, type analysis, symbol navigation
 
 #### LSP MCP Server  
-- **Command**: `dist/lsp-mcp.js`
+- **Command**: `dist/generic-lsp-mcp.js`
 - **Features**: Full Language Server Protocol support
 - **Advantages**: IDE-like features (completions, formatting)
 - **Best for**: Code completion, diagnostics, formatting

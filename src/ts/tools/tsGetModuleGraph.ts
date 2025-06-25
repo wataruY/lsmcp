@@ -1,10 +1,10 @@
 import { z } from "zod";
-import type { ToolDef } from "../../mcp/_mcplib";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
 import { Project } from "ts-morph";
 import {
   getModuleGraph,
   type GetModuleGraphSuccess,
-} from "../navigations/getModuleGraph";
+} from "../navigations/getModuleGraph.ts";
 
 type FileNode = GetModuleGraphSuccess["graph"]["files"][0];
 type GraphStats = GetModuleGraphSuccess["graph"]["stats"];

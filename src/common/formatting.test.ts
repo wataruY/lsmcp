@@ -5,7 +5,7 @@ import {
   formatFilePath,
   truncateText,
   formatCodeSnippet,
-} from "./formatting";
+} from "./formatting.ts";
 import { Location, Range } from "vscode-languageserver-types";
 
 describe("formatting", () => {

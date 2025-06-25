@@ -1,7 +1,7 @@
 import type {
   TypeSignature,
   Definition,
-} from "./navigations/getTypeSignature";
+} from "./navigations/getTypeSignature.ts";
 import { relative } from "path";
 
 export interface FormatTypeSignatureInput {

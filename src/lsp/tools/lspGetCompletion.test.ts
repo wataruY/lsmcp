@@ -5,8 +5,8 @@ import fs from "fs/promises";
 import {
   initialize as initializeLSPClient,
   shutdown as shutdownLSPClient,
-} from "../lspClient";
-import { lspGetCompletionTool } from "./lspGetCompletion";
+} from "../lspClient.ts";
+import { lspGetCompletionTool } from "./lspGetCompletion.ts";
 import { randomBytes } from "crypto";
 
 describe("lspGetCompletionTool", () => {

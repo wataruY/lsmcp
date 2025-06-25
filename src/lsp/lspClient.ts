@@ -26,7 +26,7 @@ import {
   SignatureHelpResult,
   CodeActionResult,
   FormattingResult,
-} from "./lspTypes";
+} from "./lspTypes.ts";
 import { debug } from "../mcp/_mcplib.ts";
 
 // Re-export types for backward compatibility
@@ -548,7 +548,7 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
         return result.range;
       }
       return result;
-    } catch (error) {
+    } catch {
       // Some LSP servers don't support prepareRename
       return null;
     }

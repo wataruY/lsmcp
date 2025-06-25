@@ -4,9 +4,9 @@ import fs from "fs/promises";
 import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
-} from "../projectCache";
-import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
-import type { ToolDef } from "../../mcp/_mcplib";
+} from "../projectCache.ts";
+import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
 import { ts } from "ts-morph";
 
 // Define the meaning enum

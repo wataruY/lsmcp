@@ -7,7 +7,7 @@ import {
 import fs from "fs/promises";
 import path from "path";
 import { randomBytes } from "crypto";
-import { parseRenameComments } from "./helpers/extract-ops";
+import { parseRenameComments } from "./helpers/extract-ops.ts";
 import { globSync } from "fs";
 
 const FIXTURES_DIR = path.join(__dirname, "fixtures/00-rename");

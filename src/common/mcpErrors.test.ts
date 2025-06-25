@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { MCPToolError, CommonErrors } from "./mcpErrors";
+import { MCPToolError, CommonErrors } from "./mcpErrors.ts";
 
 describe("mcpErrors", () => {
   describe("MCPToolError", () => {

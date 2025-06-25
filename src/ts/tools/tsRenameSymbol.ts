@@ -2,14 +2,14 @@ import { z } from "zod";
 import path from "path";
 import fs from "fs/promises";
 import { type Result, ok, err } from "neverthrow";
-import { renameSymbol } from "../commands/renameSymbol";
+import { renameSymbol } from "../commands/renameSymbol.ts";
 import {
   getOrCreateProject,
   getOrCreateSourceFileWithRefresh,
-} from "../projectCache";
-import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
-import type { ToolDef } from "../../mcp/_mcplib";
-import { symbolLocationSchema } from "../../common/schemas";
+} from "../projectCache.ts";
+import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
+import { symbolLocationSchema } from "../../common/schemas.ts";
 
 const schema = symbolLocationSchema.extend({
   oldName: z.string().describe("Current name of the symbol"),

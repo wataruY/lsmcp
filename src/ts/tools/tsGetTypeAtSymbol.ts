@@ -4,10 +4,10 @@ import fs from "fs/promises";
 import {
   findProjectForFile,
   getOrCreateSourceFileWithRefresh,
-} from "../projectCache";
-import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile";
-import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../textUtils/findSymbolInLineForSourceFile";
-import type { ToolDef } from "../../mcp/_mcplib";
+} from "../projectCache.ts";
+import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
+import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../textUtils/findSymbolInLineForSourceFile.ts";
+import type { ToolDef } from "../../mcp/_mcplib.ts";
 import { ts, type SourceFile, type Node, type Symbol } from "ts-morph";
 
 const schema = z.object({

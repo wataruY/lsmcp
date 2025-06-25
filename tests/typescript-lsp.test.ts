@@ -16,7 +16,7 @@ describe("TypeScript Language Server Integration", { timeout: 30000 }, () => {
   let transport: StdioClientTransport | undefined;
   let tmpDir: string | undefined;
 
-  beforeEach(async function() {
+  beforeEach(async function(this: any) {
     // Skip test if generic-lsp-mcp.js is not built
     try {
       await fs.access(GENERIC_LSP_MCP_PATH);
@@ -41,7 +41,7 @@ describe("TypeScript Language Server Integration", { timeout: 30000 }, () => {
     await fs.mkdir(tmpDir, { recursive: true });
 
     // Create a TypeScript project
-    await fs.writeFile(path.join(tmpDir, "tsconfig.json"), JSON.stringify({
+    await fs.writeFile(path.join(tmpDir!, "tsconfig.json"), JSON.stringify({
       compilerOptions: {
         target: "es2020",
         module: "commonjs",
@@ -117,7 +117,7 @@ const person: Person = {
 
 console.log(person.name);
 `;
-    await fs.writeFile(path.join(tmpDir, "test.ts"), tsCode);
+    await fs.writeFile(path.join(tmpDir!, "test.ts"), tsCode);
 
     // Get hover information for 'person'
     const result = await client.callTool({
@@ -146,7 +146,7 @@ console.log(person.name);
 const message = "Hello, World!";
 console.log(message.);
 `;
-    await fs.writeFile(path.join(tmpDir, "completion.ts"), tsCode);
+    await fs.writeFile(path.join(tmpDir!, "completion.ts"), tsCode);
 
     // Get completions after 'message.'
     const result = await client.callTool({
@@ -181,7 +181,7 @@ function greet(name: string, age: number, city?: string): string {
 
 greet("Alice", );
 `;
-    await fs.writeFile(path.join(tmpDir, "signature.ts"), tsCode);
+    await fs.writeFile(path.join(tmpDir!, "signature.ts"), tsCode);
 
     // Get signature help inside greet call
     const result = await client.callTool({
@@ -212,7 +212,7 @@ greet("Alice", );
 console.log("Hello"  )  ;
     return   42;
 }`;
-    const filePath = path.join(tmpDir, "format.ts");
+    const filePath = path.join(tmpDir!, "format.ts");
     await fs.writeFile(filePath, tsCode);
 
     // Format the document
@@ -254,8 +254,8 @@ console.log(result);
 const total = calculateSum(10, 20);
 `;
 
-    await fs.writeFile(path.join(tmpDir, "math.ts"), exportFile);
-    await fs.writeFile(path.join(tmpDir, "main.ts"), importFile);
+    await fs.writeFile(path.join(tmpDir!, "math.ts"), exportFile);
+    await fs.writeFile(path.join(tmpDir!, "main.ts"), importFile);
 
     // Rename 'calculateSum' to 'addNumbers'
     const result = await client.callTool({
@@ -276,8 +276,8 @@ const total = calculateSum(10, 20);
     }
 
     // Verify the changes
-    const mathContent = await fs.readFile(path.join(tmpDir, "math.ts"), "utf-8");
-    const mainContent = await fs.readFile(path.join(tmpDir, "main.ts"), "utf-8");
+    const mathContent = await fs.readFile(path.join(tmpDir!, "math.ts"), "utf-8");
+    const mainContent = await fs.readFile(path.join(tmpDir!, "main.ts"), "utf-8");
     
     expect(mathContent).toContain("addNumbers");
     expect(mathContent).not.toContain("calculateSum");
@@ -297,7 +297,7 @@ class MyClass {
 const instance = new MyClass();
 instance.myProperty = "value"; // Error: private property
 `;
-    await fs.writeFile(path.join(tmpDir, "codeaction.ts"), tsCode);
+    await fs.writeFile(path.join(tmpDir!, "codeaction.ts"), tsCode);
 
     // Get code actions for the error line
     const result = await client.callTool({
@@ -322,7 +322,7 @@ instance.myProperty = "value"; // Error: private property
 describe("TypeScript MCP with custom LSP via lsmcp", { timeout: 30000 }, () => {
   let tmpDir: string | undefined;
 
-  beforeEach(async function() {
+  beforeEach(async function(this: any) {
     // Skip test if lsmcp.js is not built
     try {
       await fs.access(LSMCP_PATH);
@@ -338,7 +338,7 @@ describe("TypeScript MCP with custom LSP via lsmcp", { timeout: 30000 }, () => {
     await fs.mkdir(tmpDir, { recursive: true });
 
     // Create a TypeScript project
-    await fs.writeFile(path.join(tmpDir, "tsconfig.json"), JSON.stringify({
+    await fs.writeFile(path.join(tmpDir!, "tsconfig.json"), JSON.stringify({
       compilerOptions: {
         target: "es2020",
         module: "commonjs",
@@ -384,7 +384,7 @@ describe("TypeScript MCP with custom LSP via lsmcp", { timeout: 30000 }, () => {
 const greeting: string = "Hello, TypeScript!";
 console.log(greeting);
 `;
-      await fs.writeFile(path.join(tmpDir, "test.ts"), tsCode);
+      await fs.writeFile(path.join(tmpDir!, "test.ts"), tsCode);
 
       // Test hover
       const result = await client.callTool({
@@ -430,7 +430,7 @@ import { readFile } from "node:fs/promises";
 const content = await readFile("./data.txt", "utf-8");
 console.log(content);
 `;
-      await fs.writeFile(path.join(tmpDir, "deno_test.ts"), tsCode);
+      await fs.writeFile(path.join(tmpDir!, "deno_test.ts"), tsCode);
 
       // Test diagnostics
       const result = await client.callTool({
@@ -454,7 +454,7 @@ describe("TypeScript Native Preview (TSGO) Support", { timeout: 30000 }, () => {
   let transport: StdioClientTransport | undefined;
   let tmpDir: string | undefined;
 
-  beforeEach(async function() {
+  beforeEach(async function(this: any) {
     // Skip test if typescript-mcp.js is not built
     const TYPESCRIPT_MCP_PATH = path.join(__dirname, "../dist/typescript-mcp.js");
     try {
@@ -480,7 +480,7 @@ describe("TypeScript Native Preview (TSGO) Support", { timeout: 30000 }, () => {
     await fs.mkdir(tmpDir, { recursive: true });
 
     // Create a TypeScript project
-    await fs.writeFile(path.join(tmpDir, "tsconfig.json"), JSON.stringify({
+    await fs.writeFile(path.join(tmpDir!, "tsconfig.json"), JSON.stringify({
       compilerOptions: {
         target: "es2020",
         module: "commonjs",
@@ -553,7 +553,7 @@ const user: User = {
 
 console.log(user.name);
 `;
-    await fs.writeFile(path.join(tmpDir, "user.ts"), tsCode);
+    await fs.writeFile(path.join(tmpDir!, "user.ts"), tsCode);
 
     // Get hover information for 'user' using LSP
     const result = await client.callTool({
@@ -589,7 +589,7 @@ add("hello", "world");
 // Error: missing argument
 add(1);
 `;
-    await fs.writeFile(path.join(tmpDir, "errors.ts"), tsCode);
+    await fs.writeFile(path.join(tmpDir!, "errors.ts"), tsCode);
 
     // Get diagnostics using LSP
     const result = await client.callTool({
