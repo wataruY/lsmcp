@@ -399,4 +399,137 @@ if (import.meta.vitest) {
       expect(permissions).toEqual([]);
     });
   });
+
+  describe("BaseMcpServer", () => {
+    it("should create server with options", () => {
+      const server = new BaseMcpServer({
+        name: "test-server",
+        version: "1.0.0",
+        description: "Test server",
+      });
+
+      expect(server).toBeDefined();
+      expect(server.getServer()).toBeDefined();
+    });
+
+    it("should set default root", () => {
+      const server = new BaseMcpServer({
+        name: "test-server",
+        version: "1.0.0",
+      });
+
+      server.setDefaultRoot("/test/root");
+      // Default root is stored privately, we'll test its effect in registerTool
+    });
+
+    it("should register a tool", () => {
+      const server = new BaseMcpServer({
+        name: "test-server",
+        version: "1.0.0",
+      });
+
+      const tool: ToolDef<any> = {
+        name: "test_tool",
+        description: "Test tool",
+        schema: z.object({ input: z.string() }),
+        execute: (args) => `Received: ${args.input}`,
+      };
+
+      server.registerTool(tool);
+      // Tool is registered internally
+    });
+
+    it("should register multiple tools", () => {
+      const server = new BaseMcpServer({
+        name: "test-server",
+        version: "1.0.0",
+      });
+
+      const tools: ToolDef<any>[] = [
+        {
+          name: "tool1",
+          description: "Tool 1",
+          schema: z.object({ x: z.number() }),
+          execute: (args) => `x: ${args.x}`,
+        },
+        {
+          name: "tool2",
+          description: "Tool 2",
+          schema: z.object({ y: z.string() }),
+          execute: (args) => `y: ${args.y}`,
+        },
+      ];
+
+      server.registerTools(tools);
+      // Tools are registered internally
+    });
+
+    it("should register tool with default root", () => {
+      const server = new BaseMcpServer({
+        name: "test-server",
+        version: "1.0.0",
+      });
+
+      server.setDefaultRoot("/default/root");
+
+      let executedArgs: any = null;
+      const tool: ToolDef<any> = {
+        name: "root_tool",
+        description: "Tool with root parameter",
+        schema: z.object({ 
+          root: z.string().optional(),
+          file: z.string() 
+        }),
+        execute: (args) => {
+          executedArgs = args;
+          return `File: ${args.file} in ${args.root}`;
+        },
+      };
+
+      server.registerTool(tool);
+      
+      // Since we can't directly test the wrapped handler without starting the server,
+      // we'll rely on the fact that the tool is registered
+    });
+
+    it("should handle non-ZodObject schemas", () => {
+      const server = new BaseMcpServer({
+        name: "test-server",
+        version: "1.0.0",
+      });
+
+      const tool: ToolDef<any> = {
+        name: "string_tool",
+        description: "Tool with string schema",
+        schema: z.string(),
+        execute: (args) => `Received: ${args}`,
+      };
+
+      server.registerTool(tool);
+      // Tool is registered with non-object schema
+    });
+  });
+
+  describe("createTool", () => {
+    it("should return the tool definition as-is", () => {
+      const tool: ToolDef<any> = {
+        name: "my_tool",
+        description: "My tool",
+        schema: z.object({ value: z.number() }),
+        execute: (args) => `Value: ${args.value}`,
+      };
+
+      const result = createTool(tool);
+      expect(result).toBe(tool);
+    });
+  });
+
+  describe("readJsonFile", () => {
+    it("should return null for non-existent file", () => {
+      const result = readJsonFile("/non/existent/file.json");
+      expect(result).toBe(null);
+    });
+  });
+
+  // writeJsonFile and initializeMcpConfig tests would require fs mocking
 }

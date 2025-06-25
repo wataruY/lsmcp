@@ -29,7 +29,9 @@ export function formatRange(range: Range): string {
  */
 export function formatFilePath(absolutePath: string, root: string): string {
   if (absolutePath.startsWith(root)) {
-    return absolutePath.slice(root.length + 1);
+    // Remove root, handling both trailing slash and no trailing slash
+    const offset = root.endsWith('/') ? root.length : root.length + 1;
+    return absolutePath.slice(offset);
   }
   return absolutePath;
 }

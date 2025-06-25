@@ -204,7 +204,7 @@ export const listToolsTool: ToolDef<typeof schema> = {
   name: "list_tools",
   description: "List all available MCP tools with descriptions and categories",
   schema,
-  execute: async ({ category }) => {
+  execute: async ({ category = "all" }) => {
     return formatToolsList(TOOLS_REGISTRY, category);
   },
 };

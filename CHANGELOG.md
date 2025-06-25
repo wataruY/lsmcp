@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+#### 🌍 Multi-Language Support (2025-01-25)
+- **New Language-Specific MCP Servers**:
+  - `moonbit-mcp` - Dedicated Moonbit language support
+  - `rust-mcp` - Dedicated Rust language support via rust-analyzer
+  - `multi-language-mcp` - Automatic language detection and LSP selection
+- **Language Detection System**:
+  - Automatic project type detection based on config files
+  - Support for TypeScript, JavaScript, Moonbit, Rust, Python, Go, Java, C/C++
+  - Manual language override with `FORCE_LANGUAGE` environment variable
+- **Language-Specific Tool Prefixes**:
+  - Moonbit tools: `moonbit_get_hover`, `moonbit_rename_symbol`, etc.
+  - Rust tools: `rust_get_hover`, `rust_find_references`, etc.
+  - Prevents tool name conflicts between different language servers
+- **Infrastructure**:
+  - New `languageDetection.ts` module for language configuration
+  - Refactored LSP client to support multiple language IDs
+  - Updated build configuration to generate 5 separate MCP executables
+
+#### 📚 Documentation
+- **README-multi-language.md**: Comprehensive guide for multi-language support
+- **examples/moonbit-example.md**: Moonbit usage examples and setup
+- **examples/rust-example.md**: Rust usage examples and setup
+
+### Changed
+- **Build System**:
+  - Updated `tsdown.config.ts` to build multiple MCP servers
+  - Added new bin entries in `package.json` for each language server
+  - Updated deadcode scripts to include new MCP servers
+
+### Technical Details
+- Each language server inherits from the generic LSP-based MCP implementation
+- Language servers automatically find and configure their respective LSP servers
+- Consistent interface across all languages using LSP protocol
+- Moonbit LSP server location: `~/.moon/bin/lsp-server.js`
+- Rust LSP via rust-analyzer (requires `rustup component add rust-analyzer`)
+
 ## [0.0.14] - 2025-01-24
 
 ### Added

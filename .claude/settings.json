@@ -30,7 +30,20 @@
       "mcp__lsp__lsp_get_completion",
       "mcp__lsp__lsp_get_signature_help",
       "mcp__lsp__lsp_get_code_actions",
-      "mcp__lsp__lsp_format_document"
+      "mcp__lsp__lsp_format_document",
+      "mcp__moonbit__moonbit_list_tools",
+      "mcp__moonbit__moonbit_get_hover",
+      "mcp__moonbit__moonbit_find_references",
+      "mcp__moonbit__moonbit_get_definitions",
+      "mcp__moonbit__moonbit_get_diagnostics",
+      "mcp__moonbit__moonbit_rename_symbol",
+      "mcp__moonbit__moonbit_delete_symbol",
+      "mcp__moonbit__moonbit_get_document_symbols",
+      "mcp__moonbit__moonbit_get_workspace_symbols",
+      "mcp__moonbit__moonbit_get_completion",
+      "mcp__moonbit__moonbit_get_signature_help",
+      "mcp__moonbit__moonbit_get_code_actions",
+      "mcp__moonbit__moonbit_format_document"
     ],
     "deny": [
       "Bash(npm:*)"

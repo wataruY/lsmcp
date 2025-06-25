@@ -1132,5 +1132,132 @@ if (import.meta.vitest) {
         }
       }
     });
+
+    it("should handle type parameters in functions", () => {
+      const project = new Project();
+
+      const sourceFile = project.createSourceFile(
+        "test.ts",
+        `
+          export function identity<T>(value: T): T {
+            return value;
+          }
+          
+          export function map<T, U>(array: T[], fn: (item: T) => U): U[] {
+            return array.map(fn);
+          }
+        `,
+        { overwrite: true }
+      );
+
+      const result = getTypeSignature(project, {
+        moduleName: "./test",
+        typeName: "map",
+        contextFilePath: process.cwd(),
+      });
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        const { signature } = result.value;
+        expect(signature.functionSignatures![0].typeParameters).toEqual(["T", "U"]);
+      }
+    });
+
+    it("should handle export specifiers with aliases", () => {
+      const project = new Project();
+
+      project.createSourceFile(
+        "lib.ts",
+        `
+          export class Database {
+            connect(): void {}
+          }
+          
+          export const DB_VERSION = "1.0.0";
+        `,
+        { overwrite: true }
+      );
+
+      project.createSourceFile(
+        "index.ts",
+        `
+          export { Database as DB, DB_VERSION as VERSION } from "./lib";
+        `,
+        { overwrite: true }
+      );
+
+      const result = getTypeSignature(project, {
+        moduleName: "./index",
+        typeName: "DB",
+        contextFilePath: process.cwd(),
+      });
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        const { signature } = result.value;
+        expect(signature.kind).toBe("class");
+      }
+    });
+
+    it("should extract documentation from JSDoc comments", () => {
+      const project = new Project();
+
+      const sourceFile = project.createSourceFile(
+        "test.ts",
+        `
+          /**
+           * Calculates the sum of two numbers
+           * @param a First number
+           * @param b Second number
+           * @returns The sum of a and b
+           */
+          export function add(a: number, b: number): number {
+            return a + b;
+          }
+        `,
+        { overwrite: true }
+      );
+
+      const result = getTypeSignature(project, {
+        moduleName: "./test",
+        typeName: "add",
+        contextFilePath: process.cwd(),
+      });
+
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        const { documentation } = result.value;
+        expect(documentation).toBeDefined();
+        expect(documentation).toContain("Calculates the sum");
+      }
+    });
+
+    it("should handle unknown symbol kinds", () => {
+      const project = new Project();
+      
+      // Create a file with a const assertion
+      const sourceFile = project.createSourceFile(
+        "test.ts",
+        `
+          export const config = {
+            name: "test",
+            value: 42
+          } as const;
+        `,
+        { overwrite: true }
+      );
+
+      const result = getTypeSignature(project, {
+        moduleName: "./test",
+        typeName: "config",
+        contextFilePath: process.cwd(),
+      });
+      
+      expect(result.isOk()).toBe(true);
+      if (result.isOk()) {
+        const { signature } = result.value;
+        expect(["variable", "const", "unknown"]).toContain(signature.kind);
+      }
+    });
   });
 }
