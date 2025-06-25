@@ -28,22 +28,22 @@ import { listToolsTool } from "./tools/listTools.ts";
 import { existsSync } from "fs";
 import { join } from "path";
 
-// Register all tools with moonbit_ prefix
+// Register all tools with moonbit_ prefix and Moonbit-specific descriptions
 const tools: ToolDef<any>[] = [
   // Rename tools with moonbit_ prefix
-  { ...listToolsTool, name: "moonbit_list_tools" },
-  { ...lspGetHoverTool, name: "moonbit_get_hover" },
-  { ...lspFindReferencesTool, name: "moonbit_find_references" },
-  { ...lspGetDefinitionsTool, name: "moonbit_get_definitions" },
-  { ...lspGetDiagnosticsTool, name: "moonbit_get_diagnostics" },
-  { ...lspRenameSymbolTool, name: "moonbit_rename_symbol" },
-  { ...lspDeleteSymbolTool, name: "moonbit_delete_symbol" },
-  { ...lspGetDocumentSymbolsTool, name: "moonbit_get_document_symbols" },
-  { ...lspGetWorkspaceSymbolsTool, name: "moonbit_get_workspace_symbols" },
-  { ...lspGetCompletionTool, name: "moonbit_get_completion" },
-  { ...lspGetSignatureHelpTool, name: "moonbit_get_signature_help" },
-  { ...lspGetCodeActionsTool, name: "moonbit_get_code_actions" },
-  { ...lspFormatDocumentTool, name: "moonbit_format_document" },
+  { ...listToolsTool, name: "moonbit_list_tools", description: "List all available Moonbit MCP tools with descriptions and categories" },
+  { ...lspGetHoverTool, name: "moonbit_get_hover", description: "Get hover information (type signature, documentation) for a Moonbit symbol using LSP" },
+  { ...lspFindReferencesTool, name: "moonbit_find_references", description: "Find all references to a Moonbit symbol across the codebase using LSP" },
+  { ...lspGetDefinitionsTool, name: "moonbit_get_definitions", description: "Get the definition(s) of a Moonbit symbol using LSP" },
+  { ...lspGetDiagnosticsTool, name: "moonbit_get_diagnostics", description: "Get Moonbit diagnostics (errors, warnings) for a file using LSP" },
+  { ...lspRenameSymbolTool, name: "moonbit_rename_symbol", description: "Rename a Moonbit symbol across the codebase using Language Server Protocol" },
+  { ...lspDeleteSymbolTool, name: "moonbit_delete_symbol", description: "Delete a Moonbit symbol (variable, function, struct, etc.) and optionally all its references using LSP" },
+  { ...lspGetDocumentSymbolsTool, name: "moonbit_get_document_symbols", description: "Get all symbols (functions, structs, types, etc.) in a Moonbit document using LSP" },
+  { ...lspGetWorkspaceSymbolsTool, name: "moonbit_get_workspace_symbols", description: "Search for symbols (functions, types, etc.) across the entire Moonbit workspace using LSP" },
+  { ...lspGetCompletionTool, name: "moonbit_get_completion", description: "Get code completion suggestions at a specific position in a Moonbit file using LSP" },
+  { ...lspGetSignatureHelpTool, name: "moonbit_get_signature_help", description: "Get signature help (parameter hints) for function calls in Moonbit using LSP" },
+  { ...lspGetCodeActionsTool, name: "moonbit_get_code_actions", description: "Get available code actions (quick fixes, refactorings, etc.) for Moonbit code using LSP" },
+  { ...lspFormatDocumentTool, name: "moonbit_format_document", description: "Format an entire Moonbit document using the language server's formatting provider" },
 ];
 
 /**

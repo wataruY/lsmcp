@@ -26,22 +26,22 @@ import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 import { handleMcpInit } from "./mcpInit.ts";
 import { listToolsTool } from "./tools/listTools.ts";
 
-// Register all tools with rust_ prefix
+// Register all tools with rust_ prefix and Rust-specific descriptions
 const tools: ToolDef<any>[] = [
   // Rename tools with rust_ prefix
-  { ...listToolsTool, name: "rust_list_tools" },
-  { ...lspGetHoverTool, name: "rust_get_hover" },
-  { ...lspFindReferencesTool, name: "rust_find_references" },
-  { ...lspGetDefinitionsTool, name: "rust_get_definitions" },
-  { ...lspGetDiagnosticsTool, name: "rust_get_diagnostics" },
-  { ...lspRenameSymbolTool, name: "rust_rename_symbol" },
-  { ...lspDeleteSymbolTool, name: "rust_delete_symbol" },
-  { ...lspGetDocumentSymbolsTool, name: "rust_get_document_symbols" },
-  { ...lspGetWorkspaceSymbolsTool, name: "rust_get_workspace_symbols" },
-  { ...lspGetCompletionTool, name: "rust_get_completion" },
-  { ...lspGetSignatureHelpTool, name: "rust_get_signature_help" },
-  { ...lspGetCodeActionsTool, name: "rust_get_code_actions" },
-  { ...lspFormatDocumentTool, name: "rust_format_document" },
+  { ...listToolsTool, name: "rust_list_tools", description: "List all available Rust MCP tools with descriptions and categories" },
+  { ...lspGetHoverTool, name: "rust_get_hover", description: "Get hover information (type signature, documentation) for a Rust symbol using LSP" },
+  { ...lspFindReferencesTool, name: "rust_find_references", description: "Find all references to a Rust symbol across the codebase using LSP" },
+  { ...lspGetDefinitionsTool, name: "rust_get_definitions", description: "Get the definition(s) of a Rust symbol using LSP" },
+  { ...lspGetDiagnosticsTool, name: "rust_get_diagnostics", description: "Get Rust diagnostics (errors, warnings) for a file using LSP" },
+  { ...lspRenameSymbolTool, name: "rust_rename_symbol", description: "Rename a Rust symbol across the codebase using Language Server Protocol" },
+  { ...lspDeleteSymbolTool, name: "rust_delete_symbol", description: "Delete a Rust symbol (variable, function, struct, etc.) and optionally all its references using LSP" },
+  { ...lspGetDocumentSymbolsTool, name: "rust_get_document_symbols", description: "Get all symbols (functions, structs, traits, etc.) in a Rust document using LSP" },
+  { ...lspGetWorkspaceSymbolsTool, name: "rust_get_workspace_symbols", description: "Search for symbols (structs, functions, traits, etc.) across the entire Rust workspace using LSP" },
+  { ...lspGetCompletionTool, name: "rust_get_completion", description: "Get code completion suggestions at a specific position in a Rust file using LSP" },
+  { ...lspGetSignatureHelpTool, name: "rust_get_signature_help", description: "Get signature help (parameter hints) for function calls in Rust using LSP" },
+  { ...lspGetCodeActionsTool, name: "rust_get_code_actions", description: "Get available code actions (quick fixes, refactorings, etc.) for Rust code using LSP" },
+  { ...lspFormatDocumentTool, name: "rust_format_document", description: "Format an entire Rust document using the language server's formatting provider" },
 ];
 
 /**

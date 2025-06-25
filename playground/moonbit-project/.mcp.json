@@ -2,12 +2,7 @@
   "mcpServers": {
     "moonbit": {
       "command": "node",
-      "args": [
-        "../../dist/moonbit-mcp.js"
-      ],
-      "env": {
-        "PROJECT_ROOT": "/home/mizchi/mizchi/typescript-mcp/playground/moonbit-project"
-      }
+      "args": ["../../dist/moonbit-mcp.js"]
     }
   }
 }

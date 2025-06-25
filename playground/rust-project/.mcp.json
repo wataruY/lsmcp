@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "rust": {
+      "command": "node",
+      "args": ["../../dist/rust-mcp.js"]
+    }
+  }
+}
