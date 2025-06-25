@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Unified MCP server entry point that can start different language servers
+ * Unified LSP-based MCP server entry point that can start different language servers
  * based on command line arguments or auto-detection.
  */
 
@@ -38,12 +38,12 @@ const { values, positionals } = parseArgs({
 
 function showHelp() {
   console.log(`
-🌍 Unified MCP Server - Multi-Language Support
+🌍 LSP-based MCP Server - Multi-Language Support
 
 Usage:
-  mcp [options]
-  mcp --language <lang> [options]
-  mcp --init <target>
+  lsp-mcp [options]
+  lsp-mcp --language <lang> [options]
+  lsp-mcp --init <target>
 
 Options:
   -l, --language <lang>  Language to use (typescript, moonbit, rust, etc.)
@@ -52,10 +52,10 @@ Options:
   -h, --help            Show this help message
 
 Examples:
-  mcp                    Auto-detect project language
-  mcp -l rust           Use Rust MCP server
-  mcp -l typescript     Use TypeScript MCP server
-  mcp --init claude     Initialize for Claude Desktop
+  lsp-mcp                    Auto-detect project language
+  lsp-mcp -l rust           Use Rust MCP server
+  lsp-mcp -l typescript     Use TypeScript MCP server
+  lsp-mcp --init claude     Initialize for Claude Desktop
 
 Supported Languages:
 ${Object.entries(LANGUAGE_CONFIGS)
@@ -170,7 +170,7 @@ async function main() {
     } else {
       console.error("Error: Could not detect project language.");
       console.error("Please specify a language with --language or set FORCE_LANGUAGE.");
-      console.error("\nRun 'mcp --help' for more information.");
+      console.error("\nRun 'lsp-mcp --help' for more information.");
       process.exit(1);
     }
   }

@@ -16,14 +16,14 @@
     "lint": "oxlint .",
     "lint:refactor": "oxlint . --deny-warnings",
     "lint:eslint": "eslint . --quiet",
-    "deadcode": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/mcp/lsp-mcp\\.ts$' 'src/mcp/moonbit-mcp\\.ts$' 'src/mcp/rust-mcp\\.ts$' 'src/mcp/multi-language-mcp\\.ts$'",
-    "deadcode:with-tests": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/mcp/lsp-mcp\\.ts$' 'src/mcp/moonbit-mcp\\.ts$' 'src/mcp/rust-mcp\\.ts$' 'src/mcp/multi-language-mcp\\.ts$' 'src/.*\\.test\\.ts$' 'tests/.*\\.ts$'",
-    "run:mcp": "pnpm build && node dist/mcp.js"
+    "deadcode": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/mcp/generic-lsp-mcp\\.ts$' 'src/mcp/moonbit-mcp\\.ts$' 'src/mcp/rust-mcp\\.ts$' 'src/mcp/multi-language-mcp\\.ts$'",
+    "deadcode:with-tests": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/mcp/generic-lsp-mcp\\.ts$' 'src/mcp/moonbit-mcp\\.ts$' 'src/mcp/rust-mcp\\.ts$' 'src/mcp/multi-language-mcp\\.ts$' 'src/.*\\.test\\.ts$' 'tests/.*\\.ts$'",
+    "run:mcp": "pnpm build && node dist/lsp-mcp.js"
   },
   "bin": {
-    "mcp": "./dist/mcp.js",
     "typescript-mcp": "./dist/typescript-mcp.js",
     "lsp-mcp": "./dist/lsp-mcp.js",
+    "generic-lsp-mcp": "./dist/generic-lsp-mcp.js",
     "moonbit-mcp": "./dist/moonbit-mcp.js",
     "rust-mcp": "./dist/rust-mcp.js",
     "multi-language-mcp": "./dist/multi-language-mcp.js"
