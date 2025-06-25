@@ -12,7 +12,6 @@ import {
 } from "./_mcplib.ts";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 import { handleMcpInit } from "./mcpInit.ts";
-import { getLanguageInfo, LanguageInfo } from "../common/languageDetection.ts";
 
 // Import all LSP tools
 import { lspGetHoverTool } from "../lsp/tools/lspGetHover.ts";
@@ -117,7 +116,7 @@ export function getLanguageTools(language: string, displayName: string): ToolDef
 }
 
 /**
- * Common language server configurations
+ * Language server configurations
  */
 export const LANGUAGE_SERVER_CONFIGS: Record<string, LanguageServerConfig> = {
   moonbit: {
@@ -125,42 +124,27 @@ export const LANGUAGE_SERVER_CONFIGS: Record<string, LanguageServerConfig> = {
     displayName: "Moonbit",
     icon: "🌙",
     findLspExecutable: () => {
-      const possiblePaths = [
-        process.env.MOONBIT_LSP_PATH,
-        join(process.env.HOME || "", ".moon/bin/lsp-server.js"),
-        "/usr/local/lib/moon/bin/lsp-server.js",
-      ].filter(Boolean);
-
-      for (const path of possiblePaths) {
-        if (path && existsSync(path)) {
-          return path;
-        }
-      }
-      return null;
+      const home = process.env.HOME || process.env.USERPROFILE || "";
+      const lspPath = join(home, ".moon/bin/lsp-server.js");
+      return existsSync(lspPath) ? lspPath : null;
     },
-    installInstructions: "Please install moon from https://www.moonbitlang.com/download",
-    envConfig: {
-      MOONBIT_LSP_PATH: "${MOONBIT_LSP_PATH}",
-    },
+    installInstructions: "Install Moonbit from https://www.moonbitlang.com/",
   },
-  
   rust: {
     language: "rust",
     displayName: "Rust",
     icon: "🦀",
     lspCommand: "rust-analyzer",
+    lspArgs: [],
     checkLspInstalled: () => {
       try {
-        execSync("rust-analyzer --version", { stdio: "ignore" });
+        execSync("rust-analyzer --version", { stdio: "pipe" });
         return true;
       } catch {
         return false;
       }
     },
-    installInstructions: "Please install rust-analyzer with: rustup component add rust-analyzer",
-    envConfig: {
-      RUST_ANALYZER_PATH: "${RUST_ANALYZER_PATH}",
-    },
+    installInstructions: "Install with: rustup component add rust-analyzer",
   },
 };
 

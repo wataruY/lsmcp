@@ -18,15 +18,11 @@
     "lint:eslint": "eslint . --quiet",
     "deadcode": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/mcp/generic-lsp-mcp\\.ts$' 'src/mcp/moonbit-mcp\\.ts$' 'src/mcp/rust-mcp\\.ts$' 'src/mcp/multi-language-mcp\\.ts$'",
     "deadcode:with-tests": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/mcp/generic-lsp-mcp\\.ts$' 'src/mcp/moonbit-mcp\\.ts$' 'src/mcp/rust-mcp\\.ts$' 'src/mcp/multi-language-mcp\\.ts$' 'src/.*\\.test\\.ts$' 'tests/.*\\.ts$'",
-    "run:mcp": "pnpm build && node dist/lsp-mcp.js"
+    "run:mcp": "pnpm build && node dist/lsmcp.js"
   },
   "bin": {
     "typescript-mcp": "./dist/typescript-mcp.js",
-    "lsp-mcp": "./dist/lsp-mcp.js",
-    "generic-lsp-mcp": "./dist/generic-lsp-mcp.js",
-    "moonbit-mcp": "./dist/moonbit-mcp.js",
-    "rust-mcp": "./dist/rust-mcp.js",
-    "multi-language-mcp": "./dist/multi-language-mcp.js"
+    "lsmcp": "./dist/lsmcp.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
@@ -54,5 +50,5 @@
   "peerDependencies": {
     "typescript": "*"
   },
-  "packageManager": "npm@11.4.2+sha512.f90c1ec8b207b625d6edb6693aef23dacb39c38e4217fe8c46a973f119cab392ac0de23fe3f07e583188dae9fd9108b3845ad6f525b598742bd060ebad60bff3"
+  "packageManager": "pnpm@9.15.0"
 }

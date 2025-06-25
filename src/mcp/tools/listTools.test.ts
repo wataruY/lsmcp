@@ -1,9 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { listToolsTool } from "./listTools";
+import { listToolsTool } from "./listTools.ts";
 
 describe("listToolsTool", () => {
   it("should list all tools by default", async () => {
-    const result = await listToolsTool.execute({});
+    const result = await listToolsTool.execute({ category: "all" });
     
     expect(result).toContain("Available MCP Tools");
     expect(result).toContain("TypeScript Tools (Compiler API)");
@@ -64,7 +64,7 @@ describe("listToolsTool", () => {
   });
 
   it("should include tool descriptions", async () => {
-    const result = await listToolsTool.execute({});
+    const result = await listToolsTool.execute({ category: "all" });
     
     // Check for some descriptions
     expect(result).toContain("Find all references to a TypeScript symbol");
@@ -73,7 +73,7 @@ describe("listToolsTool", () => {
   });
 
   it("should show LSP requirement indicator", async () => {
-    const result = await listToolsTool.execute({});
+    const result = await listToolsTool.execute({ category: "all" });
     
     // Check that LSP tools are under LSP section
     expect(result).toContain("lsp_get_hover");
@@ -81,7 +81,7 @@ describe("listToolsTool", () => {
   });
 
   it("should show tips section", async () => {
-    const result = await listToolsTool.execute({});
+    const result = await listToolsTool.execute({ category: "all" });
     
     expect(result).toContain("💡 Tips");
     expect(result).toContain("Use TypeScript tools for fast");
@@ -95,7 +95,7 @@ describe("listToolsTool", () => {
   });
 
   it("should have proper formatting", async () => {
-    const result = await listToolsTool.execute({});
+    const result = await listToolsTool.execute({ category: "all" });
     
     // Check for proper structure
     expect(result).toContain("##"); // Markdown headers
@@ -105,7 +105,7 @@ describe("listToolsTool", () => {
   });
 
   it("should group tools by category", async () => {
-    const result = await listToolsTool.execute({});
+    const result = await listToolsTool.execute({ category: "all" });
     
     // TypeScript tools should come before LSP tools
     const tsIndex = result.indexOf("TypeScript Tools (Compiler API)");

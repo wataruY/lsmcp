@@ -9,12 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### 🧪 Comprehensive Test Suite for Multi-Language Support (2025-01-26)
+- **New MCP Client-based Tests**: 
+  - Language detection tests for TypeScript, Rust, Moonbit, Python, Go, Java
+  - Rust MCP server integration tests with rust-analyzer
+  - Moonbit MCP server integration tests
+  - TypeScript Language Server integration tests
+  - TSGO (TypeScript Native Preview) support tests
+- **New `--include` Option for `lsmcp`**:
+  - Batch diagnostics for files matching glob patterns
+  - Example: `lsmcp --include "src/**/*.ts"` to check all TypeScript files
+  - Currently supports TypeScript/JavaScript only
+
+### Changed
+- **Package Manager**: Switched from npm to pnpm in package.json
+- **Build Improvements**: Fixed path resolution issues in unified-mcp.ts for dist directory
+
+### Added
+
 #### 🎯 Unified LSP-MCP CLI Entry Point (2025-01-26)
-- **New `lsp-mcp` Command**: Single entry point for all LSP-based language servers
+- **New `lsmcp` Command**: Single entry point for all LSP-based language servers
   - Replaces the old single-language `lsp-mcp` (now `generic-lsp-mcp`)
   - Auto-detects project language based on config files
   - Supports `--language` flag for explicit language selection
-  - Example: `lsp-mcp -l rust` or `lsp-mcp --language typescript`
+  - Example: `lsmcp -l rust` or `lsmcp --language typescript`
 - **Centralized Initialization**: Common initialization logic for all language servers
   - Shared tool registration with language-specific prefixes
   - Consistent error handling and LSP setup
@@ -23,12 +41,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `moonbit-mcp.ts` and `rust-mcp.ts` now use shared initialization
   - Each language server reduced to ~25 lines of code
 - **Help and Discovery**:
-  - `lsp-mcp --help` shows all options and supported languages
-  - `lsp-mcp --list` displays all supported languages
-  - `lsp-mcp --init claude` works with auto-detection or explicit language
+  - `lsmcp --help` shows all options and supported languages
+  - `lsmcp --list` displays all supported languages
+  - `lsmcp --init claude` works with auto-detection or explicit language
 - **Renamed Commands**:
   - Old `lsp-mcp` → `generic-lsp-mcp` (for manual LSP_COMMAND configuration)
-  - New `lsp-mcp` → Unified multi-language CLI
+  - New `lsmcp` → Unified multi-language CLI
 
 ### Changed
 - **Refactored Architecture**:
