@@ -32,7 +32,7 @@ Add to your project's `.mcp.json`:
   "mcpServers": {
     "lsmcp": {
       "command": "npx",
-      "args": ["-y", "@mizchi/lsmcp"]
+      "args": ["-y", "@mizchi/lsmcp", "--language", "typescript"]
     }
   }
 }
@@ -43,11 +43,6 @@ For language-specific servers or custom configurations:
 ```json
 {
   "mcpServers": {
-    // Auto-detect language (recommended)
-    "lsmcp": {
-      "command": "npx",
-      "args": ["-y", "@mizchi/lsmcp"]
-    },
     // Or use specific language
     "rust": {
       "command": "npx",

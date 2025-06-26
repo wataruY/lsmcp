@@ -81,30 +81,22 @@ Environment Variables:
 `);
 }
 
-async function runLanguageServer(language: string, args: string[] = []) {
-  // Map language to specific MCP server
-  const languageServers: Record<string, string> = {
-    typescript: "typescript-mcp.js",
-    javascript: "typescript-mcp.js", // Use TypeScript server for JS
-    moonbit: "moonbit-mcp.js",
-    rust: "rust-mcp.js",
-    // For other languages, use multi-language-mcp with FORCE_LANGUAGE
-  };
-
-  let serverFile = languageServers[language];
-  let env: Record<string, string | undefined> = { ...process.env };
-
-  if (!serverFile) {
-    // Use multi-language MCP for other languages
-    serverFile = "multi-language-mcp.js";
-    env.FORCE_LANGUAGE = language;
+async function runLanguageServer(language: string, args: string[] = [], customEnv?: Record<string, string | undefined>) {
+  // Only TypeScript MCP server is available now
+  if (language !== "typescript" && language !== "javascript") {
+    console.error(`Error: Language '${language}' is not supported in this build.`);
+    console.error("Only TypeScript/JavaScript is currently supported.");
+    console.error("Use --bin option to use custom LSP servers for other languages.");
+    process.exit(1);
   }
 
-  // Resolve server path
+  // Get the path to the TypeScript server
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
-  // When running from dist/lsmcp.js, we're already in the dist directory
-  const serverPath = join(__dirname, serverFile);
+  const serverPath = join(__dirname, "typescript-mcp.js");
+
+  // Merge environment variables
+  const env = customEnv ? { ...process.env, ...customEnv } : process.env;
 
   if (!existsSync(serverPath)) {
     console.error(`Error: MCP server not found at ${serverPath}`);
@@ -175,33 +167,14 @@ async function main() {
   // Check if custom LSP command is provided
   if (values.bin) {
     debug(`Using custom LSP command: ${values.bin}`);
-    // Use generic LSP MCP with custom command
-    const env: Record<string, string | undefined> = { ...process.env, LSP_COMMAND: values.bin };
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    // When running from dist/lsmcp.js, we're already in the dist directory
-    const serverPath = join(__dirname, "generic-lsp-mcp.js");
+    // Use TypeScript MCP with custom LSP command
+    const env: Record<string, string | undefined> = { 
+      ...process.env, 
+      LSP_COMMAND: values.bin,
+      FORCE_LSP: "true"  // Force LSP mode in typescript-mcp
+    };
     
-    if (!existsSync(serverPath)) {
-      console.error(`Error: Generic LSP MCP server not found at ${serverPath}`);
-      console.error(`Make sure to build the project first with: pnpm build`);
-      process.exit(1);
-    }
-    
-    const serverProcess = spawn("node", [serverPath, ...positionals], {
-      stdio: "inherit",
-      env,
-    });
-    
-    serverProcess.on("error", (err) => {
-      console.error(`Failed to start generic LSP MCP server: ${err.message}`);
-      process.exit(1);
-    });
-    
-    serverProcess.on("exit", (code) => {
-      process.exit(code || 0);
-    });
-    
+    await runLanguageServer("typescript", positionals, env);
     return;
   }
 

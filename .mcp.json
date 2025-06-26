@@ -2,26 +2,11 @@
   "mcpServers": {
     "lsmcp": {
       "command": "node",
-      "args": [
-        "dist/lsmcp.js"
-      ]
-    },
-    "typescript": {
-      "command": "node",
-      "args": [
-        "dist/typescript-mcp.js"
-      ],
-      "env": {
-        "TSGO": "true"
-      }
+      "args": ["dist/lsmcp.js", "-l", "typescript"]
     },
     "readability": {
       "command": "npx",
-      "args": [
-        "-y",
-        "@mizchi/readability",
-        "--mcp"
-      ]
+      "args": ["-y", "@mizchi/readability", "--mcp"]
     }
   }
 }

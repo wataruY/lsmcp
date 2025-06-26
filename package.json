@@ -15,8 +15,8 @@
     "typecheck:tsc": "tsc -p . --noEmit",
     "lint": "oxlint . --ignore-pattern='tests/fixtures/**' --ignore-pattern='**/*.expected.ts' --ignore-pattern='**/*.input.ts' --ignore-pattern='playground/**' --ignore-pattern='examples/**'",
     "lint:refactor": "oxlint . --deny-warnings --ignore-pattern='tests/fixtures/**' --ignore-pattern='**/*.expected.ts' --ignore-pattern='**/*.input.ts' --ignore-pattern='playground/**' --ignore-pattern='examples/**'",
-    "deadcode": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/mcp/generic-lsp-mcp\\.ts$' 'src/mcp/moonbit-mcp\\.ts$' 'src/mcp/rust-mcp\\.ts$' 'src/mcp/multi-language-mcp\\.ts$'",
-    "deadcode:with-tests": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/mcp/generic-lsp-mcp\\.ts$' 'src/mcp/moonbit-mcp\\.ts$' 'src/mcp/rust-mcp\\.ts$' 'src/mcp/multi-language-mcp\\.ts$' 'src/.*\\.test\\.ts$' 'tests/.*\\.ts$'",
+    "deadcode": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$'",
+    "deadcode:with-tests": "tsr 'src/mcp/unified-mcp\\.ts$' 'src/mcp/typescript-mcp\\.ts$' 'src/.*\\.test\\.ts$' 'tests/.*\\.ts$'",
     "run:mcp": "pnpm build && node dist/lsmcp.js"
   },
   "bin": {
