@@ -23,6 +23,11 @@
     "typescript-mcp": "./dist/typescript-mcp.js",
     "lsmcp": "./dist/lsmcp.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.1",
     "neverthrow": "^8.2.0",
