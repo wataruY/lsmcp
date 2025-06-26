@@ -385,6 +385,13 @@ pnpm install
 # Build
 pnpm build
 pnpm test
+
+# Test locally before publishing
+./dist/lsmcp.js -h
+
+# Or use npm link for global testing
+npm link
+lsmcp -h
 ```
 
 ## TODO
