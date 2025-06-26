@@ -217,7 +217,7 @@ Note: The `--include` option currently only supports TypeScript/JavaScript files
 npx lsmcp --bin "deno lsp"
 
 # Use TypeScript Native Preview (TSGO) for faster performance
-npm install -g @typescript/native-preview
+npm install @typescript/native-preview
 npx lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
 
 # Use custom rust-analyzer path
@@ -232,7 +232,7 @@ npx lsmcp --bin "typescript-language-server --stdio --tsserver-path=/usr/local/l
 For faster TypeScript performance, you can use TypeScript Native Preview:
 
 ```bash
-npm install -g @typescript/native-preview
+npm install @typescript/native-preview
 ```
 
 Then use it with lsmcp:
