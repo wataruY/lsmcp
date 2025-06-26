@@ -1,14 +1,23 @@
-# typescript-mcp
+# lsmcp - Language Server MCP
 
 > ⚠️ **This project is under active development.** APIs and features may change without notice.
 
-TypeScript specialized MCP server, providing advanced code manipulation and analysis capabilities.
+A unified MCP (Model Context Protocol) server that provides advanced code manipulation and analysis capabilities for multiple programming languages through Language Server Protocol integration.
+
+## Features
+
+- 🌍 **Multi-Language Support** - TypeScript, JavaScript, Rust, Python, Go, Java, C/C++, Moonbit, and more
+- 🔍 **Semantic Code Analysis** - Go to definition, find references, type information
+- ♻️ **Intelligent Refactoring** - Rename symbols, move files, with automatic import updates
+- 🚀 **Auto-Detection** - Automatically detects project language and configures appropriate LSP
+- 🔧 **Flexible Configuration** - Use with any LSP server via custom commands
+- 🤖 **AI-Optimized** - Designed for LLMs with line and symbol-based interfaces
 
 ## Motivation
 
-Roo and Claude Code see errors in the IDE, but cannot perform semantic refactorings such as Go to Definition or Rename.
+While AI assistants like Claude can see errors in the IDE, they cannot perform semantic refactorings such as Go to Definition or Rename without proper tooling.
 
-We can provide the AI ​​with functionality equivalent to LSP. However, LLM is not good at word counting, so we provide this by lines and symbols.
+This project provides AI with functionality equivalent to Language Server Protocol (LSP) features. Since LLMs are not good at precise position tracking, we provide these features through line numbers and symbol names instead of character offsets.
 
 ## Installation
 
@@ -201,79 +210,107 @@ Or configure it in .mcp.json:
 
 ### Built-in Language Support
 
-| Language | Detection | LSP Server | Installation |
-|----------|-----------|------------|--------------|
+| Language | Detection Files | LSP Server | Installation |
+|----------|----------------|------------|--------------|
 | TypeScript/JavaScript | `tsconfig.json`, `package.json` | typescript-language-server | `npm install -g typescript-language-server` |
 | Rust | `Cargo.toml` | rust-analyzer | `rustup component add rust-analyzer` |
-| Moonbit | `moon.mod.json` | Moonbit LSP | Included with Moonbit SDK |
+| Moonbit | `moon.mod.json` | Moonbit LSP | Included with [Moonbit SDK](https://www.moonbitlang.com/download) |
 | Go | `go.mod` | gopls | `go install golang.org/x/tools/gopls@latest` |
-| Python | `pyproject.toml`, `setup.py` | pylsp | `pip install python-lsp-server` |
+| Python | `pyproject.toml`, `setup.py`, `requirements.txt` | pylsp | `pip install python-lsp-server` |
 | Java | `pom.xml`, `build.gradle` | jdtls | See [jdtls installation](https://github.com/eclipse/eclipse.jdt.ls) |
-| C/C++ | `.c`, `.cpp`, `.h` | clangd | `apt install clangd` or `brew install llvm` |
+| C/C++ | `CMakeLists.txt`, `Makefile`, `.c/.cpp/.h` files | clangd | `apt install clangd` or `brew install llvm` |
 
-### Language-Specific MCP Servers
+### Language-Specific Tools
 
-- **TypeScript**: `npx lsmcp` or `npx lsmcp -l typescript` - Full TypeScript compiler API support
-- **Rust**: `npx rust-mcp` - Rust-specific tools via rust-analyzer
-- **Moonbit**: `npx moonbit-mcp` - Moonbit language support
-- **Multi-language**: `npx multi-language-mcp` - Auto-detects and uses appropriate LSP
-- **Generic LSP**: `npx generic-lsp-mcp` - Use any LSP server via LSP_COMMAND env
-- **Others**: Use `npx lsmcp` with auto-detection or `--language` flag
+Each language provides a consistent set of LSP-based tools with language-specific prefixes:
+
+#### TypeScript/JavaScript (`typescript_` or via Compiler API)
+- `rename_symbol` - Rename symbols across the codebase
+- `move_file` - Move files and update imports
+- `find_references` - Find all references to a symbol
+- `get_diagnostics` - Get errors and warnings
+- `get_type_at_symbol` - Get type information
+- And more...
+
+#### Other Languages (`<language>_` prefix)
+- `<language>_get_hover` - Get hover information
+- `<language>_find_references` - Find symbol references
+- `<language>_rename_symbol` - Rename symbols
+- `<language>_get_diagnostics` - Get diagnostics
+- `<language>_get_document_symbols` - List document symbols
+- And more LSP features...
+
+### Available MCP Servers
+
+1. **lsmcp** (Recommended) - Unified CLI with auto-detection
+   ```bash
+   npx lsmcp                    # Auto-detect language
+   npx lsmcp -l typescript      # Specify language
+   ```
+
+2. **Language-specific servers** - Direct access to language features
+   - `npx rust-mcp` - Rust language support
+   - `npx moonbit-mcp` - Moonbit language support
+   - `npx multi-language-mcp` - Multi-language with auto-detection
+   - `npx generic-lsp-mcp` - Use any LSP via LSP_COMMAND
 
 ## Usage Examples
 
+### TypeScript Project
 ```bash
-# start with config
-$ claude
-
-# Rename symbol
-> examples/scratch.ts foo to bar
-● typescript:rename_symbol (MCP)(root: "~/sandbox/cla
-                                ude-mcp", filePath:
-                                "examples/scratch.ts", line: 6,
-                                oldName: "foo", newName: "bar")
-  ⎿ Successfully renamed symbol "foo" to "bar" in 1 file(s) with
-     2 change(s).
-
-    Changes:
-      examples/scratch.ts:
-
-# Rename file
-● typescript:move_file (MCP)(root: "~/s
-                            andbox/claude-mcp",
-                            oldPath: "examples/oth
-                            er-types.ts", newPath:
-                             "examples/types.ts")
-  ⎿ Successfully moved file from "~/san
-    dbox/claude-mcp/examples/other-types.ts" to
-    "~/sandbox/claude-mcp/examples/type
-    s.ts". Updated imports in 2 file(s).
-
-    Changes:
-      File moved: examples/other-types.ts →
-    examples/types.ts
-
-## Get definitions
-> get toMcpHandler definitions
-● typescript:get_definitions (MCP)(root: "/home/mi
-                                  zchi/sandbox/cla
-                                  ude-mcp",
-                                  filePath: "src/m
-                                  cp/mcp_server_ut
-                                  ils.test.ts",
-                                  line: 2,
-                                  symbolName: "toM
-                                  cpToolHandler")
-
-  ⎿ Found 1 definition for symbol
-    "toMcpToolHandler"
-    Symbol: toMcpToolHandler (Identifier)
-
-    Definitions:
-      src/mcp/mcp_server_utils.ts:15:1 - export
-    function toMcpToolHandler<T>(
-
+cd my-typescript-project
+npx lsmcp --init=claude
+claude
 ```
+
+Then in Claude:
+```
+# Rename a symbol
+Use mcp__typescript__rename_symbol to rename the function "calculateTotal" to "computeSum" in src/utils.ts
+
+# Find all references
+Use mcp__typescript__find_references to find all uses of the "User" interface
+
+# Get type information
+Use mcp__typescript__get_type_at_symbol to show the type of "config" variable in app.ts line 15
+```
+
+### Rust Project
+```bash
+cd my-rust-project
+npx lsmcp -l rust --init=claude
+# or use rust-mcp directly
+npx rust-mcp --init=claude
+claude
+```
+
+Then in Claude:
+```
+Use rust_rename_symbol to rename the struct "Config" to "AppConfig"
+Use rust_find_references to find all uses of the "parse_args" function
+```
+
+### Python Project
+```bash
+cd my-python-project
+npx lsmcp --init=claude  # Auto-detects Python
+claude
+```
+
+Then in Claude:
+```
+Use python_get_hover to show documentation for the "process_data" function
+Use python_rename_symbol to rename the class "DataProcessor" to "DataHandler"
+```
+
+### Multi-Language Monorepo
+```bash
+cd my-monorepo
+npx multi-language-mcp --init=claude
+claude
+```
+
+The server will automatically detect and use the appropriate LSP based on the file being edited.
 
 ## Develop
 
@@ -290,6 +327,33 @@ pnpm test
 
 - [ ] Multiple Project
 - [ ] Symbol
+
+## Troubleshooting
+
+### LSP Server Not Found
+If you get an error about LSP server not found:
+1. Ensure the language's LSP server is installed (see Installation section above)
+2. Check if it's in your PATH: `which <lsp-command>`
+3. Set the LSP path explicitly in environment variables
+
+### Language Not Detected
+If auto-detection fails:
+1. Ensure your project has appropriate config files (see Supported Languages table)
+2. Use `--language` flag to explicitly specify: `npx lsmcp -l python`
+3. Set `FORCE_LANGUAGE` environment variable in your MCP configuration
+
+### Performance Issues
+- LSP servers may take time to index large projects on first run
+- TypeScript projects benefit from using the native TypeScript compiler API
+- Consider using language-specific servers for better performance
+- Some LSP features may be limited compared to native TypeScript support
+
+### MCP Connection Issues
+If Claude can't connect to the MCP server:
+1. Check that the server initialized correctly: `npx lsmcp --init=claude`
+2. Verify `.mcp.json` exists in your project root
+3. Ensure Claude Desktop has the correct permissions in `.claude/settings.json`
+4. Try running the server manually to see error messages: `npx lsmcp`
 
 ## License
 
