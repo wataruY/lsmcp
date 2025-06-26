@@ -6,7 +6,7 @@ A unified MCP (Model Context Protocol) server that provides advanced code manipu
 
 ## Features
 
-- 🌍 **Multi-Language Support** - TypeScript, JavaScript, Rust, Python, Go, Java, C/C++, Moonbit, and more
+- 🌍 **Multi-Language Support** - TypeScript, JavaScript, Rust, Python, Go, Moonbit, and more
 - 🔍 **Semantic Code Analysis** - Go to definition, find references, type information
 - ♻️ **Intelligent Refactoring** - Rename symbols, move files, with automatic import updates
 - 🚀 **Auto-Detection** - Automatically detects project language and configures appropriate LSP
@@ -21,77 +21,123 @@ This project provides AI with functionality equivalent to Language Server Protoc
 
 ## Installation
 
-### Quick Setup with --init=claude
+### MCP Server Configuration
 
-The easiest way to set up typescript-mcp in your project:
-
-```bash
-npm install typescript typescript-mcp -D
-npx lsmcp --init=claude
-# Creates/updates .mcp.json with typescript-mcp configuration
-# Creates/updates .claude/settings.json with permissions
-```
-
-After initialization, use Claude with:
-
-```bash
-claude
-```
-
-### Optional: Prompt
-
-```markdown
-## CRITICAL: Tool Usage Priority for Refactoring
-
-**When performing refactoring operations (rename, move, etc.) on TypeScript code, ALWAYS use typescript MCP tools (`mcp__typescript_*`) instead of the default Edit/Write tools.**
-
-Specifically for refactoring:
-
-- For renaming symbols: ALWAYS use `mcp__typescript__rename_symbol` instead of Edit/Write
-- For moving files: ALWAYS use `mcp__typescript__move_file` instead of Bash(mv) or Write
-- For moving directories: ALWAYS use `mcp__typescript__move_directory` instead of Bash(mv)
-- For finding references: ALWAYS use `mcp__typescript__find_references` instead of Grep/Bash(grep)
-- For type analysis: ALWAYS use `mcp__typescript__get_type_*` tools
-
-**NEVER use Edit, MultiEdit, or Write tools for TypeScript refactoring operations that have a corresponding mcp\__typescript_\* tool.**
-```
-
-### Manual Setup
-
-If you prefer to configure manually, add to your `.mcp.json`:
+Add to your project's `.mcp.json`:
 
 ```json
 {
   "mcpServers": {
-    "typescript": {
+    "lsmcp": {
       "command": "npx",
-      "args": ["typescript-mcp"]
+      "args": ["lsmcp"]
     }
   }
 }
 ```
 
-Add permissions in `.claude/settings.json`:
+For language-specific servers or custom configurations:
+
+```json
+{
+  "mcpServers": {
+    // Auto-detect language (recommended)
+    "lsmcp": {
+      "command": "npx",
+      "args": ["lsmcp"]
+    },
+    // Or use specific language
+    "rust": {
+      "command": "npx",
+      "args": ["lsmcp", "--language", "rust"]
+    },
+    // Or use custom LSP
+    "deno": {
+      "command": "npx",
+      "args": ["lsmcp", "--bin", "deno lsp"]
+    }
+  }
+}
+```
+
+### Quick Setup with --init=claude
+
+The easiest way to automatically configure lsmcp for Claude Desktop:
+
+```bash
+npm install typescript typescript-mcp -D
+npx lsmcp --init=claude
+# Creates/updates .mcp.json with lsmcp configuration
+# Creates/updates .claude/settings.json with permissions
+```
+
+After initialization, start Claude Desktop:
+
+```bash
+claude
+```
+
+### Manual Permissions Setup
+
+If configuring manually, add permissions to `.claude/settings.json`:
 
 ```json
 {
   "permissions": {
     "allow": [
-      "mcp__typescript__move_file",
-      "mcp__typescript__move_directory",
+      // TypeScript tools
+      "mcp__typescript__*",
+      // Or specific tools
       "mcp__typescript__rename_symbol",
-      "mcp__typescript__delete_symbol",
-      "mcp__typescript__find_references",
-      "mcp__typescript__get_definitions",
-      "mcp__typescript__get_diagnostics",
-      "mcp__typescript__get_module_symbols",
-      "mcp__typescript__get_type_in_module",
-      "mcp__typescript__get_type_at_symbol",
-      "mcp__typescript__get_symbols_in_scope"
+      "mcp__typescript__move_file",
+      // Language-specific tools
+      "rust_*",
+      "python_*",
+      "go_*"
     ],
     "deny": []
   }
 }
+```
+
+### Language Server Installation
+
+Install the appropriate language server for your project:
+
+```bash
+# TypeScript/JavaScript
+npm install -g typescript-language-server
+
+# Rust
+rustup component add rust-analyzer
+
+# Python
+pip install python-lsp-server
+
+# Go
+go install golang.org/x/tools/gopls@latest
+
+# Moonbit - included with SDK
+# Java - see jdtls docs
+# C/C++ - apt install clangd
+```
+
+### Optional: AI Assistant Prompt
+
+For better results with AI assistants, consider adding this to your prompt:
+
+```markdown
+## CRITICAL: Tool Usage Priority for Refactoring
+
+**When performing refactoring operations on code, ALWAYS use language-specific MCP tools instead of the default Edit/Write tools.**
+
+Specifically for refactoring:
+- For renaming symbols: ALWAYS use `<language>_rename_symbol` instead of Edit/Write
+- For moving files: ALWAYS use `<language>_move_file` (TypeScript only) instead of Bash(mv)
+- For finding references: ALWAYS use `<language>_find_references` instead of Grep
+- For type analysis: ALWAYS use `<language>_get_type_*` tools
+
+**NEVER use Edit, MultiEdit, or Write tools for refactoring operations that have a corresponding MCP tool.**
 ```
 
 ## Important: Migration from typescript-mcp to lsmcp
@@ -101,11 +147,13 @@ Add permissions in `.claude/settings.json`:
 ### Migration Guide
 
 If you were using:
+
 ```bash
 npx typescript-mcp
 ```
 
 Now use:
+
 ```bash
 npx lsmcp                    # Auto-detects TypeScript projects
 # or explicitly:
@@ -184,6 +232,7 @@ npm install -g @typescript/native-preview
 ```
 
 Then use it with lsmcp:
+
 ```bash
 npx lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
 ```
@@ -210,21 +259,22 @@ Or configure it in .mcp.json:
 
 ### Built-in Language Support
 
-| Language | Detection Files | LSP Server | Installation |
-|----------|----------------|------------|--------------|
-| TypeScript/JavaScript | `tsconfig.json`, `package.json` | typescript-language-server | `npm install -g typescript-language-server` |
-| Rust | `Cargo.toml` | rust-analyzer | `rustup component add rust-analyzer` |
-| Moonbit | `moon.mod.json` | Moonbit LSP | Included with [Moonbit SDK](https://www.moonbitlang.com/download) |
-| Go | `go.mod` | gopls | `go install golang.org/x/tools/gopls@latest` |
-| Python | `pyproject.toml`, `setup.py`, `requirements.txt` | pylsp | `pip install python-lsp-server` |
-| Java | `pom.xml`, `build.gradle` | jdtls | See [jdtls installation](https://github.com/eclipse/eclipse.jdt.ls) |
-| C/C++ | `CMakeLists.txt`, `Makefile`, `.c/.cpp/.h` files | clangd | `apt install clangd` or `brew install llvm` |
+| Language              | Detection Files                                  | LSP Server                 | Installation                                                        |
+| --------------------- | ------------------------------------------------ | -------------------------- | ------------------------------------------------------------------- |
+| TypeScript/JavaScript | `tsconfig.json`, `package.json`                  | typescript-language-server | `npm install -g typescript-language-server`                         |
+| Rust                  | `Cargo.toml`                                     | rust-analyzer              | `rustup component add rust-analyzer`                                |
+| Moonbit               | `moon.mod.json`                                  | Moonbit LSP                | Included with [Moonbit SDK](https://www.moonbitlang.com/download)   |
+| Go                    | `go.mod`                                         | gopls                      | `go install golang.org/x/tools/gopls@latest`                        |
+| Python                | `pyproject.toml`, `setup.py`, `requirements.txt` | pylsp                      | `pip install python-lsp-server`                                     |
+| Java                  | `pom.xml`, `build.gradle`                        | jdtls                      | See [jdtls installation](https://github.com/eclipse/eclipse.jdt.ls) |
+| C/C++                 | `CMakeLists.txt`, `Makefile`, `.c/.cpp/.h` files | clangd                     | `apt install clangd` or `brew install llvm`                         |
 
 ### Language-Specific Tools
 
 Each language provides a consistent set of LSP-based tools with language-specific prefixes:
 
 #### TypeScript/JavaScript (`typescript_` or via Compiler API)
+
 - `rename_symbol` - Rename symbols across the codebase
 - `move_file` - Move files and update imports
 - `find_references` - Find all references to a symbol
@@ -233,6 +283,7 @@ Each language provides a consistent set of LSP-based tools with language-specifi
 - And more...
 
 #### Other Languages (`<language>_` prefix)
+
 - `<language>_get_hover` - Get hover information
 - `<language>_find_references` - Find symbol references
 - `<language>_rename_symbol` - Rename symbols
@@ -243,6 +294,7 @@ Each language provides a consistent set of LSP-based tools with language-specifi
 ### Available MCP Servers
 
 1. **lsmcp** (Recommended) - Unified CLI with auto-detection
+
    ```bash
    npx lsmcp                    # Auto-detect language
    npx lsmcp -l typescript      # Specify language
@@ -257,6 +309,7 @@ Each language provides a consistent set of LSP-based tools with language-specifi
 ## Usage Examples
 
 ### TypeScript Project
+
 ```bash
 cd my-typescript-project
 npx lsmcp --init=claude
@@ -264,6 +317,7 @@ claude
 ```
 
 Then in Claude:
+
 ```
 # Rename a symbol
 Use mcp__typescript__rename_symbol to rename the function "calculateTotal" to "computeSum" in src/utils.ts
@@ -276,6 +330,7 @@ Use mcp__typescript__get_type_at_symbol to show the type of "config" variable in
 ```
 
 ### Rust Project
+
 ```bash
 cd my-rust-project
 npx lsmcp -l rust --init=claude
@@ -285,12 +340,14 @@ claude
 ```
 
 Then in Claude:
+
 ```
 Use rust_rename_symbol to rename the struct "Config" to "AppConfig"
 Use rust_find_references to find all uses of the "parse_args" function
 ```
 
 ### Python Project
+
 ```bash
 cd my-python-project
 npx lsmcp --init=claude  # Auto-detects Python
@@ -298,12 +355,14 @@ claude
 ```
 
 Then in Claude:
+
 ```
 Use python_get_hover to show documentation for the "process_data" function
 Use python_rename_symbol to rename the class "DataProcessor" to "DataHandler"
 ```
 
 ### Multi-Language Monorepo
+
 ```bash
 cd my-monorepo
 npx multi-language-mcp --init=claude
@@ -331,25 +390,32 @@ pnpm test
 ## Troubleshooting
 
 ### LSP Server Not Found
+
 If you get an error about LSP server not found:
+
 1. Ensure the language's LSP server is installed (see Installation section above)
 2. Check if it's in your PATH: `which <lsp-command>`
 3. Set the LSP path explicitly in environment variables
 
 ### Language Not Detected
+
 If auto-detection fails:
+
 1. Ensure your project has appropriate config files (see Supported Languages table)
 2. Use `--language` flag to explicitly specify: `npx lsmcp -l python`
 3. Set `FORCE_LANGUAGE` environment variable in your MCP configuration
 
 ### Performance Issues
+
 - LSP servers may take time to index large projects on first run
 - TypeScript projects benefit from using the native TypeScript compiler API
 - Consider using language-specific servers for better performance
 - Some LSP features may be limited compared to native TypeScript support
 
 ### MCP Connection Issues
+
 If Claude can't connect to the MCP server:
+
 1. Check that the server initialized correctly: `npx lsmcp --init=claude`
 2. Verify `.mcp.json` exists in your project root
 3. Ensure Claude Desktop has the correct permissions in `.claude/settings.json`
