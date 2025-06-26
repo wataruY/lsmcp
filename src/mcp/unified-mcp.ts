@@ -47,38 +47,28 @@ const { values, positionals } = parseArgs({
 });
 
 function showHelp() {
-  // Check for auto-detected language only if no language is specified
-  if (!values.language && !process.env.FORCE_LANGUAGE) {
-    const projectRoot = process.env.PROJECT_ROOT || process.cwd();
-    const detected = detectProjectLanguage(projectRoot);
-    if (detected) {
-      console.error(`Auto-detected language: ${detected.languageId}`);
-    }
-  }
-  
   console.log(`
 🌍 LSMCP - Language Service MCP for Multi-Language Support
 
 Usage:
-  lsmcp [options]
   lsmcp --language <lang> [options]
-  lsmcp --init <target>
+  lsmcp --bin <command> [options]
+  lsmcp --init <target> --language <lang>
 
 Options:
-  -l, --language <lang>  Language to use (typescript, moonbit, rust, etc.)
+  -l, --language <lang>  Language to use (required unless --bin is provided)
   --bin <command>        Custom LSP server command (e.g., "deno lsp", "rust-analyzer")
-  --include <pattern>    Glob pattern for files to get diagnostics (e.g., "src/**/*.ts")
-  --init <target>        Initialize MCP configuration (claude or global)
+  --include <pattern>    Glob pattern for files to get diagnostics (TypeScript/JS only)
+  --init <target>        Initialize MCP configuration (requires --language)
   --list                 List all supported languages
   -h, --help            Show this help message
 
 Examples:
-  lsmcp                         Auto-detect project language
-  lsmcp -l rust                Use Rust MCP server
   lsmcp -l typescript          Use TypeScript MCP server
+  lsmcp -l rust                Use Rust MCP server
   lsmcp --bin "deno lsp"       Use custom LSP server
-  lsmcp --include "src/**/*.ts" Get diagnostics for all TypeScript files
-  lsmcp --init claude          Initialize for Claude Desktop
+  lsmcp --include "src/**/*.ts" -l typescript  Get diagnostics for TypeScript files
+  lsmcp --init claude -l typescript            Initialize for Claude Desktop
 
 Supported Languages:
 ${Object.entries(LANGUAGE_CONFIGS)
@@ -158,24 +148,27 @@ async function main() {
 
   // Handle initialization
   if (values.init) {
-    // For init, we need to determine which language server to initialize
     const language = values.language || process.env.FORCE_LANGUAGE;
     
-    if (language) {
-      // Run specific language server with --init
-      await runLanguageServer(language, [`--init=${values.init}`]);
-    } else {
-      // Auto-detect and initialize
-      const detectedLang = detectProjectLanguage(process.cwd());
-      if (detectedLang) {
-        console.log(`Detected ${detectedLang.languageId} project`);
-        await runLanguageServer(detectedLang.languageId, [`--init=${values.init}`]);
-      } else {
-        console.error("Could not detect project language.");
-        console.error("Please specify a language with --language or create a project config file.");
-        process.exit(1);
-      }
+    if (!language) {
+      console.error("Error: --init requires --language option");
+      console.error("Example: lsmcp --init=claude --language=typescript");
+      process.exit(1);
     }
+    
+    // Validate language
+    const languageInfo = getLanguageInfo(language);
+    if (!languageInfo) {
+      console.error(`Error: Unsupported language: ${language}`);
+      console.error("\nSupported languages:");
+      Object.keys(LANGUAGE_CONFIGS).forEach(lang => {
+        console.error(`  - ${lang}`);
+      });
+      process.exit(1);
+    }
+    
+    // Run specific language server with --init
+    await runLanguageServer(language, [`--init=${values.init}`]);
     return;
   }
 
@@ -319,38 +312,33 @@ async function main() {
     process.exit(hasErrors ? 1 : 0);
   }
 
-  // Determine language
-  let language = values.language || process.env.FORCE_LANGUAGE;
+  // Require either --language or --bin option
+  const language = values.language || process.env.FORCE_LANGUAGE;
 
-  if (!language) {
-    // Auto-detect language
-    const projectRoot = process.env.PROJECT_ROOT || process.cwd();
-    const detected = detectProjectLanguage(projectRoot);
-    
-    if (detected) {
-      language = detected.languageId;
-      debug(`Auto-detected language: ${language}`);
-    } else {
-      console.error("Error: Could not detect project language.");
-      console.error("Please specify a language with --language or set FORCE_LANGUAGE.");
-      console.error("\nRun 'lsmcp --help' for more information.");
-      process.exit(1);
-    }
-  }
-
-  // Validate language
-  const languageInfo = getLanguageInfo(language);
-  if (!languageInfo) {
-    console.error(`Error: Unsupported language: ${language}`);
-    console.error("\nSupported languages:");
-    Object.keys(LANGUAGE_CONFIGS).forEach(lang => {
-      console.error(`  - ${lang}`);
-    });
+  if (!language && !values.bin) {
+    console.error("Error: Either --language or --bin option is required");
+    console.error("\nExamples:");
+    console.error("  lsmcp --language=typescript");
+    console.error("  lsmcp --bin=\"deno lsp\"");
+    console.error("\nRun 'lsmcp --help' for more information.");
     process.exit(1);
   }
 
-  // Run the appropriate language server
-  await runLanguageServer(language, positionals);
+  if (language) {
+    // Validate language
+    const languageInfo = getLanguageInfo(language);
+    if (!languageInfo) {
+      console.error(`Error: Unsupported language: ${language}`);
+      console.error("\nSupported languages:");
+      Object.keys(LANGUAGE_CONFIGS).forEach(lang => {
+        console.error(`  - ${lang}`);
+      });
+      process.exit(1);
+    }
+
+    // Run the appropriate language server
+    await runLanguageServer(language, positionals);
+  }
 }
 
 // Always run main when this script is executed directly

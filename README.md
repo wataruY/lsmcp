@@ -68,7 +68,7 @@ The easiest way to automatically configure lsmcp for Claude Desktop:
 
 ```bash
 npm install typescript @mizchi/lsmcp -D
-npx -y @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude --language=<language>
 # Creates/updates .mcp.json with lsmcp configuration
 # Creates/updates .claude/settings.json with permissions
 ```
@@ -186,11 +186,11 @@ npx -y @mizchi/lsmcp -l moonbit
 npx -y @mizchi/lsmcp --bin "deno lsp"
 npx -y @mizchi/lsmcp --bin "rust-analyzer"
 
-# Initialize for Claude Desktop
-npx -y @mizchi/lsmcp --init claude
+# Initialize for Claude (requires --language)
+npx -y @mizchi/lsmcp --init claude --language typescript
 
-# Get diagnostics for multiple files using glob pattern
-npx -y @mizchi/lsmcp --include "src/**/*.ts"
+# Get diagnostics for multiple files using glob pattern (requires --language)
+npx -y @mizchi/lsmcp --include "src/**/*.ts" --language typescript
 npx -y @mizchi/lsmcp --include "**/*.ts" --language typescript
 ```
 
@@ -200,16 +200,16 @@ The `--include` option allows you to get diagnostics for multiple files matching
 
 ```bash
 # Check all TypeScript files in src directory
-npx -y @mizchi/lsmcp --include "src/**/*.ts"
+npx -y @mizchi/lsmcp --include "src/**/*.ts" --language typescript
 
 # Check all TypeScript files in the project
-npx -y @mizchi/lsmcp --include "**/*.ts"
+npx -y @mizchi/lsmcp --include "**/*.ts" --language typescript
 
 # Check specific directory
-npx -y @mizchi/lsmcp --include "src/components/*.ts"
+npx -y @mizchi/lsmcp --include "src/components/*.ts" --language typescript
 ```
 
-Note: The `--include` option currently only supports TypeScript/JavaScript files.
+Note: The `--include` option currently only supports TypeScript/JavaScript files and requires `--language` to be specified.
 
 ### Custom LSP Server Examples
 
@@ -263,19 +263,22 @@ Or configure it in .mcp.json:
 ### TypeScript/JavaScript
 
 #### Prerequisites
+
 ```bash
 # Install TypeScript language server
-npm install -g typescript-language-server typescript
+npm add typescript-language-server typescript
 ```
 
 #### Quick Setup
+
 ```bash
 cd my-typescript-project
-npx -y @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude --language=typescript
 claude
 ```
 
 #### Available Tools
+
 - `mcp__lsmcp__rename_symbol` - Rename symbols across the codebase
 - `mcp__lsmcp__move_file` - Move files and update imports
 - `mcp__lsmcp__find_references` - Find all references to a symbol
@@ -283,6 +286,7 @@ claude
 - `mcp__lsmcp__get_type_at_symbol` - Get type information
 
 #### Example Usage in Claude
+
 ```
 Use mcp__lsmcp__rename_symbol to rename the function "calculateTotal" to "computeSum" in src/utils.ts
 Use mcp__lsmcp__find_references to find all uses of the "User" interface
@@ -291,25 +295,29 @@ Use mcp__lsmcp__find_references to find all uses of the "User" interface
 ### Rust
 
 #### Prerequisites
+
 ```bash
 # Install rust-analyzer
 rustup component add rust-analyzer
 ```
 
 #### Quick Setup
+
 ```bash
 cd my-rust-project
-npx -y @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude --language=rust
 claude
 ```
 
 #### Available Tools
+
 - `rust_get_hover` - Get type information and documentation
 - `rust_find_references` - Find all references to a symbol
 - `rust_rename_symbol` - Rename symbols across the codebase
 - `rust_get_diagnostics` - Get compilation errors and warnings
 
 #### Example Usage in Claude
+
 ```
 Use rust_rename_symbol to rename the struct "Config" to "AppConfig"
 Use rust_find_references to find all uses of the "parse_args" function
@@ -318,25 +326,29 @@ Use rust_find_references to find all uses of the "parse_args" function
 ### Python
 
 #### Prerequisites
+
 ```bash
 # Install Python LSP server
 pip install python-lsp-server
 ```
 
 #### Quick Setup
+
 ```bash
 cd my-python-project
-npx -y @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude --language=python
 claude
 ```
 
 #### Available Tools
+
 - `python_get_hover` - Get documentation and type information
 - `python_find_references` - Find all references to a symbol
 - `python_rename_symbol` - Rename symbols across the codebase
 - `python_get_diagnostics` - Get syntax and type errors
 
 #### Example Usage in Claude
+
 ```
 Use python_get_hover to show documentation for the "process_data" function
 Use python_rename_symbol to rename the class "DataProcessor" to "DataHandler"
@@ -345,19 +357,22 @@ Use python_rename_symbol to rename the class "DataProcessor" to "DataHandler"
 ### Go
 
 #### Prerequisites
+
 ```bash
 # Install gopls
 go install golang.org/x/tools/gopls@latest
 ```
 
 #### Quick Setup
+
 ```bash
 cd my-go-project
-npx -y @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude --language=go
 claude
 ```
 
 #### Available Tools
+
 - `go_get_hover` - Get type information and documentation
 - `go_find_references` - Find all references to a symbol
 - `go_rename_symbol` - Rename symbols across the codebase
@@ -366,6 +381,7 @@ claude
 ### Other Languages
 
 #### C/C++
+
 ```bash
 # Install clangd
 apt install clangd  # Ubuntu/Debian
@@ -373,32 +389,35 @@ brew install llvm   # macOS
 
 # Setup
 cd my-cpp-project
-npx -y @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude --language=cpp
 ```
 
 #### Java
+
 ```bash
 # Install Eclipse JDT Language Server
 # See: https://github.com/eclipse/eclipse.jdt.ls
 
 # Setup
 cd my-java-project
-npx -y @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude --language=java
 ```
 
 #### Moonbit
+
 ```bash
 # Install Moonbit SDK (includes LSP)
 # See: https://www.moonbitlang.com/download
 
 # Setup
 cd my-moonbit-project
-npx -y @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude --language=moonbit
 ```
 
 ## Advanced Configuration
 
 ### Custom LSP Server
+
 ```bash
 # Use Deno LSP for TypeScript
 npx -y @mizchi/lsmcp --bin "deno lsp"
@@ -408,13 +427,19 @@ npx -y @mizchi/lsmcp --bin "/path/to/rust-analyzer"
 ```
 
 ### Manual MCP Configuration
+
 Edit `.mcp.json`:
+
 ```json
 {
   "mcpServers": {
-    "lsmcp": {
+    "lsmcp-typescript": {
       "command": "npx",
-      "args": ["-y", "@mizchi/lsmcp"]
+      "args": ["-y", "@mizchi/lsmcp", "--language", "typescript"]
+    },
+    "lsmcp-rust": {
+      "command": "npx",
+      "args": ["-y", "@mizchi/lsmcp", "--language", "rust"]
     }
   }
 }
@@ -484,7 +509,7 @@ If auto-detection fails:
 
 If Claude can't connect to the MCP server:
 
-1. Check that the server initialized correctly: `npx -y @mizchi/lsmcp --init=claude`
+1. Check that the server initialized correctly: `npx -y @mizchi/lsmcp --init=claude --language=<language>`
 2. Verify `.mcp.json` exists in your project root
 3. Ensure Claude Desktop has the correct permissions in `.claude/settings.json`
 4. Try running the server manually to see error messages: `npx -y @mizchi/lsmcp`
