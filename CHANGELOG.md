@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### ⚡ Real-time File Watching for Symbol Index (2025-01-26)
+- **File System Watching**: Symbol index now automatically updates when files change
+  - Monitors directories containing source files
+  - Incremental updates on file modifications
+  - Proper cleanup on process exit
+- **Removed 5-minute Cache**: Replaced heuristic caching with real-time updates
+- **Performance**: File watching is disabled in test environments for stability
+
 #### 🔄 Project Renamed to lsmcp (2025-01-26)
 - **Project Rebranding**: typescript-mcp → lsmcp (Language Service MCP)
   - Added "LSP for headless AI Agents" tagline

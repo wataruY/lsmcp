@@ -15,37 +15,40 @@ const schema = z.object({
   buildIndex: z.boolean().optional().default(false).describe("Force rebuild of symbol index"),
 });
 
-// Cache for symbol indexers
-const indexerCache = new Map<string, { indexer: ProjectSymbolIndexer; lastBuilt: Date }>();
+// Cache for symbol indexers (now managed by file watchers)
+const indexerCache = new Map<string, ProjectSymbolIndexer>();
 
 async function getOrCreateIndexer(root: string, forceRebuild: boolean = false): Promise<ProjectSymbolIndexer> {
-  const cached = indexerCache.get(root);
+  let indexer = indexerCache.get(root);
   
-  // Use cached indexer if available and not forcing rebuild
-  if (cached && !forceRebuild) {
-    const ageMs = Date.now() - cached.lastBuilt.getTime();
-    const maxAgeMs = 5 * 60 * 1000; // 5 minutes
-    
-    if (ageMs < maxAgeMs) {
-      return cached.indexer;
-    }
+  // If forcing rebuild, dispose of the old indexer
+  if (indexer && forceRebuild) {
+    indexer.dispose();
+    indexerCache.delete(root);
+    indexer = undefined;
   }
-
-  // Create new indexer
-  const project = await getOrCreateProject(root);
-  const indexer = new ProjectSymbolIndexer(project, root);
   
-  // Build index
-  await indexer.buildIndex();
-  
-  // Cache it
-  indexerCache.set(root, {
-    indexer,
-    lastBuilt: new Date(),
-  });
+  // Create new indexer if needed
+  if (!indexer) {
+    const project = await getOrCreateProject(root);
+    indexer = new ProjectSymbolIndexer(project, root);
+    
+    // Build index with file watching enabled
+    await indexer.buildIndex(undefined, true);
+    
+    // Cache it
+    indexerCache.set(root, indexer);
+  }
 
   return indexer;
 }
+
+// Clean up indexers on process exit
+process.on('exit', () => {
+  for (const indexer of indexerCache.values()) {
+    indexer.dispose();
+  }
+});
 
 export const searchSymbolsTool: ToolDef<typeof schema> = {
   name: "lsmcp_search_symbols",

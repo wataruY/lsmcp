@@ -13,7 +13,7 @@ A unified MCP (Model Context Protocol) server that provides advanced code manipu
 - ♻️ **Intelligent Refactoring** - Rename symbols, move files, with automatic import updates
 - 🔧 **Flexible Configuration** - Use with any LSP server via `--bin` option
 - 🤖 **AI-Optimized** - Designed for LLMs with line and symbol-based interfaces
-- ⚡ **Fast Symbol Search** - Project-wide symbol index with caching for instant results
+- ⚡ **Fast Symbol Search** - Project-wide symbol index with real-time file watching
 - 🎯 **Smart Import Suggestions** - Find and suggest import candidates with relative paths
 
 See [Language Support Matrix](docs/LANGUAGE_SUPPORT_MATRIX.md) for detailed information about available tools for each language.

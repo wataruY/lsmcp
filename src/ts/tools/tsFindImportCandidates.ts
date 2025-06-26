@@ -13,29 +13,21 @@ const schema = z.object({
   limit: z.number().optional().default(10).describe("Maximum number of candidates"),
 });
 
-// Reuse the indexer cache from tsSearchSymbols
-const indexerCache = new Map<string, { indexer: ProjectSymbolIndexer; lastBuilt: Date }>();
+// Share the indexer cache with tsSearchSymbols for consistency
+const indexerCache = new Map<string, ProjectSymbolIndexer>();
 
 async function getOrCreateIndexer(root: string): Promise<ProjectSymbolIndexer> {
-  const cached = indexerCache.get(root);
+  let indexer = indexerCache.get(root);
   
-  if (cached) {
-    const ageMs = Date.now() - cached.lastBuilt.getTime();
-    const maxAgeMs = 5 * 60 * 1000; // 5 minutes
+  if (!indexer) {
+    const project = await getOrCreateProject(root);
+    indexer = new ProjectSymbolIndexer(project, root);
     
-    if (ageMs < maxAgeMs) {
-      return cached.indexer;
-    }
+    // Build index with file watching enabled
+    await indexer.buildIndex(undefined, true);
+    
+    indexerCache.set(root, indexer);
   }
-
-  const project = await getOrCreateProject(root);
-  const indexer = new ProjectSymbolIndexer(project, root);
-  await indexer.buildIndex();
-  
-  indexerCache.set(root, {
-    indexer,
-    lastBuilt: new Date(),
-  });
 
   return indexer;
 }

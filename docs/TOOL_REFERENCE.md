@@ -83,6 +83,8 @@ Get all symbols visible at a specific location.
 ### lsmcp_search_symbols
 Search for symbols across the entire project using a pre-built index (fast).
 
+The index is automatically maintained with file system watching, so changes to files are reflected immediately without needing to rebuild.
+
 **Arguments:**
 - `root`: Root directory
 - `query`: Symbol name to search for (prefix match)
@@ -99,6 +101,8 @@ Search for all classes starting with "User"
 
 ### lsmcp_find_import_candidates
 Find potential import candidates for a symbol name using the symbol index (fast).
+
+Uses the same automatically maintained index as `lsmcp_search_symbols`, with file system watching for immediate updates.
 
 **Arguments:**
 - `root`: Root directory

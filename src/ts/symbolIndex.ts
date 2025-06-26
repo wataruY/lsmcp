@@ -1,6 +1,6 @@
 import { Project, SourceFile, Node, SyntaxKind } from "ts-morph";
-import { existsSync } from "fs";
-import { join, relative } from "path";
+import { existsSync, watch, FSWatcher } from "fs";
+import { join, relative, dirname } from "path";
 import { glob } from "glob";
 import { debug } from "../mcp/_mcplib.ts";
 
@@ -25,6 +25,9 @@ export class ProjectSymbolIndexer {
   private index: SymbolIndex;
   private project: Project;
   private rootPath: string;
+  private watchers: Map<string, FSWatcher> = new Map();
+  private watchedDirs: Set<string> = new Set();
+  private includePatterns: string[] = [];
 
   constructor(project: Project, rootPath: string) {
     this.project = project;
@@ -39,9 +42,17 @@ export class ProjectSymbolIndexer {
   /**
    * Build or rebuild the symbol index for the entire project
    */
-  async buildIndex(includePatterns: string[] = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"]): Promise<void> {
+  async buildIndex(includePatterns: string[] = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"], enableWatch: boolean = true): Promise<void> {
+    // Disable file watching in test environment
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+      enableWatch = false;
+    }
+    
     debug("Building project symbol index...");
     const startTime = Date.now();
+
+    // Store patterns for file watching
+    this.includePatterns = includePatterns;
 
     // Clear existing index
     this.index.symbols.clear();
@@ -76,6 +87,11 @@ export class ProjectSymbolIndexer {
     this.index.lastUpdated = new Date();
     const duration = Date.now() - startTime;
     debug(`Symbol index built in ${duration}ms. Total symbols: ${this.index.symbols.size}`);
+
+    // Set up file watchers if enabled
+    if (enableWatch) {
+      this.setupFileWatchers();
+    }
   }
 
   /**
@@ -265,6 +281,7 @@ export class ProjectSymbolIndexer {
     totalModules: number;
     lastUpdated: Date;
     symbolsByKind: Map<string, number>;
+    watchedDirectories: number;
   } {
     const symbolsByKind = new Map<string, number>();
     
@@ -280,6 +297,152 @@ export class ProjectSymbolIndexer {
       totalModules: this.index.modules.size,
       lastUpdated: this.index.lastUpdated,
       symbolsByKind,
+      watchedDirectories: this.watchedDirs.size,
     };
+  }
+
+  /**
+   * Set up file system watchers for automatic index updates
+   */
+  private setupFileWatchers(): void {
+    // Clear existing watchers
+    this.clearWatchers();
+
+    // Get all directories containing source files
+    const dirsToWatch = new Set<string>();
+    
+    for (const [filePath] of this.index.modules) {
+      const dir = dirname(join(this.rootPath, filePath));
+      dirsToWatch.add(dir);
+    }
+
+    // Also watch the root directory
+    dirsToWatch.add(this.rootPath);
+
+    // Set up watchers for each directory
+    for (const dir of dirsToWatch) {
+      if (!existsSync(dir)) continue;
+      
+      try {
+        const watcher = watch(dir, { recursive: false }, (eventType, filename) => {
+          if (!filename) return;
+          
+          // Check if the file matches our patterns
+          const fullPath = join(dir, filename);
+          const relativePath = relative(this.rootPath, fullPath);
+          
+          if (this.shouldIndexFile(relativePath)) {
+            debug(`File ${eventType}: ${relativePath}`);
+            this.handleFileChange(fullPath, eventType);
+          }
+        });
+
+        this.watchers.set(dir, watcher);
+        this.watchedDirs.add(dir);
+      } catch (error) {
+        debug(`Failed to watch directory ${dir}: ${error}`);
+      }
+    }
+
+    debug(`Set up file watchers for ${this.watchedDirs.size} directories`);
+  }
+
+  /**
+   * Check if a file should be indexed based on include patterns
+   */
+  private shouldIndexFile(relativePath: string): boolean {
+    const extensions = ['.ts', '.tsx', '.js', '.jsx'];
+    return extensions.some(ext => relativePath.endsWith(ext)) &&
+           !relativePath.includes('node_modules') &&
+           !relativePath.includes('dist') &&
+           !relativePath.endsWith('.d.ts');
+  }
+
+  /**
+   * Handle file change events
+   */
+  private handleFileChange(filePath: string, eventType: string): void {
+    const relativePath = relative(this.rootPath, filePath);
+
+    if (eventType === 'rename') {
+      // File deleted or renamed
+      this.removeFileFromIndex(relativePath);
+      
+      // If file still exists, it was renamed (not deleted)
+      if (existsSync(filePath)) {
+        this.updateFileInIndex(filePath);
+      }
+    } else if (eventType === 'change') {
+      // File modified
+      this.updateFileInIndex(filePath);
+    }
+  }
+
+  /**
+   * Remove a file from the index
+   */
+  private removeFileFromIndex(relativePath: string): void {
+    // Remove from modules
+    this.index.modules.delete(relativePath);
+
+    // Remove symbols from this file
+    for (const [symbolName, symbols] of this.index.symbols) {
+      const filtered = symbols.filter(s => s.filePath !== relativePath);
+      if (filtered.length === 0) {
+        this.index.symbols.delete(symbolName);
+      } else if (filtered.length !== symbols.length) {
+        this.index.symbols.set(symbolName, filtered);
+      }
+    }
+
+    this.index.lastUpdated = new Date();
+    debug(`Removed file from index: ${relativePath}`);
+  }
+
+  /**
+   * Update a single file in the index
+   */
+  private updateFileInIndex(filePath: string): void {
+    try {
+      const relativePath = relative(this.rootPath, filePath);
+      
+      // Remove old entries
+      this.removeFileFromIndex(relativePath);
+      
+      // Remove the source file from the project to clear any cached content
+      const existingSourceFile = this.project.getSourceFile(filePath);
+      if (existingSourceFile) {
+        this.project.removeSourceFile(existingSourceFile);
+      }
+      
+      // Re-add and index the file with fresh content
+      const sourceFile = this.project.addSourceFileAtPath(filePath);
+      this.indexSourceFile(sourceFile);
+      
+      this.index.lastUpdated = new Date();
+      debug(`Updated file in index: ${relativePath}`);
+    } catch (error) {
+      debug(`Error updating file ${filePath}: ${error}`);
+    }
+  }
+
+  /**
+   * Clear all file watchers
+   */
+  private clearWatchers(): void {
+    for (const [dir, watcher] of this.watchers) {
+      watcher.close();
+    }
+    this.watchers.clear();
+    this.watchedDirs.clear();
+  }
+
+  /**
+   * Dispose of the indexer and clean up resources
+   */
+  dispose(): void {
+    this.clearWatchers();
+    this.index.symbols.clear();
+    this.index.modules.clear();
   }
 }
