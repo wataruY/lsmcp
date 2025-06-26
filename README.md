@@ -1,5 +1,7 @@
 # lsmcp - Language Server MCP
 
+**LSP for headless AI Agents**
+
 > ⚠️ **This project is under active development.** APIs and features may change without notice.
 
 A unified MCP (Model Context Protocol) server that provides advanced code manipulation and analysis capabilities for multiple programming languages through Language Server Protocol integration.
