@@ -8,11 +8,10 @@ A unified MCP (Model Context Protocol) server that provides advanced code manipu
 
 ## Features
 
-- 🌍 **Multi-Language Support** - TypeScript, JavaScript, Rust, Python, Go, Moonbit, and more
+- 🌍 **Multi-Language Support** - Built-in TypeScript/JavaScript, extensible to any language via LSP
 - 🔍 **Semantic Code Analysis** - Go to definition, find references, type information
 - ♻️ **Intelligent Refactoring** - Rename symbols, move files, with automatic import updates
-- 🚀 **Auto-Detection** - Automatically detects project language and configures appropriate LSP
-- 🔧 **Flexible Configuration** - Use with any LSP server via custom commands
+- 🔧 **Flexible Configuration** - Use with any LSP server via `--bin` option
 - 🤖 **AI-Optimized** - Designed for LLMs with line and symbol-based interfaces
 
 ## Motivation
@@ -38,17 +37,22 @@ Add to your project's `.mcp.json`:
 }
 ```
 
-For language-specific servers or custom configurations:
+For other languages, use the `--bin` option with your LSP server:
 
 ```json
 {
   "mcpServers": {
-    // Or use specific language
+    // Rust via rust-analyzer
     "rust": {
       "command": "npx",
-      "args": ["-y", "@mizchi/lsmcp", "--language", "rust"]
+      "args": ["-y", "@mizchi/lsmcp", "--bin", "rust-analyzer"]
     },
-    // Or use custom LSP
+    // Python via pylsp
+    "python": {
+      "command": "npx",
+      "args": ["-y", "@mizchi/lsmcp", "--bin", "pylsp"]
+    },
+    // Deno via built-in LSP
     "deno": {
       "command": "npx",
       "args": ["-y", "@mizchi/lsmcp", "--bin", "deno lsp"]
@@ -128,14 +132,18 @@ For better results with AI assistants, consider adding this to your prompt:
 ```markdown
 ## CRITICAL: Tool Usage Priority for Refactoring
 
-**When performing refactoring operations on code, ALWAYS use language-specific MCP tools instead of the default Edit/Write tools.**
+**When performing refactoring operations on code, ALWAYS use MCP tools instead of the default Edit/Write tools.**
 
-Specifically for refactoring:
+For TypeScript/JavaScript projects:
+- For renaming symbols: ALWAYS use `mcp__lsmcp__rename_symbol` instead of Edit/Write
+- For moving files: ALWAYS use `mcp__lsmcp__move_file` instead of Bash(mv)
+- For finding references: ALWAYS use `mcp__lsmcp__find_references` instead of Grep
+- For type analysis: ALWAYS use `mcp__lsmcp__get_type_*` tools
 
-- For renaming symbols: ALWAYS use `<language>_rename_symbol` instead of Edit/Write
-- For moving files: ALWAYS use `<language>_move_file` (TypeScript only) instead of Bash(mv)
-- For finding references: ALWAYS use `<language>_find_references` instead of Grep
-- For type analysis: ALWAYS use `<language>_get_type_*` tools
+For other languages (using LSP):
+- For renaming symbols: ALWAYS use `lsp_rename_symbol` instead of Edit/Write
+- For finding references: ALWAYS use `lsp_find_references` instead of Grep
+- For diagnostics: ALWAYS use `lsp_get_diagnostics`
 
 **NEVER use Edit, MultiEdit, or Write tools for refactoring operations that have a corresponding MCP tool.**
 ```
@@ -169,17 +177,17 @@ All TypeScript-specific features remain available through `lsmcp`. The tool will
 ### Basic Usage
 
 ```bash
-# Auto-detect project language
-npx -y @mizchi/lsmcp
-
-# Specify language explicitly
+# TypeScript/JavaScript (built-in support)
 npx -y @mizchi/lsmcp --language typescript
-npx -y @mizchi/lsmcp -l rust
-npx -y @mizchi/lsmcp -l moonbit
+npx -y @mizchi/lsmcp -l javascript
 
-# Use custom LSP server
-npx -y @mizchi/lsmcp --bin "deno lsp"
-npx -y @mizchi/lsmcp --bin "rust-analyzer"
+# Other languages via LSP servers
+npx -y @mizchi/lsmcp --bin "rust-analyzer"      # Rust
+npx -y @mizchi/lsmcp --bin "pylsp"              # Python
+npx -y @mizchi/lsmcp --bin "gopls"              # Go
+npx -y @mizchi/lsmcp --bin "clangd"             # C/C++
+npx -y @mizchi/lsmcp --bin "jdtls"              # Java
+npx -y @mizchi/lsmcp --bin "deno lsp"           # Deno
 
 # Initialize for Claude (requires --language)
 npx -y @mizchi/lsmcp --init claude --language typescript
@@ -296,26 +304,38 @@ Use mcp__lsmcp__find_references to find all uses of the "User" interface
 rustup component add rust-analyzer
 ```
 
-#### Quick Setup
+#### Configuration
 
-```bash
-cd my-rust-project
-npx -y @mizchi/lsmcp --init=claude --language=rust
-claude
+Create `.mcp.json` in your Rust project:
+
+```json
+{
+  "mcpServers": {
+    "rust-lsp": {
+      "command": "npx",
+      "args": ["-y", "@mizchi/lsmcp", "--bin", "rust-analyzer"]
+    }
+  }
+}
 ```
 
-#### Available Tools
+#### Available LSP Tools
 
-- `rust_get_hover` - Get type information and documentation
-- `rust_find_references` - Find all references to a symbol
-- `rust_rename_symbol` - Rename symbols across the codebase
-- `rust_get_diagnostics` - Get compilation errors and warnings
+- `lsp_get_hover` - Get type information and documentation
+- `lsp_find_references` - Find all references to a symbol
+- `lsp_rename_symbol` - Rename symbols across the codebase
+- `lsp_get_diagnostics` - Get compilation errors and warnings
+- `lsp_get_definitions` - Go to definition
+- `lsp_get_document_symbols` - List all symbols in a file
+- `lsp_get_completion` - Get code completions
+- `lsp_format_document` - Format code using rustfmt
+- `lsp_get_code_actions` - Get available code actions
 
 #### Example Usage in Claude
 
 ```
-Use rust_rename_symbol to rename the struct "Config" to "AppConfig"
-Use rust_find_references to find all uses of the "parse_args" function
+Use lsp_rename_symbol to rename the struct "Config" to "AppConfig"
+Use lsp_find_references to find all uses of the "parse_args" function
 ```
 
 ### Python
@@ -327,26 +347,38 @@ Use rust_find_references to find all uses of the "parse_args" function
 pip install python-lsp-server
 ```
 
-#### Quick Setup
+#### Configuration
 
-```bash
-cd my-python-project
-npx -y @mizchi/lsmcp --init=claude --language=python
-claude
+Create `.mcp.json` in your Python project:
+
+```json
+{
+  "mcpServers": {
+    "python-lsp": {
+      "command": "npx",
+      "args": ["-y", "@mizchi/lsmcp", "--bin", "pylsp"]
+    }
+  }
+}
 ```
 
-#### Available Tools
+#### Available LSP Tools
 
-- `python_get_hover` - Get documentation and type information
-- `python_find_references` - Find all references to a symbol
-- `python_rename_symbol` - Rename symbols across the codebase
-- `python_get_diagnostics` - Get syntax and type errors
+- `lsp_get_hover` - Get documentation and type information
+- `lsp_find_references` - Find all references to a symbol
+- `lsp_rename_symbol` - Rename symbols across the codebase
+- `lsp_get_diagnostics` - Get syntax and type errors
+- `lsp_get_definitions` - Go to definition
+- `lsp_get_document_symbols` - List all symbols in a file
+- `lsp_get_completion` - Get code completions
+- `lsp_format_document` - Format code
+- `lsp_get_code_actions` - Get available code actions
 
 #### Example Usage in Claude
 
 ```
-Use python_get_hover to show documentation for the "process_data" function
-Use python_rename_symbol to rename the class "DataProcessor" to "DataHandler"
+Use lsp_get_hover to show documentation for the "process_data" function
+Use lsp_rename_symbol to rename the class "DataProcessor" to "DataHandler"
 ```
 
 ### Go
@@ -358,20 +390,32 @@ Use python_rename_symbol to rename the class "DataProcessor" to "DataHandler"
 go install golang.org/x/tools/gopls@latest
 ```
 
-#### Quick Setup
+#### Configuration
 
-```bash
-cd my-go-project
-npx -y @mizchi/lsmcp --init=claude --language=go
-claude
+Create `.mcp.json` in your Go project:
+
+```json
+{
+  "mcpServers": {
+    "go-lsp": {
+      "command": "npx",
+      "args": ["-y", "@mizchi/lsmcp", "--bin", "gopls"]
+    }
+  }
+}
 ```
 
-#### Available Tools
+#### Available LSP Tools
 
-- `go_get_hover` - Get type information and documentation
-- `go_find_references` - Find all references to a symbol
-- `go_rename_symbol` - Rename symbols across the codebase
-- `go_get_diagnostics` - Get compilation errors
+- `lsp_get_hover` - Get type information and documentation
+- `lsp_find_references` - Find all references to a symbol
+- `lsp_rename_symbol` - Rename symbols across the codebase
+- `lsp_get_diagnostics` - Get compilation errors
+- `lsp_get_definitions` - Go to definition
+- `lsp_get_document_symbols` - List all symbols in a file
+- `lsp_get_completion` - Get code completions
+- `lsp_format_document` - Format code using gofmt
+- `lsp_get_code_actions` - Get available code actions
 
 ### Other Languages
 
@@ -381,10 +425,19 @@ claude
 # Install clangd
 apt install clangd  # Ubuntu/Debian
 brew install llvm   # macOS
+```
 
-# Setup
-cd my-cpp-project
-npx -y @mizchi/lsmcp --init=claude --language=cpp
+Create `.mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "cpp-lsp": {
+      "command": "npx",
+      "args": ["-y", "@mizchi/lsmcp", "--bin", "clangd"]
+    }
+  }
+}
 ```
 
 #### Java

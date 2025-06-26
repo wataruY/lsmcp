@@ -1,6 +1,8 @@
 # Moonbit Test Project
 
-This is a test project for demonstrating Moonbit MCP server functionality.
+**⚠️ Note: This example is currently not functional as Moonbit-specific MCP support has been removed from lsmcp.**
+
+This directory was originally a test project for demonstrating Moonbit MCP server functionality. However, since lsmcp now only supports TypeScript/JavaScript directly, and Moonbit doesn't have a standard LSP server that can be used with the `--bin` option, this example cannot be used with the current version of lsmcp.
 
 ## Structure
 
