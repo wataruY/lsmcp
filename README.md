@@ -32,7 +32,7 @@ Add to your project's `.mcp.json`:
   "mcpServers": {
     "lsmcp": {
       "command": "npx",
-      "args": ["@mizchi/lsmcp"]
+      "args": ["-y", "@mizchi/lsmcp"]
     }
   }
 }
@@ -46,17 +46,17 @@ For language-specific servers or custom configurations:
     // Auto-detect language (recommended)
     "lsmcp": {
       "command": "npx",
-      "args": ["@mizchi/lsmcp"]
+      "args": ["-y", "@mizchi/lsmcp"]
     },
     // Or use specific language
     "rust": {
       "command": "npx",
-      "args": ["@mizchi/lsmcp", "--language", "rust"]
+      "args": ["-y", "@mizchi/lsmcp", "--language", "rust"]
     },
     // Or use custom LSP
     "deno": {
       "command": "npx",
-      "args": ["@mizchi/lsmcp", "--bin", "deno lsp"]
+      "args": ["-y", "@mizchi/lsmcp", "--bin", "deno lsp"]
     }
   }
 }
@@ -252,7 +252,7 @@ Or configure it in .mcp.json:
         "TSGO": "true"
       },
       "command": "npx",
-      "args": ["@mizchi/lsmcp"]
+      "args": ["-y", "@mizchi/lsmcp"]
     }
   }
 }
