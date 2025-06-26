@@ -68,7 +68,7 @@ The easiest way to automatically configure lsmcp for Claude Desktop:
 
 ```bash
 npm install typescript @mizchi/lsmcp -D
-npx @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude
 # Creates/updates .mcp.json with lsmcp configuration
 # Creates/updates .claude/settings.json with permissions
 ```
@@ -160,9 +160,9 @@ npx typescript-mcp
 Now use:
 
 ```bash
-npx @mizchi/lsmcp                    # Auto-detects TypeScript projects
+npx -y @mizchi/lsmcp                    # Auto-detects TypeScript projects
 # or explicitly:
-npx @mizchi/lsmcp --language typescript
+npx -y @mizchi/lsmcp --language typescript
 ```
 
 All TypeScript-specific features remain available through `lsmcp`. The tool will automatically detect TypeScript projects by looking for `tsconfig.json` or `package.json` files.
@@ -175,23 +175,23 @@ All TypeScript-specific features remain available through `lsmcp`. The tool will
 
 ```bash
 # Auto-detect project language
-npx @mizchi/lsmcp
+npx -y @mizchi/lsmcp
 
 # Specify language explicitly
-npx @mizchi/lsmcp --language typescript
-npx @mizchi/lsmcp -l rust
-npx @mizchi/lsmcp -l moonbit
+npx -y @mizchi/lsmcp --language typescript
+npx -y @mizchi/lsmcp -l rust
+npx -y @mizchi/lsmcp -l moonbit
 
 # Use custom LSP server
-npx @mizchi/lsmcp --bin "deno lsp"
-npx @mizchi/lsmcp --bin "rust-analyzer"
+npx -y @mizchi/lsmcp --bin "deno lsp"
+npx -y @mizchi/lsmcp --bin "rust-analyzer"
 
 # Initialize for Claude Desktop
-npx @mizchi/lsmcp --init claude
+npx -y @mizchi/lsmcp --init claude
 
 # Get diagnostics for multiple files using glob pattern
-npx @mizchi/lsmcp --include "src/**/*.ts"
-npx @mizchi/lsmcp --include "**/*.ts" --language typescript
+npx -y @mizchi/lsmcp --include "src/**/*.ts"
+npx -y @mizchi/lsmcp --include "**/*.ts" --language typescript
 ```
 
 ### Batch Diagnostics with --include
@@ -200,13 +200,13 @@ The `--include` option allows you to get diagnostics for multiple files matching
 
 ```bash
 # Check all TypeScript files in src directory
-npx @mizchi/lsmcp --include "src/**/*.ts"
+npx -y @mizchi/lsmcp --include "src/**/*.ts"
 
 # Check all TypeScript files in the project
-npx @mizchi/lsmcp --include "**/*.ts"
+npx -y @mizchi/lsmcp --include "**/*.ts"
 
 # Check specific directory
-npx @mizchi/lsmcp --include "src/components/*.ts"
+npx -y @mizchi/lsmcp --include "src/components/*.ts"
 ```
 
 Note: The `--include` option currently only supports TypeScript/JavaScript files.
@@ -215,17 +215,17 @@ Note: The `--include` option currently only supports TypeScript/JavaScript files
 
 ```bash
 # Use Deno LSP for TypeScript
-npx @mizchi/lsmcp --bin "deno lsp"
+npx -y @mizchi/lsmcp --bin "deno lsp"
 
 # Use TypeScript Native Preview (TSGO) for faster performance
 npm install @typescript/native-preview
-npx @mizchi/lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
+npx -y @mizchi/lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
 
 # Use custom rust-analyzer path
-npx @mizchi/lsmcp --bin "/usr/local/bin/rust-analyzer"
+npx -y @mizchi/lsmcp --bin "/usr/local/bin/rust-analyzer"
 
 # Use TypeScript LSP with custom tsserver path
-npx @mizchi/lsmcp --bin "typescript-language-server --stdio --tsserver-path=/usr/local/lib/node_modules/typescript/lib"
+npx -y @mizchi/lsmcp --bin "typescript-language-server --stdio --tsserver-path=/usr/local/lib/node_modules/typescript/lib"
 ```
 
 ### Experimental TSGO
@@ -239,7 +239,7 @@ npm install @typescript/native-preview
 Then use it with lsmcp:
 
 ```bash
-npx @mizchi/lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
+npx -y @mizchi/lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
 ```
 
 Or configure it in .mcp.json:
@@ -301,8 +301,8 @@ Each language provides a consistent set of LSP-based tools with language-specifi
 1. **lsmcp** (Recommended) - Unified CLI with auto-detection
 
    ```bash
-   npx @mizchi/lsmcp                    # Auto-detect language
-   npx @mizchi/lsmcp -l typescript      # Specify language
+   npx -y @mizchi/lsmcp                    # Auto-detect language
+   npx -y @mizchi/lsmcp -l typescript      # Specify language
    ```
 
 2. **Language-specific servers** - Direct access to language features
@@ -317,7 +317,7 @@ Each language provides a consistent set of LSP-based tools with language-specifi
 
 ```bash
 cd my-typescript-project
-npx @mizchi/lsmcp --init=claude
+npx -y @mizchi/lsmcp --init=claude
 claude
 ```
 
@@ -338,7 +338,7 @@ Use mcp__typescript__get_type_at_symbol to show the type of "config" variable in
 
 ```bash
 cd my-rust-project
-npx @mizchi/lsmcp -l rust --init=claude
+npx -y @mizchi/lsmcp -l rust --init=claude
 # or use rust-mcp directly
 npx rust-mcp --init=claude
 claude
@@ -355,7 +355,7 @@ Use rust_find_references to find all uses of the "parse_args" function
 
 ```bash
 cd my-python-project
-npx @mizchi/lsmcp --init=claude  # Auto-detects Python
+npx -y @mizchi/lsmcp --init=claude  # Auto-detects Python
 claude
 ```
 
@@ -414,7 +414,7 @@ If you get an error about LSP server not found:
 If auto-detection fails:
 
 1. Ensure your project has appropriate config files (see Supported Languages table)
-2. Use `--language` flag to explicitly specify: `npx @mizchi/lsmcp -l python`
+2. Use `--language` flag to explicitly specify: `npx -y @mizchi/lsmcp -l python`
 3. Set `FORCE_LANGUAGE` environment variable in your MCP configuration
 
 ### Performance Issues
@@ -428,10 +428,10 @@ If auto-detection fails:
 
 If Claude can't connect to the MCP server:
 
-1. Check that the server initialized correctly: `npx @mizchi/lsmcp --init=claude`
+1. Check that the server initialized correctly: `npx -y @mizchi/lsmcp --init=claude`
 2. Verify `.mcp.json` exists in your project root
 3. Ensure Claude Desktop has the correct permissions in `.claude/settings.json`
-4. Try running the server manually to see error messages: `npx @mizchi/lsmcp`
+4. Try running the server manually to see error messages: `npx -y @mizchi/lsmcp`
 
 ## License
 
