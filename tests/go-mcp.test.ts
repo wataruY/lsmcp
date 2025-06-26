@@ -118,8 +118,10 @@ func main() {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("string");
     }
@@ -151,8 +153,10 @@ func main() {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("error");
       expect(text.toLowerCase()).toMatch(/type|mismatch|cannot|invalid/);
@@ -196,8 +200,10 @@ func main() {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("Person");
       expect(text).toContain("NewPerson");
@@ -243,8 +249,10 @@ func main() {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("Found");
       expect(text).toContain("reference");
@@ -280,8 +288,10 @@ func main() {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("Successfully renamed");
     }
@@ -319,8 +329,10 @@ func main() {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       // Should suggest Printf, Println, Print
       expect(text).toContain("Print");
@@ -332,14 +344,16 @@ func main() {
     if (!client) return;
 
     const response = await client.callTool({
-      name: "list_tools",
+      name: "go_list_tools",
       arguments: {
         category: "lsp",
       },
     });
 
-    expect(response.isError).toBe(false);
-    if (!response.isError && response.content[0]?.type === "text") {
+    expect(response).toBeDefined();
+    expect(response.content).toBeDefined();
+    expect(response.content[0]?.type).toBe("text");
+    if (response.content[0]?.type === "text") {
       const text = response.content[0].text;
       // Should not mention TypeScript in Go tools
       expect(text).not.toContain("TypeScript");

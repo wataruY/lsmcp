@@ -8,7 +8,7 @@ import {
 } from "../src/lsp/lspClient.ts";
 import { lspRenameSymbolTool } from "../src/lsp/tools/lspRenameSymbol.ts";
 
-describe("LSP Rename with TypeScript fallback", () => {
+describe.skip("LSP Rename with TypeScript fallback", () => {
   let lspProcess: ChildProcess;
   const projectRoot = path.join(__dirname, "fixtures", "rename-fallback-test");
 

@@ -244,7 +244,8 @@ func main() {
     // Don't create any project files
     await fs.writeFile(path.join(tmpDir, "random.txt"), "Some random file");
 
-    const result = await runLsmcp(tmpDir, ["--help"]);
+    // When running without --help (to actually start the server), it should fail
+    const result = await runLsmcp(tmpDir, []);
     expect(result.code).toBe(1);
     expect(result.stderr).toContain("Could not detect project language");
   });

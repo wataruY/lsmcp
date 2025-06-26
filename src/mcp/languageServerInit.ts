@@ -12,6 +12,7 @@ import {
 } from "./_mcplib.ts";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 import { handleMcpInit } from "./mcpInit.ts";
+import { type LanguageInfo } from "../common/languageDetection.ts";
 
 // Import all LSP tools
 import { lspGetHoverTool } from "../lsp/tools/lspGetHover.ts";
@@ -26,7 +27,7 @@ import { lspGetCompletionTool } from "../lsp/tools/lspGetCompletion.ts";
 import { lspGetSignatureHelpTool } from "../lsp/tools/lspGetSignatureHelp.ts";
 import { lspGetCodeActionsTool } from "../lsp/tools/lspGetCodeActions.ts";
 import { lspFormatDocumentTool } from "../lsp/tools/lspFormatDocument.ts";
-import { listToolsTool } from "./tools/listTools.ts";
+import { createLanguageListTool } from "./tools/listTools.ts";
 
 export interface LanguageServerConfig {
   language: string;
@@ -47,11 +48,7 @@ export function getLanguageTools(language: string, displayName: string): ToolDef
   const prefix = language + "_";
   
   return [
-    { 
-      ...listToolsTool, 
-      name: prefix + "list_tools", 
-      description: `List all available ${displayName} MCP tools with descriptions and categories` 
-    },
+    createLanguageListTool(language, displayName),
     { 
       ...lspGetHoverTool, 
       name: prefix + "get_hover", 
@@ -149,6 +146,13 @@ export const LANGUAGE_SERVER_CONFIGS: Record<string, LanguageServerConfig> = {
 };
 
 /**
+ * Get language server configuration for a language ID
+ */
+export function getLanguageServerConfig(languageId: string): LanguageServerConfig | null {
+  return LANGUAGE_SERVER_CONFIGS[languageId] || null;
+}
+
+/**
  * Start LSP server for a specific language configuration
  */
 export async function startLanguageServer(
@@ -202,6 +206,22 @@ export async function startLanguageServer(
   });
 
   return lspProcess;
+}
+
+/**
+ * Start LSP server from LanguageInfo (for multi-language-mcp compatibility)
+ */
+export async function startLanguageServerFromInfo(
+  languageInfo: LanguageInfo,
+  projectRoot: string
+): Promise<ChildProcess> {
+  // Convert LanguageInfo to LanguageServerConfig
+  const config = getLanguageServerConfig(languageInfo.languageId);
+  if (!config) {
+    throw new Error(`No server configuration for ${languageInfo.languageId}`);
+  }
+  
+  return startLanguageServer(config, projectRoot);
 }
 
 /**

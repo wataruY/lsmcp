@@ -47,6 +47,15 @@ const { values, positionals } = parseArgs({
 });
 
 function showHelp() {
+  // Check for auto-detected language only if no language is specified
+  if (!values.language && !process.env.FORCE_LANGUAGE) {
+    const projectRoot = process.env.PROJECT_ROOT || process.cwd();
+    const detected = detectProjectLanguage(projectRoot);
+    if (detected) {
+      console.error(`Auto-detected language: ${detected.languageId}`);
+    }
+  }
+  
   console.log(`
 🌍 LSMCP - Language Server MCP for Multi-Language Support
 

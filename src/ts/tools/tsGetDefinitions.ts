@@ -1,13 +1,7 @@
 import { z } from "zod";
-import path from "path";
-import fs from "fs/promises";
 import { goToDefinition } from "../navigations/goToDefinition.ts";
-import {
-  getOrCreateProject,
-  getOrCreateSourceFileWithRefresh,
-} from "../projectCache.ts";
-import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
-import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../textUtils/findSymbolInLineForSourceFile.ts";
+import { prepareToolContext, formatRelativePath } from "../utils/toolHandlers.ts";
+import { getOrCreateSourceFileWithRefresh } from "../projectCache.ts";
 import type { ToolDef } from "../../mcp/_mcplib.ts";
 import { definitionContextSchema } from "../../common/schemas.ts";
 
@@ -27,34 +21,16 @@ interface GetDefinitionsResult {
   }[];
 }
 
-async function handleGetDefinitions({
-  root,
-  filePath,
-  line,
-  symbolName,
-}: z.infer<typeof schema>): Promise<GetDefinitionsResult> {
-  // Always treat paths as relative to root
-  const absolutePath = path.join(root, filePath);
-
-  // Check if file exists
-  await fs.access(absolutePath);
-
-  const project = await getOrCreateProject(absolutePath);
-
-  // Get the source file to find the column position with fresh content
-  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
-
-  // Resolve line parameter
-  const resolvedLine = resolveLineParameter(sourceFile, line);
-
-  // Find the symbol in the line and get column position
-  const { column } = findSymbolInLine(sourceFile, resolvedLine, symbolName);
+async function handleGetDefinitions(
+  params: z.infer<typeof schema>
+): Promise<GetDefinitionsResult> {
+  const context = await prepareToolContext(params);
 
   // Find definition using the column position
-  const result = goToDefinition(project, {
-    filePath: absolutePath,
-    line: resolvedLine,
-    column,
+  const result = goToDefinition(context.project, {
+    filePath: context.absolutePath,
+    line: context.resolvedLine,
+    column: context.column,
   });
 
   if (result.isErr()) {
@@ -80,7 +56,7 @@ function formatGetDefinitionsResult(
   ];
 
   for (const def of definitions) {
-    const relativePath = path.relative(root, def.filePath);
+    const relativePath = formatRelativePath(def.filePath, root);
     output.push(
       `  ${relativePath}:${def.line}:${def.column} - ${def.lineText}`
     );

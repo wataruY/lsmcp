@@ -21,30 +21,16 @@ import { lspGetCompletionTool } from "../lsp/tools/lspGetCompletion.ts";
 import { lspGetSignatureHelpTool } from "../lsp/tools/lspGetSignatureHelp.ts";
 import { lspGetCodeActionsTool } from "../lsp/tools/lspGetCodeActions.ts";
 import { lspFormatDocumentTool } from "../lsp/tools/lspFormatDocument.ts";
-import { spawn, execSync, ChildProcess } from "child_process";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 import { handleMcpInit } from "./mcpInit.ts";
-import { listToolsTool } from "./tools/listTools.ts";
+import { createLanguageListTool } from "./tools/listTools.ts";
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
 import { LANGUAGE_CONFIGS, LanguageInfo } from "../common/languageDetection.ts";
+import { startLanguageServerFromInfo } from "./languageServerInit.ts";
 
-// Register all tools
-const tools: ToolDef<any>[] = [
-  listToolsTool,
-  lspGetHoverTool,
-  lspFindReferencesTool,
-  lspGetDefinitionsTool,
-  lspGetDiagnosticsTool,
-  lspRenameSymbolTool,
-  lspDeleteSymbolTool,
-  lspGetDocumentSymbolsTool,
-  lspGetWorkspaceSymbolsTool,
-  lspGetCompletionTool,
-  lspGetSignatureHelpTool,
-  lspGetCodeActionsTool,
-  lspFormatDocumentTool,
-];
+// Tools will be dynamically created based on detected language
+let tools: ToolDef<any>[] = [];
 
 /**
  * Detect project language based on files in the project root
@@ -103,75 +89,28 @@ function detectProjectLanguage(projectRoot: string): LanguageInfo | null {
   return detectedLanguage ? LANGUAGE_CONFIGS[detectedLanguage] : null;
 }
 
-/**
- * Start LSP server for a specific language
- */
-async function startLSPServer(
-  languageInfo: LanguageInfo,
-  projectRoot: string
-): Promise<ChildProcess> {
-  let command: string;
-  let args: string[] = [];
-
-  // Special handling for different languages
-  switch (languageInfo.languageId) {
-    case "moonbit": {
-      // Find Moonbit LSP
-      const moonbitLSP = join(process.env.HOME || "", ".moon/bin/lsp-server.js");
-      if (existsSync(moonbitLSP)) {
-        command = "node";
-        args = [moonbitLSP];
-      } else {
-        throw new Error("Moonbit LSP not found. Please install moon.");
-      }
-      break;
-    }
-    
-    case "rust": {
-      // Check rust-analyzer
-      try {
-        execSync("rust-analyzer --version", { stdio: "ignore" });
-        command = "rust-analyzer";
-      } catch {
-        throw new Error("rust-analyzer not found. Please install it with: rustup component add rust-analyzer");
-      }
-      break;
-    }
-    
-    default: {
-      // Use configured LSP command
-      if (!languageInfo.lspCommand) {
-        throw new Error(`No LSP server configured for ${languageInfo.languageId}`);
-      }
-      command = languageInfo.lspCommand;
-      args = languageInfo.lspArgs || [];
-    }
-  }
-
-  debug(`Starting LSP server: ${command} ${args.join(" ")}`);
-
-  const lspProcess = spawn(command, args, {
-    cwd: projectRoot,
-    stdio: ["pipe", "pipe", "pipe"],
-    env: process.env,
-  });
-
-  lspProcess.stderr.on("data", (data) => {
-    debug(`[${languageInfo.languageId}-lsp stderr] ${data}`);
-  });
-
-  lspProcess.on("error", (error) => {
-    debug(`[${languageInfo.languageId}-lsp error] ${error.message}`);
-    throw error;
-  });
-
-  return lspProcess;
-}
 
 async function main() {
   try {
+    // Create temporary tools for initialization check
+    const tempTools = [
+      createLanguageListTool("language", "Language"),
+      lspGetHoverTool,
+      lspFindReferencesTool,
+      lspGetDefinitionsTool,
+      lspGetDiagnosticsTool,
+      lspRenameSymbolTool,
+      lspDeleteSymbolTool,
+      lspGetDocumentSymbolsTool,
+      lspGetWorkspaceSymbolsTool,
+      lspGetCompletionTool,
+      lspGetSignatureHelpTool,
+      lspGetCodeActionsTool,
+      lspFormatDocumentTool,
+    ];
+    
     // Handle initialization
-    const initialized = await handleMcpInit(tools, {
+    const initialized = await handleMcpInit(tempTools, {
       projectName: "multi-language-mcp",
       toolPrefix: "lsp",
       globalCommand: "multi-language-mcp@latest",
@@ -216,10 +155,28 @@ async function main() {
     }
 
     // Start appropriate LSP server
-    const lspProcess = await startLSPServer(languageInfo, projectRoot);
+    const lspProcess = await startLanguageServerFromInfo(languageInfo, projectRoot);
 
     // Initialize LSP client
     await initializeLSPClient(projectRoot, lspProcess, languageInfo.languageId);
+
+    // Create language-specific tools
+    const prefix = languageInfo.languageId + "_";
+    tools = [
+      createLanguageListTool(languageInfo.languageId, languageInfo.languageId),
+      { ...lspGetHoverTool, name: prefix + "get_hover", description: `Get hover information for ${languageInfo.languageId} using LSP` },
+      { ...lspFindReferencesTool, name: prefix + "find_references", description: `Find all references to a ${languageInfo.languageId} symbol using LSP` },
+      { ...lspGetDefinitionsTool, name: prefix + "get_definitions", description: `Get the definition(s) of a ${languageInfo.languageId} symbol using LSP` },
+      { ...lspGetDiagnosticsTool, name: prefix + "get_diagnostics", description: `Get ${languageInfo.languageId} diagnostics using LSP` },
+      { ...lspRenameSymbolTool, name: prefix + "rename_symbol", description: `Rename a ${languageInfo.languageId} symbol using LSP` },
+      { ...lspDeleteSymbolTool, name: prefix + "delete_symbol", description: `Delete a ${languageInfo.languageId} symbol using LSP` },
+      { ...lspGetDocumentSymbolsTool, name: prefix + "get_document_symbols", description: `Get all symbols in a ${languageInfo.languageId} document using LSP` },
+      { ...lspGetWorkspaceSymbolsTool, name: prefix + "get_workspace_symbols", description: `Search for symbols in the ${languageInfo.languageId} workspace using LSP` },
+      { ...lspGetCompletionTool, name: prefix + "get_completion", description: `Get code completion for ${languageInfo.languageId} using LSP` },
+      { ...lspGetSignatureHelpTool, name: prefix + "get_signature_help", description: `Get signature help for ${languageInfo.languageId} using LSP` },
+      { ...lspGetCodeActionsTool, name: prefix + "get_code_actions", description: `Get code actions for ${languageInfo.languageId} using LSP` },
+      { ...lspFormatDocumentTool, name: prefix + "format_document", description: `Format a ${languageInfo.languageId} document using LSP` },
+    ];
 
     // Start MCP server
     const server = new BaseMcpServer({

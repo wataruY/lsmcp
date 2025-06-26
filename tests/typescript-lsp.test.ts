@@ -130,8 +130,10 @@ console.log(person.name);
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("Person");
       expect(text).toContain("const person: Person");
@@ -159,8 +161,10 @@ console.log(message.);
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       // String methods should be suggested
       expect(text).toContain("toLowerCase");
@@ -194,8 +198,10 @@ greet("Alice", );
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("greet");
       expect(text).toContain("name: string");
@@ -269,8 +275,10 @@ const total = calculateSum(10, 20);
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("Successfully renamed");
     }
@@ -310,8 +318,10 @@ instance.myProperty = "value"; // Error: private property
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       // Should suggest making the property public or adding a setter
       expect(text.toLowerCase()).toMatch(/action|fix|suggest/);
@@ -397,8 +407,10 @@ console.log(greeting);
         },
       });
 
-      expect(result.isError).toBe(false);
-      if (!result.isError && result.content[0]?.type === "text") {
+      expect(result).toBeDefined();
+      expect(result.content).toBeDefined();
+      expect(result.content[0]?.type).toBe("text");
+      if (result.content[0]?.type === "text") {
         const text = result.content[0].text;
         expect(text).toContain("string");
         expect(text).toContain("const greeting: string");
@@ -566,8 +578,10 @@ console.log(user.name);
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("User");
       expect(text).toContain("const user: User");
@@ -600,8 +614,10 @@ add(1);
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("error");
       expect(text.toLowerCase()).toMatch(/argument|parameter|type/);

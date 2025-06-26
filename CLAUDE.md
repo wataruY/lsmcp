@@ -157,15 +157,41 @@ export const toolNameTool: ToolDef<typeof schema> = {
 };
 ```
 
+### Common Utilities
+- `src/ts/utils/moduleResolution.ts` - Shared module path resolution logic
+- `src/ts/utils/symbolNavigation.ts` - Common helpers for finding nodes and symbols
+- `src/ts/utils/toolHandlers.ts` - Shared tool preparation and context setup
+- `src/mcp/languageServerInit.ts` - Unified language server initialization
+
 ## Memories
 
 - AI はワードカウントが苦手なので、LSPのLine Character ではなく、一致する行と、一致するコードでインターフェースを調整する必要があります。既存のコードを参考に、そうなってないMCPサーバーのインターフェースを調整します。
+
+## Recent Changes (2025-01-26)
+
+1. **Added Python MCP Tests**
+   - `tests/python-mcp.test.ts` - Comprehensive Python MCP server tests
+   - `tests/python-lsmcp.test.ts` - Python language detection and lsmcp integration tests
+
+2. **Code Duplication Refactoring**
+   - Extracted common `resolveModulePath` function to `src/ts/utils/moduleResolution.ts`
+   - Created shared navigation helpers in `src/ts/utils/symbolNavigation.ts`
+   - Unified tool handlers with `src/ts/utils/toolHandlers.ts`
+   - Consolidated language server initialization in `src/mcp/languageServerInit.ts`
+
+3. **Multi-language Support Improvements**
+   - Added `--include` option for batch diagnostics with glob patterns
+   - Enhanced language detection for Python, Go, Java, and other languages
+   - Improved error handling and user feedback
 
 ## TODO
 
 - [ ] Multi Project support
 - [ ] Extract function refactoring
+- [ ] Add Java MCP tests
 - [x] Fix MCP client tests for move_file and delete_symbol ✅ 2025-01-13
+- [x] Add Python MCP tests ✅ 2025-01-26
+- [x] Refactor code duplication ✅ 2025-01-26
 
 ## LICENSE
 

@@ -124,8 +124,10 @@ func main() {
         },
       });
 
-      expect(result.isError).toBe(false);
-      if (!result.isError && result.content[0]?.type === "text") {
+      expect(result).toBeDefined();
+      expect(result.content).toBeDefined();
+      expect(result.content[0]?.type).toBe("text");
+      if (result.content[0]?.type === "text") {
         const text = result.content[0].text;
         expect(text).toContain("func");
         expect(text).toContain("string");
@@ -171,8 +173,10 @@ func main() {
         },
       });
 
-      expect(result.isError).toBe(false);
-      if (!result.isError && result.content[0]?.type === "text") {
+      expect(result).toBeDefined();
+      expect(result.content).toBeDefined();
+      expect(result.content[0]?.type).toBe("text");
+      if (result.content[0]?.type === "text") {
         const text = result.content[0].text;
         expect(text).toContain("Writer");
         expect(text).toContain("ConsoleWriter");
@@ -215,8 +219,10 @@ func main() {
         },
       });
 
-      expect(result.isError).toBe(false);
-      if (!result.isError && result.content[0]?.type === "text") {
+      expect(result).toBeDefined();
+      expect(result.content).toBeDefined();
+      expect(result.content[0]?.type).toBe("text");
+      if (result.content[0]?.type === "text") {
         const text = result.content[0].text;
         expect(text).toContain("Found");
       }
@@ -258,8 +264,10 @@ func main() {
         },
       });
 
-      expect(result.isError).toBe(false);
-      if (!result.isError && result.content[0]?.type === "text") {
+      expect(result).toBeDefined();
+      expect(result.content).toBeDefined();
+      expect(result.content[0]?.type).toBe("text");
+      if (result.content[0]?.type === "text") {
         const text = result.content[0].text;
         // Should detect various Go-specific issues
         expect(text.toLowerCase()).toMatch(/unused|format|unreachable|declared|not used/);

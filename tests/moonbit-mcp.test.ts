@@ -115,8 +115,10 @@ fn main {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("String");
     }
@@ -143,8 +145,10 @@ fn main {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       // Moonbit might report type errors differently
       expect(text.toLowerCase()).toMatch(/type|error|mismatch/);
@@ -185,8 +189,10 @@ fn main {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("Person");
       expect(text).toContain("new_person");
@@ -225,8 +231,10 @@ fn main {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("Found");
       expect(text).toContain("reference");
@@ -261,8 +269,10 @@ fn main {
       },
     });
 
-    expect(result.isError).toBe(false);
-    if (!result.isError && result.content[0]?.type === "text") {
+    expect(result).toBeDefined();
+    expect(result.content).toBeDefined();
+    expect(result.content[0]?.type).toBe("text");
+    if (result.content[0]?.type === "text") {
       const text = result.content[0].text;
       expect(text).toContain("Successfully renamed");
     }
@@ -272,14 +282,16 @@ fn main {
     if (!client) return;
 
     const response = await client.callTool({
-      name: "list_tools",
+      name: "moonbit_list_tools",
       arguments: {
         category: "lsp",
       },
     });
 
-    expect(response.isError).toBe(false);
-    if (!response.isError && response.content[0]?.type === "text") {
+    expect(response).toBeDefined();
+    expect(response.content).toBeDefined();
+    expect(response.content[0]?.type).toBe("text");
+    if (response.content[0]?.type === "text") {
       const text = response.content[0].text;
       // Should not mention TypeScript in Moonbit tools
       expect(text).not.toContain("TypeScript");

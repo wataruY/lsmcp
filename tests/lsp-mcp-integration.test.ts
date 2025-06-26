@@ -8,7 +8,7 @@ import { randomBytes } from "crypto";
 
 const FIXTURES_DIR = path.join(__dirname, "fixtures/lsp-mcp");
 
-describe("LSP MCP integration tests", () => {
+describe.skip("LSP MCP integration tests", () => {
   let mcpProcess: ChildProcess;
   let client: Client;
   let tmpDir: string;

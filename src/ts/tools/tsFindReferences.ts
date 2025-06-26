@@ -1,13 +1,6 @@
 import { z } from "zod";
-import path from "path";
-import fs from "fs/promises";
 import { findReferences } from "../navigations/findReferences.ts";
-import {
-  getOrCreateProject,
-  getOrCreateSourceFileWithRefresh,
-} from "../projectCache.ts";
-import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
-import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../textUtils/findSymbolInLineForSourceFile.ts";
+import { prepareToolContext, formatRelativePath } from "../utils/toolHandlers.ts";
 import type { ToolDef } from "../../mcp/_mcplib.ts";
 import { symbolLocationSchema } from "../../common/schemas.ts";
 
@@ -27,34 +20,16 @@ interface FindReferencesResult {
   }[];
 }
 
-async function handleFindReferences({
-  root,
-  filePath,
-  line,
-  symbolName,
-}: z.infer<typeof schema>): Promise<FindReferencesResult> {
-  // Always treat paths as relative to root
-  const absolutePath = path.join(root, filePath);
-
-  // Check if file exists
-  await fs.access(absolutePath);
-
-  const project = await getOrCreateProject(absolutePath);
-
-  // Ensure the source file is loaded in the project with fresh content
-  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
-
-  // Resolve line parameter
-  const resolvedLine = resolveLineParameter(sourceFile, line);
-
-  // Find the symbol in the line and get column position
-  const { column } = findSymbolInLine(sourceFile, resolvedLine, symbolName);
+async function handleFindReferences(
+  params: z.infer<typeof schema>
+): Promise<FindReferencesResult> {
+  const context = await prepareToolContext(params);
 
   // Find references
-  const result = findReferences(project, {
-    filePath: absolutePath,
-    line: resolvedLine,
-    column,
+  const result = findReferences(context.project, {
+    filePath: context.absolutePath,
+    line: context.resolvedLine,
+    column: context.column,
   });
 
   if (result.isErr()) {
@@ -79,7 +54,7 @@ function formatFindReferencesResult(
   ];
 
   for (const ref of references) {
-    const relativePath = path.relative(root, ref.filePath);
+    const relativePath = formatRelativePath(ref.filePath, root);
     output.push(
       `  ${relativePath}:${ref.line}:${ref.column} - ${ref.lineText}`
     );
