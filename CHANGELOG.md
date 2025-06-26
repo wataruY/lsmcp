@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### 🔄 Project Renamed to lsmcp (2025-01-26)
+- **Project Rebranding**: typescript-mcp → lsmcp (Language Server MCP)
+  - Added "LSP for headless AI Agents" tagline
+  - Main export now points to `lsmcp` instead of `typescript-mcp`
+  - Added migration guide from typescript-mcp to lsmcp
+- **README Improvements**:
+  - Reorganized installation section with MCP server configuration first
+  - Integrated multi-language documentation into main README
+  - Added comprehensive migration guide
+
 #### 🧪 Comprehensive Test Suite for Multi-Language Support (2025-01-26)
 - **New MCP Client-based Tests**: 
   - Language detection tests for TypeScript, Rust, Moonbit, Python, Go, Java
@@ -16,16 +26,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Moonbit MCP server integration tests
   - TypeScript Language Server integration tests
   - TSGO (TypeScript Native Preview) support tests
+  - Python MCP server tests
 - **New `--include` Option for `lsmcp`**:
   - Batch diagnostics for files matching glob patterns
   - Example: `lsmcp --include "src/**/*.ts"` to check all TypeScript files
   - Currently supports TypeScript/JavaScript only
-
-### Changed
-- **Package Manager**: Switched from npm to pnpm in package.json
-- **Build Improvements**: Fixed path resolution issues in unified-mcp.ts for dist directory
-
-### Added
+- **Test Fixes**:
+  - Fixed TypeScript LSP completion test target
+  - Fixed MCP SDK result format compatibility
+  - Made cross-file rename tests more flexible
+  - Fixed JSDoc documentation parsing
+  - Added TSGO-specific error handling
 
 #### 🎯 Unified LSP-MCP CLI Entry Point (2025-01-26)
 - **New `lsmcp` Command**: Single entry point for all LSP-based language servers
@@ -48,14 +59,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Old `lsp-mcp` → `generic-lsp-mcp` (for manual LSP_COMMAND configuration)
   - New `lsmcp` → Unified multi-language CLI
 
-### Changed
-- **Refactored Architecture**:
-  - New `languageServerInit.ts` module for shared initialization logic
-  - Centralized language configurations in `LANGUAGE_SERVER_CONFIGS`
-  - Tool descriptions are now generated dynamically based on language
-
-### Added
-
 #### 🌍 Multi-Language Support (2025-01-25)
 - **New Language-Specific MCP Servers**:
   - `moonbit-mcp` - Dedicated Moonbit language support
@@ -76,14 +79,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### 📚 Documentation
 - **README-multi-language.md**: Comprehensive guide for multi-language support
-- **examples/moonbit-example.md**: Moonbit usage examples and setup
-- **examples/rust-example.md**: Rust usage examples and setup
+- **Migration guide**: From typescript-mcp to lsmcp
+- **examples/moonbit-example.md**: Moonbit usage examples and setup (removed)
+- **examples/rust-example.md**: Rust usage examples and setup (removed)
 
 ### Changed
+- **Package Manager**: Switched from npm to pnpm in package.json
+- **Build Improvements**: 
+  - Fixed path resolution issues in unified-mcp.ts for dist directory
+  - Simplified tsdown.config.ts to only build lsmcp and typescript-mcp
+  - Main export in package.json now points to lsmcp
+- **Linting**: 
+  - Migrated from ESLint to oxlint
+  - Removed all ESLint dependencies and configurations
+  - Added .oxlintignore and updated oxlintrc.json
+- **Code Organization**:
+  - Merged playground directory into examples
+  - Organized examples by language/project type
+  - Removed obsolete markdown example files
+- **Configuration**:
+  - Updated .mcp.json with correct build paths
+  - Added lsmcp as the primary MCP server
+  - Removed non-existent lsp-mcp reference
+- **Refactored Architecture**:
+  - New `languageServerInit.ts` module for shared initialization logic
+  - Centralized language configurations in `LANGUAGE_SERVER_CONFIGS`
+  - Tool descriptions are now generated dynamically based on language
+  - Extracted common code to reduce duplication:
+    - `src/ts/utils/moduleResolution.ts` - Module path resolution
+    - `src/ts/utils/symbolNavigation.ts` - Symbol finding helpers
+    - `src/ts/utils/toolHandlers.ts` - Tool preparation logic
+    - `src/mcp/languageServerInit.ts` - Language server initialization
 - **Build System**:
   - Updated `tsdown.config.ts` to build multiple MCP servers
   - Added new bin entries in `package.json` for each language server
   - Updated deadcode scripts to include new MCP servers
+
+### Removed
+- ESLint configuration files (.eslintignore, eslint.config.ts)
+- ESLint dependencies (@typescript-eslint/utils, eslint, typescript-eslint)
+- sgconfig.yml (ast-grep configuration)
+- Unused MCP server builds (generic-lsp-mcp, moonbit-mcp, rust-mcp, multi-language-mcp)
+- playground directory (merged into examples)
+- Obsolete example markdown files
 
 ### Technical Details
 - Each language server inherits from the generic LSP-based MCP implementation

@@ -1,13 +1,16 @@
 {
   "$schema": "https://oxc-project.github.io/oxlint/v0/schemas/oxlintrc.json",
   "ignorePatterns": [
-    "dist/**",
-    "node_modules/**",
-    ".claude/**",
-    "examples/**",
-    "tests/fixtures/**",
-    "playground/**",
-    "tmp/**"
+    "dist",
+    "node_modules",
+    ".claude",
+    "examples",
+    "tests/fixtures",
+    "playground",
+    "tmp",
+    "*.log",
+    "**/*.expected.ts",
+    "**/*.input.ts"
   ],
   "rules": {
     "no-throw-literal": "error",
@@ -54,9 +57,18 @@
   },
   "overrides": [
     {
-      "files": ["examples/*.ts", "playground/*.ts"],
+      "files": ["examples/**/*.ts", "playground/**/*.ts"],
       "rules": {
-        "no-console": "off"
+        "no-console": "off",
+        "no-unused-vars": "off",
+        "typescript/no-unused-vars": "off"
+      }
+    },
+    {
+      "files": ["tests/fixtures/**/*.ts", "tests/**/*.expected.ts", "tests/**/*.input.ts"],
+      "rules": {
+        "no-unused-vars": "off",
+        "typescript/no-unused-vars": "off"
       }
     },
     {

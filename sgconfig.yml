@@ -1,6 +1,0 @@
-ruleDirs:
-- /home/mizchi/mizchi/typescript-mcp/.git/wt/impl-lsp/collect_decls
-testConfigs:
-- testDir: /home/mizchi/mizchi/typescript-mcp/.git/wt/impl-lsp/rule-tests
-utilDirs:
-- /home/mizchi/mizchi/typescript-mcp/.git/wt/impl-lsp/utils

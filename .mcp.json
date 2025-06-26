@@ -1,5 +1,11 @@
 {
   "mcpServers": {
+    "lsmcp": {
+      "command": "node",
+      "args": [
+        "dist/lsmcp.js"
+      ]
+    },
     "typescript": {
       "command": "node",
       "args": [
@@ -16,15 +22,6 @@
         "@mizchi/readability",
         "--mcp"
       ]
-    },
-    "lsp": {
-      "command": "node",
-      "args": [
-        "dist/lsp-mcp.js"
-      ],
-      "env": {
-        "LSP_COMMAND": "deno lsp"
-      }
     }
   }
 }

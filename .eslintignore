@@ -1,7 +1,0 @@
-dist/
-node_modules/
-.claude/
-examples/
-tests/fixtures/
-_experiments/
-tmp/

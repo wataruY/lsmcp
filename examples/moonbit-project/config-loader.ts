@@ -4,8 +4,8 @@ import { MoonbitProjectManager, MoonbitConfig } from "./src/utils/project";
 const project = new MoonbitProjectManager("./moon.mod.json");
 
 // Try to access methods
-const name = project.
-const version = project.
+const name = project.getProject();
+const version = project.getProject();
 
 // Create a new config
 const config: MoonbitConfig = {
@@ -15,4 +15,4 @@ const config: MoonbitConfig = {
 // Test build function
 import { build } from "./src/utils/project";
 
-build(
+build("./");
