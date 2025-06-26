@@ -14,7 +14,7 @@ const schema = z.object({
 });
 
 export const moveDirectoryTool: ToolDef<typeof schema> = {
-  name: "move_directory",
+  name: "lsmcp_move_directory",
   description:
     "Move a directory to a new location, updating all TypeScript imports and references automatically",
   schema,

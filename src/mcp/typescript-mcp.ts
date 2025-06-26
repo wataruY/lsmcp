@@ -20,6 +20,8 @@ import { getModuleSymbolsTool } from "../ts/tools/tsGetModuleSymbols.ts";
 import { getTypeInModuleTool } from "../ts/tools/tsGetTypeInModule.ts";
 import { getTypeAtSymbolTool } from "../ts/tools/tsGetTypeAtSymbol.ts";
 import { getSymbolsInScopeTool } from "../ts/tools/tsGetSymbolsInScope.ts";
+import { searchSymbolsTool } from "../ts/tools/tsSearchSymbols.ts";
+import { findImportCandidatesTool } from "../ts/tools/tsFindImportCandidates.ts";
 import { lspGetHoverTool } from "../lsp/tools/lspGetHover.ts";
 import { lspFindReferencesTool } from "../lsp/tools/lspFindReferences.ts";
 import { lspGetDefinitionsTool } from "../lsp/tools/lspGetDefinitions.ts";
@@ -36,26 +38,41 @@ import * as path from "node:path";
 import { parseArgs } from "node:util";
 import { spawn } from "child_process";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
+import { formatError, ErrorContext } from "./utils/errorHandler.ts";
 
-const USE_TSGO: boolean = process.env.TSGO != null;
-const USE_LSP: boolean = process.env.FORCE_LSP === "true" || process.env.LSP_COMMAND != null;
+// Use LSP mode when LSP_COMMAND is provided or FORCE_LSP is set
+const USE_LSP: boolean = process.env.LSP_COMMAND != null || process.env.FORCE_LSP === "true";
 
 // Define tools based on configuration
 const tools: ToolDef<any>[] = [
   listToolsTool, // Help tool to list all available tools
-  moveFileTool,
-  moveDirectoryTool,
-  renameSymbolTool,
-  deleteSymbolTool,
-  getModuleSymbolsTool,
-  getTypeInModuleTool,
-  getTypeAtSymbolTool,
-  getSymbolsInScopeTool,
-  // WIP: does not work yet correctly
-  // getModuleGraphTool,
-  // getRelatedModulesTool,
+  
+  // Only include TypeScript-specific tools when not in forced LSP mode
+  ...(process.env.FORCE_LSP !== "true"
+    ? [
+        moveFileTool,
+        moveDirectoryTool,
+        renameSymbolTool,
+        deleteSymbolTool,
+        getModuleSymbolsTool,
+        getTypeInModuleTool,
+        getTypeAtSymbolTool,
+        getSymbolsInScopeTool,
+        searchSymbolsTool,
+        findImportCandidatesTool,
+        // WIP: does not work yet correctly
+        // getModuleGraphTool,
+        // getRelatedModulesTool,
 
-  ...((USE_TSGO || USE_LSP)
+        // TypeScript Compiler API tools (always available for TypeScript)
+        findReferencesTool,
+        getDefinitionsTool,
+        getDiagnosticsTool,
+      ]
+    : []),
+  
+  // LSP tools (only when LSP_COMMAND is set or FORCE_LSP is true)
+  ...(USE_LSP
     ? [
         lspGetHoverTool,
         lspFindReferencesTool,
@@ -68,7 +85,7 @@ const tools: ToolDef<any>[] = [
         lspFormatDocumentTool,
         lspGetCodeActionsTool,
       ]
-    : [findReferencesTool, getDefinitionsTool, getDiagnosticsTool]),
+    : []),
 ];
 
 function getTypescriptInfo(): {
@@ -185,10 +202,17 @@ async function main() {
     }
 
     // Start MCP server
+    const serverName = process.env.FORCE_LSP === "true" 
+      ? "lsp" 
+      : "typescript";
+    const serverDescription = process.env.FORCE_LSP === "true"
+      ? "Language Server Protocol tools for MCP" 
+      : "TypeScript refactoring and analysis tools for MCP";
+      
     const server = new BaseMcpServer({
-      name: "typescript",
+      name: serverName,
       version: "1.0.0",
-      description: "TypeScript refactoring and analysis tools for MCP",
+      description: serverDescription,
       capabilities: {
         tools: true,
       },
@@ -197,30 +221,39 @@ async function main() {
     server.setDefaultRoot(projectRoot);
     server.registerTools(tools);
 
-    // Initialize LSP if using TSGO or custom LSP
-    if (USE_TSGO) {
-      const tsgoProcess = spawn(
-        "npx",
-        ["@typescript/native-preview", "--lsp", "-stdio"],
-        {
-          cwd: projectRoot,
-          stdio: ["pipe", "pipe", "pipe"],
-        }
-      );
-      await initializeLSPClient(projectRoot, tsgoProcess, "typescript");
-      debug("[tsgo] Initialized tsgo LSP client");
-    } else if (USE_LSP && process.env.LSP_COMMAND) {
+    // Initialize LSP if LSP_COMMAND is provided
+    if (USE_LSP && process.env.LSP_COMMAND) {
       // Parse LSP command
       const parts = process.env.LSP_COMMAND.split(" ");
       const command = parts[0];
       const args = parts.slice(1);
       
-      const lspProcess = spawn(command, args, {
-        cwd: projectRoot,
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-      await initializeLSPClient(projectRoot, lspProcess, "typescript");
-      debug(`[lsp] Initialized custom LSP client: ${process.env.LSP_COMMAND}`);
+      let lspProcess;
+      try {
+        lspProcess = spawn(command, args, {
+          cwd: projectRoot,
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+      } catch (error) {
+        const context: ErrorContext = {
+          operation: "LSP server startup",
+          language: "typescript",
+          details: { command: process.env.LSP_COMMAND }
+        };
+        throw new Error(formatError(error, context));
+      }
+      
+      try {
+        await initializeLSPClient(projectRoot, lspProcess, "typescript");
+        debug(`[lsp] Initialized LSP client: ${process.env.LSP_COMMAND}`);
+      } catch (error) {
+        const context: ErrorContext = {
+          operation: "LSP client initialization",
+          language: "typescript",
+          details: { command: process.env.LSP_COMMAND }
+        };
+        throw new Error(formatError(error, context));
+      }
     }
 
     // Connect transport and start server
@@ -240,12 +273,12 @@ async function main() {
       debug("Warning: TypeScript not detected in current project");
     }
   } catch (error) {
-    console.error("Error:", error);
+    console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);
   }
 }
 
 main().catch((error: unknown) => {
-  console.error("Fatal error:", error);
+  console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 });

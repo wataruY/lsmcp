@@ -455,7 +455,7 @@ async function handleRenameSymbol(
 }
 
 export const lspRenameSymbolTool: ToolDef<typeof schema> = {
-  name: "lsp_rename_symbol",
+  name: "lsmcp_rename_symbol",
   description:
     "Rename a symbol across the codebase using Language Server Protocol",
   schema,

@@ -166,7 +166,7 @@ async function getDefinitionsWithLSP(
 }
 
 export const lspGetDefinitionsTool: ToolDef<typeof schema> = {
-  name: "lsp_get_definitions",
+  name: "lsmcp_get_definitions",
   description: "Get the definition(s) of a symbol using LSP",
   schema,
   execute: async (args: z.infer<typeof schema>) => {
@@ -208,7 +208,7 @@ if (import.meta.vitest) {
     });
 
     it("should have correct tool definition", () => {
-      expect(lspGetDefinitionsTool.name).toBe("lsp_get_definitions");
+      expect(lspGetDefinitionsTool.name).toBe("lsmcp_get_definitions");
       expect(lspGetDefinitionsTool.description).toContain("definition");
       expect(lspGetDefinitionsTool.schema).toBeDefined();
     });

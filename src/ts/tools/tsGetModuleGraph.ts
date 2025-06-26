@@ -277,7 +277,7 @@ function handleGetModuleGraph(
 }
 
 export const getModuleGraphTool: ToolDef<typeof paramsSchema> = {
-  name: "get_module_graph",
+  name: "lsmcp_get_module_graph",
   description:
     "Analyze the module dependency graph of a TypeScript/JavaScript project",
   schema: paramsSchema,

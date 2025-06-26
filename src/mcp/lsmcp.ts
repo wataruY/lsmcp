@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
- * Unified LSP-based MCP server entry point that can start different language servers
- * based on command line arguments or auto-detection.
+ * lsmcp - Language Service MCP
+ * 
+ * Main entry point for the lsmcp tool that provides MCP integration
+ * for TypeScript/JavaScript (built-in) or any LSP server (via --bin).
  */
 
 import { parseArgs } from "node:util";
@@ -11,7 +13,7 @@ import { join, dirname, relative } from "path";
 import { fileURLToPath } from "url";
 import { spawn } from "child_process";
 import { debug } from "./_mcplib.ts";
-import { getLanguageInfo, LANGUAGE_CONFIGS } from "../common/languageDetection.ts";
+import { formatError, ErrorContext } from "./utils/errorHandler.ts";
 
 // Parse command line arguments
 const { values, positionals } = parseArgs({
@@ -71,9 +73,8 @@ Examples:
   lsmcp --init claude -l typescript            Initialize for Claude Desktop
 
 Supported Languages:
-${Object.entries(LANGUAGE_CONFIGS)
-  .map(([lang, config]) => `  - ${lang}: ${config.fileExtensions.join(", ")}`)
-  .join("\n")}
+  - TypeScript/JavaScript (built-in support)
+  - Any language via LSP server with --bin option
 
 Environment Variables:
   PROJECT_ROOT          Override project root directory
@@ -99,8 +100,13 @@ async function runLanguageServer(language: string, args: string[] = [], customEn
   const env = customEnv ? { ...process.env, ...customEnv } : process.env;
 
   if (!existsSync(serverPath)) {
-    console.error(`Error: MCP server not found at ${serverPath}`);
-    console.error(`Make sure to build the project first with: pnpm build`);
+    const context: ErrorContext = {
+      operation: "MCP server startup",
+      language,
+      filePath: serverPath
+    };
+    const error = new Error(`MCP server not found at ${serverPath}`);
+    console.error(formatError(error, context));
     process.exit(1);
   }
 
@@ -113,7 +119,11 @@ async function runLanguageServer(language: string, args: string[] = [], customEn
   });
 
   serverProcess.on("error", (error) => {
-    console.error(`Failed to start ${language} MCP server:`, error);
+    const context: ErrorContext = {
+      operation: "MCP server process",
+      language
+    };
+    console.error(formatError(error, context));
     process.exit(1);
   });
 
@@ -132,9 +142,12 @@ async function main() {
   // List languages if requested
   if (values.list) {
     console.log("Supported languages:");
-    for (const [lang, config] of Object.entries(LANGUAGE_CONFIGS)) {
-      console.log(`  ${lang}: ${config.fileExtensions.join(", ")}`);
-    }
+    console.log("  typescript - TypeScript files (.ts, .tsx)");
+    console.log("  javascript - JavaScript files (.js, .jsx)");
+    console.log("\nFor other languages, use --bin with an LSP server:");
+    console.log("  --bin \"rust-analyzer\" for Rust");
+    console.log("  --bin \"pylsp\" for Python");
+    console.log("  --bin \"gopls\" for Go");
     process.exit(0);
   }
 
@@ -143,19 +156,24 @@ async function main() {
     const language = values.language || process.env.FORCE_LANGUAGE;
     
     if (!language) {
-      console.error("Error: --init requires --language option");
+      const context: ErrorContext = {
+        operation: "initialization"
+      };
+      const error = new Error("--init requires --language option");
+      console.error(formatError(error, context));
       console.error("Example: lsmcp --init=claude --language=typescript");
       process.exit(1);
     }
     
     // Validate language
-    const languageInfo = getLanguageInfo(language);
-    if (!languageInfo) {
-      console.error(`Error: Unsupported language: ${language}`);
-      console.error("\nSupported languages:");
-      Object.keys(LANGUAGE_CONFIGS).forEach(lang => {
-        console.error(`  - ${lang}`);
-      });
+    if (language !== "typescript" && language !== "javascript") {
+      const context: ErrorContext = {
+        operation: "language validation",
+        language
+      };
+      const error = new Error(`Only TypeScript/JavaScript are supported with --language`);
+      console.error(formatError(error, context));
+      console.error("For other languages, use --bin option with an LSP server");
       process.exit(1);
     }
     
@@ -186,7 +204,13 @@ async function main() {
     const language = values.language || process.env.FORCE_LANGUAGE || "typescript";
     
     if (language !== "typescript" && language !== "javascript") {
-      console.error("Error: --include option is currently only supported for TypeScript/JavaScript");
+      const context: ErrorContext = {
+        operation: "diagnostics",
+        language,
+        details: { option: "--include" }
+      };
+      const error = new Error("--include option is currently only supported for TypeScript/JavaScript");
+      console.error(formatError(error, context));
       process.exit(1);
     }
     
@@ -299,13 +323,9 @@ async function main() {
 
   if (language) {
     // Validate language
-    const languageInfo = getLanguageInfo(language);
-    if (!languageInfo) {
-      console.error(`Error: Unsupported language: ${language}`);
-      console.error("\nSupported languages:");
-      Object.keys(LANGUAGE_CONFIGS).forEach(lang => {
-        console.error(`  - ${lang}`);
-      });
+    if (language !== "typescript" && language !== "javascript") {
+      console.error(`Error: Only TypeScript/JavaScript are supported with --language`);
+      console.error("For other languages, use --bin option with an LSP server");
       process.exit(1);
     }
 

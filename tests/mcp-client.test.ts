@@ -33,13 +33,16 @@ describe("MCP TypeScript Tools", () => {
     }, null, 2));
 
     // Create transport with server parameters
+    const cleanEnv = { ...process.env } as Record<string, string>;
+    cleanEnv.PROJECT_ROOT = tmpDir;
+    // Ensure TypeScript-specific tools are enabled
+    delete cleanEnv.FORCE_LSP;
+    delete cleanEnv.LSP_COMMAND;
+    
     transport = new StdioClientTransport({
       command: "node",
       args: [SERVER_PATH, "--project-root", tmpDir],
-      env: {
-        ...process.env,
-        PROJECT_ROOT: tmpDir,
-      } as Record<string, string>,
+      env: cleanEnv,
     });
 
     // Create and connect client
@@ -68,7 +71,7 @@ export function useOldName() {
 `);
 
       const result = await client.callTool({
-        name: "rename_symbol",
+        name: "lsmcp_rename_symbol",
         arguments: {
           root: tmpDir,
           filePath: "test.ts",
@@ -103,7 +106,7 @@ export function useOldName() {
       await expect(fs.access(importerFile)).resolves.toBeUndefined();
 
       const result = await client.callTool({
-        name: "move_file",
+        name: "lsmcp_move_file",
         arguments: {
           root: tmpDir,
           oldPath: "src.ts",
@@ -142,7 +145,7 @@ const arr = [1, 2, 3];
 `);
 
       const result = await client.callTool({
-        name: "get_type_at_symbol",
+        name: "lsmcp_get_type_at_symbol",
         arguments: {
           root: tmpDir,
           filePath: "test.ts",
@@ -179,7 +182,7 @@ function testFunction() {
 `);
 
       const result = await client.callTool({
-        name: "get_symbols_in_scope",
+        name: "lsmcp_get_symbols_in_scope",
         arguments: {
           root: tmpDir,
           filePath: "test.ts",
@@ -213,7 +216,7 @@ export const keepThis = "keep";
 `);
 
       const result = await client.callTool({
-        name: "delete_symbol",
+        name: "lsmcp_delete_symbol",
         arguments: {
           root: tmpDir,
           filePath: "test.ts",

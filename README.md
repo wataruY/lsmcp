@@ -13,6 +13,12 @@ A unified MCP (Model Context Protocol) server that provides advanced code manipu
 - ♻️ **Intelligent Refactoring** - Rename symbols, move files, with automatic import updates
 - 🔧 **Flexible Configuration** - Use with any LSP server via `--bin` option
 - 🤖 **AI-Optimized** - Designed for LLMs with line and symbol-based interfaces
+- ⚡ **Fast Symbol Search** - Project-wide symbol index with caching for instant results
+- 🎯 **Smart Import Suggestions** - Find and suggest import candidates with relative paths
+
+See [Language Support Matrix](docs/LANGUAGE_SUPPORT_MATRIX.md) for detailed information about available tools for each language.
+
+See [Language Support Matrix](docs/LANGUAGE_SUPPORT_MATRIX.md) for detailed information about available tools for each language.
 
 ## Motivation
 
@@ -86,17 +92,10 @@ If configuring manually, add permissions to `.claude/settings.json`:
 {
   "permissions": {
     "allow": [
-      // lsmcp tools (TypeScript via Compiler API)
-      "mcp__lsmcp__*",
-      // Or specific tools
-      "mcp__lsmcp__rename_symbol",
-      "mcp__lsmcp__move_file",
-      // TypeScript-specific server
-      "mcp__typescript__*",
-      // Language-specific tools
-      "rust_*",
-      "python_*",
-      "go_*"
+      // Allow all lsmcp tools
+      "mcp__lsmcp__lsmcp_*",
+      // TypeScript-specific server (when using --language typescript)
+      "mcp__typescript__lsmcp_*"
     ],
     "deny": []
   }
@@ -135,46 +134,46 @@ For better results with AI assistants, consider adding this to your prompt:
 **When performing refactoring operations on code, ALWAYS use MCP tools instead of the default Edit/Write tools.**
 
 For TypeScript/JavaScript projects:
-- For renaming symbols: ALWAYS use `mcp__lsmcp__rename_symbol` instead of Edit/Write
-- For moving files: ALWAYS use `mcp__lsmcp__move_file` instead of Bash(mv)
-- For finding references: ALWAYS use `mcp__lsmcp__find_references` instead of Grep
-- For type analysis: ALWAYS use `mcp__lsmcp__get_type_*` tools
+- For renaming symbols: ALWAYS use `lsmcp_rename_symbol` instead of Edit/Write
+- For moving files: ALWAYS use `lsmcp_move_file` instead of Bash(mv)
+- For finding references: ALWAYS use `lsmcp_find_references` instead of Grep
+- For type analysis: ALWAYS use `lsmcp_get_type_*` tools
 
 For other languages (using LSP):
-- For renaming symbols: ALWAYS use `lsp_rename_symbol` instead of Edit/Write
-- For finding references: ALWAYS use `lsp_find_references` instead of Grep
-- For diagnostics: ALWAYS use `lsp_get_diagnostics`
+- For renaming symbols: ALWAYS use `lsmcp_rename_symbol` instead of Edit/Write
+- For finding references: ALWAYS use `lsmcp_find_references` instead of Grep
+- For diagnostics: ALWAYS use `lsmcp_get_diagnostics`
 
 **NEVER use Edit, MultiEdit, or Write tools for refactoring operations that have a corresponding MCP tool.**
 ```
 
-## Migration from typescript-mcp to lsmcp
+## Quick Start
 
-**Note:** The standalone `typescript-mcp` command has been replaced with the unified `lsmcp` (Language Server MCP) command. This change provides better multi-language support while maintaining all TypeScript functionality.
-
-### Migration Guide
-
-If you were using:
+### TypeScript/JavaScript Projects
 
 ```bash
-npx typescript-mcp
+# Install and configure for Claude Desktop
+npm install typescript @mizchi/lsmcp -D
+npx -y @mizchi/lsmcp --init=claude --language=typescript
+clauder
 ```
 
-Now use:
+### Other Languages
 
 ```bash
-npx -y @mizchi/lsmcp                    # Auto-detects TypeScript projects
-# or explicitly:
-npx -y @mizchi/lsmcp --language typescript
+# Rust
+npx -y @mizchi/lsmcp --init=claude --bin="rust-analyzer"
+
+# Python
+npx -y @mizchi/lsmcp --init=claude --bin="pylsp"
+
+# Go
+npx -y @mizchi/lsmcp --init=claude --bin="gopls"
 ```
 
-All TypeScript-specific features remain available through `lsmcp`. The tool will automatically detect TypeScript projects by looking for `tsconfig.json` or `package.json` files.
+## Usage
 
-## Using lsmcp - Unified Language Server MCP
-
-`lsmcp` is a unified CLI that supports multiple language servers through the `--language` flag or automatic detection.
-
-### Basic Usage
+### Command Line Options
 
 ```bash
 # TypeScript/JavaScript (built-in support)
@@ -189,8 +188,9 @@ npx -y @mizchi/lsmcp --bin "clangd"             # C/C++
 npx -y @mizchi/lsmcp --bin "jdtls"              # Java
 npx -y @mizchi/lsmcp --bin "deno lsp"           # Deno
 
-# Initialize for Claude (requires --language)
-npx -y @mizchi/lsmcp --init claude --language typescript
+# Initialize for Claude
+npx -y @mizchi/lsmcp --init=claude --language=typescript
+npx -y @mizchi/lsmcp --init=claude --bin="rust-analyzer"
 
 # Get diagnostics for multiple files using glob pattern (requires --language)
 npx -y @mizchi/lsmcp --include "src/**/*.ts" --language typescript
@@ -214,51 +214,45 @@ npx -y @mizchi/lsmcp --include "src/components/*.ts" --language typescript
 
 Note: The `--include` option currently only supports TypeScript/JavaScript files and requires `--language` to be specified.
 
-### Custom LSP Server Examples
+### Advanced Usage
+
+#### Custom LSP Servers
 
 ```bash
 # Use Deno LSP for TypeScript
 npx -y @mizchi/lsmcp --bin "deno lsp"
 
-# Use TypeScript Native Preview (TSGO) for faster performance
-npm install @typescript/native-preview
-npx -y @mizchi/lsmcp --bin "tsgo --lsp --stdio"
-
-# Use custom rust-analyzer path
-npx -y @mizchi/lsmcp --bin "rust-analyzer"
-
 # Use TypeScript LSP with custom tsserver path
-npx -y @mizchi/lsmcp --bin "typescript-language-server --stdio --tsserver-path=/usr/local/lib/node_modules/typescript/lib"
+npx -y @mizchi/lsmcp --bin "typescript-language-server --stdio --tsserver-path=/custom/path"
 ```
 
-### Experimental TSGO
+#### Environment Variables
 
-For faster TypeScript performance, you can use TypeScript Native Preview:
+- `PROJECT_ROOT` - Override the project root directory
+- `LSP_COMMAND` - Override the LSP command for TypeScript server
+- `FORCE_LSP` - Force TypeScript server to use LSP mode instead of Compiler API
+- `DEBUG` - Enable debug output including detailed error information
+
+#### Error Handling
+
+lsmcp provides user-friendly error messages with solutions:
 
 ```bash
-npm install @typescript/native-preview
-```
+# Example: LSP server not found
+$ npx @mizchi/lsmcp --bin "rust-analyzer"
+Error: LSP server for rust not found
+Reason: The language server is not installed or not in PATH
+Solution: Install it with: rustup component add rust-analyzer
 
-Then use it with lsmcp:
+# Example: File not found
+Error: File not found: src/test.ts
+Reason: The specified file does not exist
+Solution: Check the file path and ensure it exists. Use relative paths from the project root.
 
-```bash
-npx -y @mizchi/lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
-```
-
-Or configure it in .mcp.json:
-
-```json
-{
-  "mcpServers": {
-    "typescript": {
-      "env": {
-        "TSGO": "true"
-      },
-      "command": "npx",
-      "args": ["-y", "@mizchi/lsmcp"]
-    }
-  }
-}
+# Example: Symbol not found
+Error: Symbol not found: myFunction
+Reason: The specified symbol does not exist at the given location
+Solution: Ensure the symbol name is spelled correctly and exists at the specified line.
 ```
 
 ## Language-Specific Setup
@@ -282,17 +276,27 @@ claude
 
 #### Available Tools
 
-- `mcp__lsmcp__rename_symbol` - Rename symbols across the codebase
-- `mcp__lsmcp__move_file` - Move files and update imports
-- `mcp__lsmcp__find_references` - Find all references to a symbol
-- `mcp__lsmcp__get_diagnostics` - Get errors and warnings
-- `mcp__lsmcp__get_type_at_symbol` - Get type information
+TypeScript/JavaScript supports all tools. See [Language Support Matrix](docs/LANGUAGE_SUPPORT_MATRIX.md) for details.
+
+**TypeScript-specific tools** (via Compiler API):
+- `lsmcp_move_file` - Move files and update imports
+- `lsmcp_move_directory` - Move directories and update imports
+- `lsmcp_delete_symbol` - Delete symbols and their references
+- `lsmcp_get_type_at_symbol` - Get detailed type information
+- `lsmcp_get_module_symbols` - List all exports from a module
+
+**Common LSP tools**:
+- `lsmcp_rename_symbol` - Rename symbols across the codebase
+- `lsmcp_find_references` - Find all references to a symbol
+- `lsmcp_get_diagnostics` - Get errors and warnings
+- `lsmcp_get_hover` - Get documentation and type info
+- `lsmcp_get_definitions` - Go to definition
 
 #### Example Usage in Claude
 
 ```
-Use mcp__lsmcp__rename_symbol to rename the function "calculateTotal" to "computeSum" in src/utils.ts
-Use mcp__lsmcp__find_references to find all uses of the "User" interface
+Use lsmcp_rename_symbol to rename the function "calculateTotal" to "computeSum" in src/utils.ts
+Use lsmcp_find_references to find all uses of the "User" interface
 ```
 
 ### Rust
@@ -321,21 +325,21 @@ Create `.mcp.json` in your Rust project:
 
 #### Available LSP Tools
 
-- `lsp_get_hover` - Get type information and documentation
-- `lsp_find_references` - Find all references to a symbol
-- `lsp_rename_symbol` - Rename symbols across the codebase
-- `lsp_get_diagnostics` - Get compilation errors and warnings
-- `lsp_get_definitions` - Go to definition
-- `lsp_get_document_symbols` - List all symbols in a file
-- `lsp_get_completion` - Get code completions
-- `lsp_format_document` - Format code using rustfmt
-- `lsp_get_code_actions` - Get available code actions
+- `lsmcp_get_hover` - Get type information and documentation
+- `lsmcp_find_references` - Find all references to a symbol
+- `lsmcp_rename_symbol` - Rename symbols across the codebase
+- `lsmcp_get_diagnostics` - Get compilation errors and warnings
+- `lsmcp_get_definitions` - Go to definition
+- `lsmcp_get_document_symbols` - List all symbols in a file
+- `lsmcp_get_completion` - Get code completions
+- `lsmcp_format_document` - Format code using rustfmt
+- `lsmcp_get_code_actions` - Get available code actions
 
 #### Example Usage in Claude
 
 ```
-Use lsp_rename_symbol to rename the struct "Config" to "AppConfig"
-Use lsp_find_references to find all uses of the "parse_args" function
+Use lsmcp_rename_symbol to rename the struct "Config" to "AppConfig"
+Use lsmcp_find_references to find all uses of the "parse_args" function
 ```
 
 ### Python
@@ -364,21 +368,21 @@ Create `.mcp.json` in your Python project:
 
 #### Available LSP Tools
 
-- `lsp_get_hover` - Get documentation and type information
-- `lsp_find_references` - Find all references to a symbol
-- `lsp_rename_symbol` - Rename symbols across the codebase
-- `lsp_get_diagnostics` - Get syntax and type errors
-- `lsp_get_definitions` - Go to definition
-- `lsp_get_document_symbols` - List all symbols in a file
-- `lsp_get_completion` - Get code completions
-- `lsp_format_document` - Format code
-- `lsp_get_code_actions` - Get available code actions
+- `lsmcp_get_hover` - Get documentation and type information
+- `lsmcp_find_references` - Find all references to a symbol
+- `lsmcp_rename_symbol` - Rename symbols across the codebase
+- `lsmcp_get_diagnostics` - Get syntax and type errors
+- `lsmcp_get_definitions` - Go to definition
+- `lsmcp_get_document_symbols` - List all symbols in a file
+- `lsmcp_get_completion` - Get code completions
+- `lsmcp_format_document` - Format code
+- `lsmcp_get_code_actions` - Get available code actions
 
 #### Example Usage in Claude
 
 ```
-Use lsp_get_hover to show documentation for the "process_data" function
-Use lsp_rename_symbol to rename the class "DataProcessor" to "DataHandler"
+Use lsmcp_get_hover to show documentation for the "process_data" function
+Use lsmcp_rename_symbol to rename the class "DataProcessor" to "DataHandler"
 ```
 
 ### Go
@@ -407,15 +411,15 @@ Create `.mcp.json` in your Go project:
 
 #### Available LSP Tools
 
-- `lsp_get_hover` - Get type information and documentation
-- `lsp_find_references` - Find all references to a symbol
-- `lsp_rename_symbol` - Rename symbols across the codebase
-- `lsp_get_diagnostics` - Get compilation errors
-- `lsp_get_definitions` - Go to definition
-- `lsp_get_document_symbols` - List all symbols in a file
-- `lsp_get_completion` - Get code completions
-- `lsp_format_document` - Format code using gofmt
-- `lsp_get_code_actions` - Get available code actions
+- `lsmcp_get_hover` - Get type information and documentation
+- `lsmcp_find_references` - Find all references to a symbol
+- `lsmcp_rename_symbol` - Rename symbols across the codebase
+- `lsmcp_get_diagnostics` - Get compilation errors
+- `lsmcp_get_definitions` - Go to definition
+- `lsmcp_get_document_symbols` - List all symbols in a file
+- `lsmcp_get_completion` - Get code completions
+- `lsmcp_format_document` - Format code using gofmt
+- `lsmcp_get_code_actions` - Get available code actions
 
 ### Other Languages
 
@@ -495,15 +499,18 @@ Edit `.mcp.json`:
 
 ## Supported Languages
 
-| Language              | Detection Files                                  | LSP Server                 |
-| --------------------- | ------------------------------------------------ | -------------------------- |
-| TypeScript/JavaScript | `tsconfig.json`, `package.json`                  | typescript-language-server |
-| Rust                  | `Cargo.toml`                                     | rust-analyzer              |
-| Python                | `pyproject.toml`, `setup.py`, `requirements.txt` | pylsp                      |
-| Go                    | `go.mod`                                         | gopls                      |
-| Java                  | `pom.xml`, `build.gradle`                        | jdtls                      |
-| C/C++                 | `CMakeLists.txt`, `Makefile`                     | clangd                     |
-| Moonbit               | `moon.mod.json`                                  | Moonbit LSP                |
+| Language              | LSP Server                 | Installation                              |
+| --------------------- | -------------------------- | ----------------------------------------- |
+| TypeScript/JavaScript | Built-in + LSP             | `npm install typescript`                  |
+| Rust                  | rust-analyzer              | `rustup component add rust-analyzer`      |
+| Python                | pylsp                      | `pip install python-lsp-server`           |
+| Go                    | gopls                      | `go install golang.org/x/tools/gopls@latest` |
+| Java                  | jdtls                      | See [Eclipse JDT.LS](https://github.com/eclipse/eclipse.jdt.ls) |
+| C/C++                 | clangd                     | `apt install clangd` or `brew install llvm` |
+| Moonbit               | Moonbit LSP                | Included with [Moonbit SDK](https://www.moonbitlang.com/download) |
+| Deno                  | deno lsp                   | `deno` command                            |
+
+For detailed tool availability per language, see [Language Support Matrix](docs/LANGUAGE_SUPPORT_MATRIX.md).
 
 ## Develop
 
@@ -523,10 +530,17 @@ npm link
 lsmcp -h
 ```
 
-## TODO
+## Changelog
 
-- [ ] Multiple Project
-- [ ] Symbol
+### v0.2.x
+- **Breaking**: Removed automatic language detection - `--language` or `--bin` is now required
+- Unified tool naming with `lsmcp_` prefix
+- Added generic LSP server support
+- Improved error messages and language support documentation
+
+### v0.1.x
+- Initial release with TypeScript support
+- Basic LSP integration for multiple languages
 
 ## Troubleshooting
 
@@ -538,13 +552,13 @@ If you get an error about LSP server not found:
 2. Check if it's in your PATH: `which <lsp-command>`
 3. Set the LSP path explicitly in environment variables
 
-### Language Not Detected
+### Language Configuration
 
-If auto-detection fails:
+Since v0.2.0, language must be explicitly specified:
 
-1. Ensure your project has appropriate config files (see Supported Languages table)
-2. Use `--language` flag to explicitly specify: `npx -y @mizchi/lsmcp -l python`
-3. Set `FORCE_LANGUAGE` environment variable in your MCP configuration
+1. Use `--language` flag: `npx -y @mizchi/lsmcp --language typescript`
+2. Or use `--bin` flag: `npx -y @mizchi/lsmcp --bin "rust-analyzer"`
+3. Configure in `.mcp.json` with appropriate args
 
 ### Performance Issues
 

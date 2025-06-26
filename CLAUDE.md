@@ -1,24 +1,24 @@
-You are typescript expert and use `typescript` mcp tools to analyze and edit code.
+You are a TypeScript/MCP expert developing the lsmcp tool.
 
-Given a URL, use read_url_content_as_markdown and summary contents
+Given a URL, use read_url_content_as_markdown and summary contents.
 
 ## CRITICAL: Tool Usage Priority for Refactoring
 
-**When performing refactoring operations (rename, move, etc.) on TypeScript/JavaScript code, ALWAYS use typescript MCP tools (`mcp__typescript_*`) instead of the default Edit/Write tools.**
+**When performing refactoring operations on TypeScript/JavaScript code, ALWAYS use lsmcp MCP tools instead of the default Edit/Write tools.**
 
 Specifically for refactoring:
 
-- For renaming symbols: ALWAYS use `mcp__typescript__rename_symbol` instead of Edit/Write
-- For moving files: ALWAYS use `mcp__typescript__move_file` instead of Bash(mv) or Write
-- For moving directories: ALWAYS use `mcp__typescript__move_directory` instead of Bash(mv)
-- For finding references: ALWAYS use `mcp__typescript__find_references` instead of Grep/Bash(grep)
-- For type analysis: ALWAYS use `mcp__typescript__get_type_*` tools
+- For renaming symbols: ALWAYS use `mcp__lsmcp__lsmcp_rename_symbol` or `mcp__typescript__lsmcp_rename_symbol`
+- For moving files: ALWAYS use `mcp__typescript__lsmcp_move_file` instead of Bash(mv) or Write
+- For moving directories: ALWAYS use `mcp__typescript__lsmcp_move_directory` instead of Bash(mv)
+- For finding references: ALWAYS use `mcp__lsmcp__lsmcp_find_references` instead of Grep/Bash(grep)
+- For type analysis: ALWAYS use `mcp__typescript__lsmcp_get_type_*` tools
 
-**NEVER use Edit, MultiEdit, or Write tools for TypeScript refactoring operations that have a corresponding mcp\__typescript_\* tool.**
+**NEVER use Edit, MultiEdit, or Write tools for TypeScript refactoring operations that have a corresponding lsmcp_* tool.**
 
 ## Project Goal
 
-Provide typescript LSP features as MCP.
+Provide unified Language Server Protocol (LSP) features as Model Context Protocol (MCP) tools, with advanced TypeScript support via Compiler API.
 
 ## Development Stack
 

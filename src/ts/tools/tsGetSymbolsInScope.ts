@@ -342,7 +342,7 @@ function formatGetSymbolsInScopeResult(
 }
 
 export const getSymbolsInScopeTool: ToolDef<typeof schema> = {
-  name: "get_symbols_in_scope",
+  name: "lsmcp_get_symbols_in_scope",
   description:
     "Get all symbols (variables, types, functions, etc.) visible at a specific location in a TypeScript/JavaScript file",
   schema,

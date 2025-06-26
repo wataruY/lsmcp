@@ -9,7 +9,7 @@ const paramsSchema = z.object({
 });
 
 export const getRelatedModulesTool: ToolDef<typeof paramsSchema> = {
-  name: "get_related_modules",
+  name: "lsmcp_get_related_modules",
   description:
     "Get all modules related to a specific file (imports, imported by, re-exports, re-exported by)",
   schema: paramsSchema,

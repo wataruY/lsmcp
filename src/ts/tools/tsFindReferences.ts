@@ -3,6 +3,7 @@ import { findReferences } from "../navigations/findReferences.ts";
 import { prepareToolContext, formatRelativePath } from "../utils/toolHandlers.ts";
 import type { ToolDef } from "../../mcp/_mcplib.ts";
 import { symbolLocationSchema } from "../../common/schemas.ts";
+import { formatError, ErrorContext } from "../../mcp/utils/errorHandler.ts";
 
 const schema = symbolLocationSchema;
 
@@ -23,7 +24,13 @@ interface FindReferencesResult {
 async function handleFindReferences(
   params: z.infer<typeof schema>
 ): Promise<FindReferencesResult> {
-  const context = await prepareToolContext(params);
+  let context;
+  try {
+    context = await prepareToolContext(params);
+  } catch (error) {
+    // prepareToolContext already formats errors properly
+    throw error;
+  }
 
   // Find references
   const result = findReferences(context.project, {
@@ -33,7 +40,14 @@ async function handleFindReferences(
   });
 
   if (result.isErr()) {
-    throw new Error(result.error);
+    const errorContext: ErrorContext = {
+      operation: "find references",
+      filePath: params.filePath,
+      symbolName: params.symbolName,
+      language: "typescript",
+      details: { line: params.line }
+    };
+    throw new Error(formatError(new Error(result.error), errorContext));
   }
 
   return result.value;
@@ -64,7 +78,7 @@ function formatFindReferencesResult(
 }
 
 export const findReferencesTool: ToolDef<typeof schema> = {
-  name: "find_references",
+  name: "lsmcp_find_references",
   description:
     "Find all references to a TypeScript/JavaScript symbol across the codebase",
   schema,

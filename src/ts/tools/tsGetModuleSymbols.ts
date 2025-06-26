@@ -92,7 +92,7 @@ function formatGetModuleSymbolsResult(
 }
 
 export const getModuleSymbolsTool: ToolDef<typeof schema> = {
-  name: "get_module_symbols",
+  name: "lsmcp_get_module_symbols",
   description:
     "Get all exported symbols from a TypeScript/JavaScript module without detailed signatures",
   schema,

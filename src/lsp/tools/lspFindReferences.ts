@@ -6,6 +6,7 @@ import { getActiveClient } from "../lspClient.ts";
 import { parseLineNumber } from "../../textUtils/parseLineNumber.ts";
 import { findSymbolInLine } from "../../textUtils/findSymbolInLine.ts";
 import type { ToolDef } from "../../mcp/_mcplib.ts";
+import { formatError, ErrorContext } from "../../mcp/utils/errorHandler.ts";
 
 const schema = z.object({
   root: z.string().describe("Root directory for resolving relative paths"),
@@ -44,14 +45,29 @@ async function findReferencesWithLSP(
     
     // Read file content
     const absolutePath = path.resolve(request.root, request.filePath);
-    const fileContent = readFileSync(absolutePath, "utf-8");
+    let fileContent: string;
+    try {
+      fileContent = readFileSync(absolutePath, "utf-8");
+    } catch (error) {
+      const context: ErrorContext = {
+        operation: "find references",
+        filePath: request.filePath,
+        language: "lsp"
+      };
+      return err(formatError(error, context));
+    }
     const fileUri = `file://${absolutePath}`;
     
     // Parse line number
     const lines = fileContent.split("\n");
     const lineResult = parseLineNumber(fileContent, request.line);
     if ("error" in lineResult) {
-      return err(`${lineResult.error} in ${request.filePath}`);
+      const context: ErrorContext = {
+        operation: "line resolution",
+        filePath: request.filePath,
+        details: { line: request.line }
+      };
+      return err(formatError(new Error(lineResult.error), context));
     }
     
     const targetLine = lineResult.lineIndex;
@@ -60,7 +76,13 @@ async function findReferencesWithLSP(
     const lineText = lines[targetLine];
     const symbolResult = findSymbolInLine(lineText, request.symbolName);
     if ("error" in symbolResult) {
-      return err(`${symbolResult.error} on line ${targetLine + 1}`);
+      const context: ErrorContext = {
+        operation: "symbol location",
+        filePath: request.filePath,
+        symbolName: request.symbolName,
+        details: { line: targetLine + 1 }
+      };
+      return err(formatError(new Error(symbolResult.error), context));
     }
     
     const symbolPosition = symbolResult.characterIndex;
@@ -81,7 +103,13 @@ async function findReferencesWithLSP(
 
     for (const location of locations) {
       const refPath = location.uri.replace("file://", "");
-      const refContent = readFileSync(refPath, "utf-8");
+      let refContent: string;
+      try {
+        refContent = readFileSync(refPath, "utf-8");
+      } catch (error) {
+        // Skip references in files we can't read
+        continue;
+      }
       const refLines = refContent.split("\n");
 
       // Get the text at the reference location
@@ -119,12 +147,18 @@ async function findReferencesWithLSP(
       references,
     });
   } catch (error) {
-    return err(error instanceof Error ? error.message : String(error));
+    const context: ErrorContext = {
+      operation: "find references",
+      filePath: request.filePath,
+      symbolName: request.symbolName,
+      language: "lsp"
+    };
+    return err(formatError(error, context));
   }
 }
 
 export const lspFindReferencesTool: ToolDef<typeof schema> = {
-  name: "lsp_find_references",
+  name: "lsmcp_find_references",
   description: "Find all references to symbol across the codebase using LSP",
   schema,
   execute: async (args: z.infer<typeof schema>) => {
@@ -167,7 +201,7 @@ if (import.meta.vitest) {
     });
 
     it("should have correct tool definition", () => {
-      expect(lspFindReferencesTool.name).toBe("lsp_find_references");
+      expect(lspFindReferencesTool.name).toBe("lsmcp_find_references");
       expect(lspFindReferencesTool.description).toContain("references");
       expect(lspFindReferencesTool.schema.shape).toBeDefined();
       expect(lspFindReferencesTool.schema.shape.root).toBeDefined();
@@ -219,7 +253,7 @@ if (import.meta.vitest) {
           line: 1,
           symbolName: "nonexistent",
         })
-      ).rejects.toThrow("not found on line");
+      ).rejects.toThrow("Symbol \"nonexistent\" not found");
     });
 
     it("should handle line not found", async () => {

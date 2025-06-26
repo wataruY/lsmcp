@@ -210,6 +210,7 @@ export type LSPClient = {
   getDocumentSymbols: (uri: string) => Promise<DocumentSymbol[] | SymbolInformation[]>;
   getWorkspaceSymbols: (query: string) => Promise<SymbolInformation[]>;
   getCompletion: (uri: string, position: Position) => Promise<CompletionItem[]>;
+  resolveCompletionItem: (item: CompletionItem) => Promise<CompletionItem>;
   getSignatureHelp: (uri: string, position: Position) => Promise<SignatureHelp | null>;
   getCodeActions: (uri: string, range: Range, context?: { diagnostics?: Diagnostic[] }) => Promise<(Command | CodeAction)[]>;
   formatDocument: (uri: string, options: FormattingOptions) => Promise<TextEdit[]>;

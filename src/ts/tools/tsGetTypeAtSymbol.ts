@@ -208,7 +208,7 @@ function formatGetTypeAtSymbolResult(
 }
 
 export const getTypeAtSymbolTool: ToolDef<typeof schema> = {
-  name: "get_type_at_symbol",
+  name: "lsmcp_get_type_at_symbol",
   description:
     "Get type information for a TypeScript/JavaScript symbol at a specific location",
   schema,

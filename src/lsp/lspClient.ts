@@ -28,6 +28,7 @@ import {
   FormattingResult,
 } from "./lspTypes.ts";
 import { debug } from "../mcp/_mcplib.ts";
+import { formatError, debugLog, ErrorContext } from "../mcp/utils/errorHandler.ts";
 
 // Re-export types for backward compatibility
 export type {
@@ -209,9 +210,31 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     };
 
     return new Promise<T>((resolve, reject) => {
+      // Set timeout for requests
+      const timeout = setTimeout(() => {
+        state.responseHandlers.delete(id);
+        const context: ErrorContext = {
+          operation: method,
+          language: state.languageId,
+          details: { method, params }
+        };
+        reject(new Error(formatError(new Error(`Request '${method}' timed out after 30 seconds`), context)));
+      }, 30000);
+      
       state.responseHandlers.set(id, (response) => {
+        clearTimeout(timeout);
+        state.responseHandlers.delete(id);
+        
         if (response.error) {
-          reject(new Error(response.error.message));
+          const context: ErrorContext = {
+            operation: method,
+            language: state.languageId,
+            details: { 
+              errorCode: response.error.code,
+              errorData: response.error.data
+            }
+          };
+          reject(new Error(formatError(new Error(response.error.message), context)));
         } else {
           resolve(response.result as T);
         }
@@ -287,29 +310,52 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
       throw new Error("No process provided to LSP client");
     }
 
+    let stderrBuffer = "";
+    
     state.process.stdout?.on("data", (data: Buffer) => {
       state.buffer += data.toString();
       processBuffer();
     });
 
-    state.process.stderr?.on("data", (_data: Buffer) => {
-      // Uncomment for debugging LSP stderr output
-      // debug("LSP stderr:", data.toString());
+    state.process.stderr?.on("data", (data: Buffer) => {
+      stderrBuffer += data.toString();
+      debugLog("LSP stderr:", data.toString());
     });
 
-    state.process.on("exit", (_code) => {
-      // Uncomment for debugging LSP process lifecycle
-      // debug(`LSP server exited with code ${code}`);
+    state.process.on("exit", (code) => {
+      debugLog(`LSP server exited with code ${code}`);
       state.process = null;
+      
+      if (code !== 0 && code !== null) {
+        const context: ErrorContext = {
+          operation: "LSP server process",
+          language: state.languageId,
+          details: { exitCode: code, stderr: stderrBuffer }
+        };
+        const error = new Error(`LSP server exited unexpectedly with code ${code}`);
+        debug(formatError(error, context));
+      }
     });
 
-    state.process.on("error", (_error) => {
-      // Uncomment for debugging LSP errors
-      // debug("LSP server error:", error);
+    state.process.on("error", (error) => {
+      debugLog("LSP server error:", error);
+      const context: ErrorContext = {
+        operation: "LSP server startup",
+        language: state.languageId
+      };
+      debug(formatError(error, context));
     });
 
-    // Initialize the LSP connection
-    await initialize();
+    // Initialize the LSP connection with better error handling
+    try {
+      await initialize();
+    } catch (error) {
+      const context: ErrorContext = {
+        operation: "LSP initialization",
+        language: state.languageId
+      };
+      throw new Error(formatError(error, context));
+    }
   }
 
   function openDocument(uri: string, text: string): void {
@@ -465,6 +511,16 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     }
     
     return [];
+  }
+
+  async function resolveCompletionItem(
+    item: CompletionItem
+  ): Promise<CompletionItem> {
+    const result = await sendRequest<CompletionItem>(
+      "completionItem/resolve",
+      item
+    );
+    return result ?? item;
   }
 
   async function getSignatureHelp(
@@ -635,6 +691,7 @@ export function createLSPClient(config: LSPClientConfig): LSPClient {
     getDocumentSymbols,
     getWorkspaceSymbols,
     getCompletion,
+    resolveCompletionItem,
     getSignatureHelp,
     getCodeActions,
     formatDocument,

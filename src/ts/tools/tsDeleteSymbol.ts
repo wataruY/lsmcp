@@ -77,7 +77,7 @@ function formatDeleteSymbolResult(result: DeleteSymbolResult): string {
 }
 
 export const deleteSymbolTool: ToolDef<typeof schema> = {
-  name: "delete_symbol",
+  name: "lsmcp_delete_symbol",
   description:
     "Delete a TypeScript/JavaScript symbol (variable, function, class, etc.) and all its references",
   schema,

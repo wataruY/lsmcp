@@ -168,7 +168,7 @@ async function handleFormatDocument({
 }
 
 export const lspFormatDocumentTool: ToolDef<typeof schema> = {
-  name: "lsp_format_document",
+  name: "lsmcp_format_document",
   description:
     "Format an entire document using the language server's formatting provider",
   schema,

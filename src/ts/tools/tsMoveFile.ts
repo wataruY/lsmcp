@@ -221,7 +221,7 @@ async function formatMoveFileResult(
 }
 
 export const moveFileTool: ToolDef<typeof schema> = {
-  name: "move_file",
+  name: "lsmcp_move_file",
   description:
     "Move a TypeScript/JavaScript file to a new location and update all import statements",
   schema,

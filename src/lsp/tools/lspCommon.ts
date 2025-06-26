@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import { pathToFileURL } from "url";
 import { getLSPClient } from "../lspClient.ts";
 import { resolveLineParameter } from "../../textUtils/resolveLineParameter.ts";
+import { formatError, ErrorContext } from "../../mcp/utils/errorHandler.ts";
 
 // Common schema shapes for LSP tools
 export const filePathShape = {
@@ -42,26 +43,46 @@ export async function prepareFileContext(
     : path.join(root, filePath);
 
   // Check if file exists
-  await fs.access(absolutePath);
+  try {
+    await fs.access(absolutePath);
+  } catch (error) {
+    const context: ErrorContext = {
+      operation: "file access",
+      filePath: path.relative(root, absolutePath)
+    };
+    throw new Error(formatError(error, context));
+  }
 
   // Convert to file URI
   const fileUri = pathToFileURL(absolutePath).toString();
 
   // Read the file content
-  const content = await fs.readFile(absolutePath, "utf-8");
-
-  return { absolutePath, fileUri, content };
+  try {
+    const content = await fs.readFile(absolutePath, "utf-8");
+    return { absolutePath, fileUri, content };
+  } catch (error) {
+    const context: ErrorContext = {
+      operation: "file read",
+      filePath: path.relative(root, absolutePath)
+    };
+    throw new Error(formatError(error, context));
+  }
 }
 
 // Common LSP client operations
 export async function withLSPDocument<T>(
   fileUri: string,
   content: string,
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
+  language?: string
 ): Promise<T> {
   const client = getLSPClient();
   if (!client) {
-    throw new Error("LSP client not initialized");
+    const context: ErrorContext = {
+      operation: "LSP document operation",
+      language
+    };
+    throw new Error(formatError(new Error("LSP client not initialized. Ensure the language server is started."), context));
   }
 
   // Open the document in LSP
@@ -88,7 +109,12 @@ export function resolveLineOrThrow(
   const resolveResult = resolveLineParameter(content, line);
   
   if (!resolveResult.success) {
-    throw new Error(`${resolveResult.error} in ${filePath}`);
+    const context: ErrorContext = {
+      operation: "line resolution",
+      filePath,
+      details: { line, error: resolveResult.error }
+    };
+    throw new Error(formatError(new Error(`Failed to resolve line: ${resolveResult.error}`), context));
   }
   
   return resolveResult.lineIndex;

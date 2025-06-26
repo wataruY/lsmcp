@@ -245,7 +245,7 @@ function formatHoverContents(
 }
 
 export const lspGetHoverTool: ToolDef<typeof schema> = {
-  name: "lsp_get_hover",
+  name: "lsmcp_get_hover",
   description:
     "Get hover information (type signature, documentation) for a symbol using LSP",
   schema,
@@ -280,7 +280,7 @@ if (import.meta.vitest) {
     });
 
     it("should have correct tool definition", () => {
-      expect(lspGetHoverTool.name).toBe("lsp_get_hover");
+      expect(lspGetHoverTool.name).toBe("lsmcp_get_hover");
       expect(lspGetHoverTool.description).toContain("hover information");
       expect(lspGetHoverTool.schema.shape).toBeDefined();
       expect(lspGetHoverTool.schema.shape.root).toBeDefined();

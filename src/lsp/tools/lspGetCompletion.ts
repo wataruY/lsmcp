@@ -10,6 +10,8 @@ const schema = z.object({
   filePath: commonSchemas.filePath,
   line: commonSchemas.line,
   target: z.string().describe("Text at the position to get completions for").optional(),
+  resolve: z.boolean().describe("Whether to resolve completion items for additional details like auto-imports").optional().default(false),
+  includeAutoImport: z.boolean().describe("Whether to include auto-import suggestions").optional().default(false),
 });
 
 function getCompletionItemKindName(kind?: CompletionItemKind): string {
@@ -46,7 +48,7 @@ function getCompletionItemKindName(kind?: CompletionItemKind): string {
   return kindNames[kind] || "Unknown";
 }
 
-function formatCompletionItem(item: CompletionItem): string {
+function formatCompletionItem(item: CompletionItem, showImportInfo: boolean = false): string {
   const kind = getCompletionItemKindName(item.kind);
   let result = `${item.label} [${kind}]`;
   
@@ -68,6 +70,22 @@ function formatCompletionItem(item: CompletionItem): string {
     }
   }
   
+  // Show auto-import information if available
+  if (showImportInfo && item.additionalTextEdits && item.additionalTextEdits.length > 0) {
+    const importEdits = item.additionalTextEdits.filter(edit => {
+      // Check if the edit is likely an import statement
+      const editText = edit.newText;
+      return editText.includes('import') || editText.includes('from');
+    });
+    
+    if (importEdits.length > 0) {
+      result += "\n[Auto-import available]";
+      for (const edit of importEdits) {
+        result += `\n  ${edit.newText.trim()}`;
+      }
+    }
+  }
+  
   return result;
 }
 
@@ -76,6 +94,8 @@ async function handleGetCompletion({
   filePath,
   line,
   target,
+  resolve,
+  includeAutoImport,
 }: z.infer<typeof schema>): Promise<string> {
   const { fileUri, content } = await prepareFileContext(root, filePath);
   const lineIndex = resolveLineOrThrow(content, line, filePath);
@@ -120,15 +140,43 @@ async function handleGetCompletion({
     // Take top 20 completions
     const topCompletions = sortedCompletions.slice(0, 20);
 
+    // Resolve completion items if requested
+    const resolvedCompletions = resolve ? await Promise.all(
+      topCompletions.map(async (item) => {
+        try {
+          return await client.resolveCompletionItem(item);
+        } catch {
+          // If resolve fails, return the original item
+          return item;
+        }
+      })
+    ) : topCompletions;
+
+    // Filter for auto-import completions if requested
+    const finalCompletions = includeAutoImport
+      ? resolvedCompletions.filter(item => {
+          // Include items that have additionalTextEdits (likely imports) or are from external modules
+          return (item.additionalTextEdits && item.additionalTextEdits.length > 0) || 
+                 (item.detail && (item.detail.includes('import') || item.detail.includes('from')));
+        })
+      : resolvedCompletions;
+
+    if (finalCompletions.length === 0) {
+      const message = includeAutoImport 
+        ? `No auto-import completions available at ${filePath}:${lineIndex + 1}:${character + 1}`
+        : `No completions available at ${filePath}:${lineIndex + 1}:${character + 1}`;
+      return message;
+    }
+
     // Format the completions
     let result = `Completions at ${filePath}:${lineIndex + 1}:${character + 1}:\n\n`;
     
-    for (const item of topCompletions) {
-      result += formatCompletionItem(item) + "\n\n";
+    for (const item of finalCompletions) {
+      result += formatCompletionItem(item, resolve) + "\n\n";
     }
     
-    if (completions.length > 20) {
-      result += `... and ${completions.length - 20} more completions`;
+    if (completions.length > finalCompletions.length) {
+      result += `... and ${completions.length - finalCompletions.length} more completions`;
     }
 
     return result.trim();
@@ -136,7 +184,7 @@ async function handleGetCompletion({
 }
 
 export const lspGetCompletionTool: ToolDef<typeof schema> = {
-  name: "lsp_get_completion",
+  name: "lsmcp_get_completion",
   description:
     "Get code completion suggestions at a specific position in a file using LSP",
   schema,

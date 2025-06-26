@@ -1,0 +1,173 @@
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { mkdtemp, rm, writeFile, mkdir } from "fs/promises";
+import { join } from "path";
+import { tmpdir } from "os";
+import { searchSymbolsTool } from "./tsSearchSymbols.ts";
+
+describe("searchSymbolsTool", () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), "test-search-symbols-"));
+    await mkdir(join(tmpDir, "src"), { recursive: true });
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it("should find symbols by prefix match", async () => {
+    // Create test files
+    await writeFile(
+      join(tmpDir, "src/user.ts"),
+      `
+export class User {
+  name: string;
+  email: string;
+}
+
+export interface UserProfile {
+  userId: string;
+  bio: string;
+}
+
+export function getUserById(id: string): User {
+  return new User();
+}
+
+class InternalUserService {
+  private users: User[] = [];
+}
+      `
+    );
+
+    await writeFile(
+      join(tmpDir, "src/product.ts"),
+      `
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export class ProductService {
+  getProducts(): Product[] {
+    return [];
+  }
+}
+      `
+    );
+
+    // Search for "User" prefix
+    const result = await searchSymbolsTool.execute({
+      root: tmpDir,
+      query: "User",
+      exact: false,
+      includeNonExported: false,
+      buildIndex: true,
+    });
+
+    expect(result).toContain("Found 2 symbols matching \"User\"");
+    expect(result).toContain("User [Class]");
+    expect(result).toContain("UserProfile [Interface]");
+    expect(result).not.toContain("getUserById"); // Function name doesn't start with "User"
+    expect(result).not.toContain("InternalUserService"); // Not exported
+  });
+
+  it("should find symbols by exact match", async () => {
+    await writeFile(
+      join(tmpDir, "test.ts"),
+      `
+export const Config = { port: 3000 };
+export const ConfigLoader = () => {};
+export class Configuration {}
+      `
+    );
+
+    const result = await searchSymbolsTool.execute({
+      root: tmpDir,
+      query: "Config",
+      exact: true,
+      buildIndex: true,
+    });
+
+    expect(result).toContain("Found 1 symbols matching \"Config\"");
+    expect(result).toContain("Config [Variable]");
+    expect(result).not.toContain("ConfigLoader");
+    expect(result).not.toContain("Configuration");
+  });
+
+  it("should filter by symbol kinds", async () => {
+    await writeFile(
+      join(tmpDir, "types.ts"),
+      `
+export class MyClass {}
+export interface MyInterface {}
+export type MyType = string;
+export function myFunction() {}
+export const myVariable = 42;
+      `
+    );
+
+    const result = await searchSymbolsTool.execute({
+      root: tmpDir,
+      query: "My",
+      kinds: ["Class", "Interface"],
+      buildIndex: true,
+    });
+
+    expect(result).toContain("MyClass [Class]");
+    expect(result).toContain("MyInterface [Interface]");
+    expect(result).not.toContain("MyType");
+    expect(result).not.toContain("myFunction");
+    expect(result).not.toContain("myVariable");
+  });
+
+  it("should include non-exported symbols when requested", async () => {
+    await writeFile(
+      join(tmpDir, "internal.ts"),
+      `
+export class PublicAPI {}
+class InternalHelper {}
+function privateUtil() {}
+      `
+    );
+
+    const withoutInternal = await searchSymbolsTool.execute({
+      root: tmpDir,
+      query: "",
+      includeNonExported: false,
+      buildIndex: true,
+    });
+
+    const withInternal = await searchSymbolsTool.execute({
+      root: tmpDir,
+      query: "",
+      includeNonExported: true,
+      buildIndex: false, // Use cached index
+    });
+
+    expect(withoutInternal).toContain("PublicAPI");
+    expect(withoutInternal).not.toContain("InternalHelper");
+    
+    expect(withInternal).toContain("PublicAPI");
+    expect(withInternal).toContain("InternalHelper");
+    expect(withInternal).toContain("privateUtil");
+  });
+
+  it("should show index statistics", async () => {
+    await writeFile(
+      join(tmpDir, "stats.ts"),
+      `export class Test {}`
+    );
+
+    const result = await searchSymbolsTool.execute({
+      root: tmpDir,
+      query: "Test",
+      buildIndex: true,
+    });
+
+    expect(result).toMatch(/📊 Index stats: \d+ symbols, \d+ modules/);
+    expect(result).toMatch(/⏱️  Last updated: \d{4}-\d{2}-\d{2}T/);
+  });
+});

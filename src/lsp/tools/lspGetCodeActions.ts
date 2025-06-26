@@ -210,7 +210,7 @@ async function handleGetCodeActions({
 }
 
 export const lspGetCodeActionsTool: ToolDef<typeof schema> = {
-  name: "lsp_get_code_actions",
+  name: "lsmcp_get_code_actions",
   description:
     "Get available code actions (quick fixes, refactorings, etc.) for a range in a file using LSP",
   schema,

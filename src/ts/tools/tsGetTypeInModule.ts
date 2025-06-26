@@ -57,7 +57,7 @@ function handleGetTypeInModule({
 export { formatTypeSignature as formatGetTypeInModuleResult };
 
 export const getTypeInModuleTool: ToolDef<typeof schema> = {
-  name: "get_type_in_module",
+  name: "lsmcp_get_type_in_module",
   description:
     "Get detailed signature information for a specific type (function, class, interface, type alias, etc.) from a module",
   schema,

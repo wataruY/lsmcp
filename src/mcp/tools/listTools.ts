@@ -82,6 +82,18 @@ const TOOLS_REGISTRY: ToolInfo[] = [
     category: "typescript",
     requiresLSP: false,
   },
+  {
+    name: "search_symbols",
+    description: "Search for symbols across the entire project using a pre-built index (fast)",
+    category: "typescript",
+    requiresLSP: false,
+  },
+  {
+    name: "find_import_candidates",
+    description: "Find potential import candidates for a symbol name using the symbol index (fast)",
+    category: "typescript",
+    requiresLSP: false,
+  },
   
   // LSP tools (using Language Server Protocol)
   {

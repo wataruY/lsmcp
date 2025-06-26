@@ -4,6 +4,7 @@ import fs from "fs/promises";
 import { getOrCreateProject, getOrCreateSourceFileWithRefresh } from "../projectCache.ts";
 import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
 import { findSymbolInLineForSourceFile as findSymbolInLine } from "../../textUtils/findSymbolInLineForSourceFile.ts";
+import { formatError, ErrorContext } from "../../mcp/utils/errorHandler.ts";
 
 export interface BaseToolParams {
   root: string;
@@ -29,11 +30,32 @@ export async function prepareToolContext(params: BaseToolParams): Promise<Prepar
   
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);
+  const relativePath = path.relative(root, absolutePath);
 
   // Check if file exists
-  await fs.access(absolutePath);
+  try {
+    await fs.access(absolutePath);
+  } catch (error) {
+    const context: ErrorContext = {
+      operation: "TypeScript file access",
+      filePath: relativePath,
+      language: "typescript"
+    };
+    throw new Error(formatError(error, context));
+  }
 
-  const project = await getOrCreateProject(absolutePath);
+  // Get or create project
+  let project: Project;
+  try {
+    project = await getOrCreateProject(absolutePath);
+  } catch (error) {
+    const context: ErrorContext = {
+      operation: "TypeScript project initialization",
+      filePath: relativePath,
+      language: "typescript"
+    };
+    throw new Error(formatError(error, context));
+  }
 
   // Ensure the source file is loaded in the project with fresh content
   const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
@@ -42,15 +64,26 @@ export async function prepareToolContext(params: BaseToolParams): Promise<Prepar
   const resolvedLine = resolveLineParameter(sourceFile, line);
 
   // Find the symbol in the line and get column position
-  const { column } = findSymbolInLine(sourceFile, resolvedLine, symbolName);
-
-  return {
-    project,
-    absolutePath,
-    sourceFile,
-    resolvedLine,
-    column
-  };
+  try {
+    const { column } = findSymbolInLine(sourceFile, resolvedLine, symbolName);
+    
+    return {
+      project,
+      absolutePath,
+      sourceFile,
+      resolvedLine,
+      column
+    };
+  } catch (error) {
+    const context: ErrorContext = {
+      operation: "symbol location",
+      filePath: relativePath,
+      symbolName,
+      language: "typescript",
+      details: { line, resolvedLine }
+    };
+    throw new Error(formatError(error, context));
+  }
 }
 
 /**

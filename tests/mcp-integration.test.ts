@@ -31,10 +31,15 @@ describe("MCP Server Integration", () => {
     await fs.access(SERVER_PATH);
 
     // Create transport with server parameters
+    const cleanEnv = { ...process.env } as Record<string, string>;
+    // Ensure TypeScript-specific tools are enabled
+    delete cleanEnv.FORCE_LSP;
+    delete cleanEnv.LSP_COMMAND;
+    
     transport = new StdioClientTransport({
       command: "node",
       args: [SERVER_PATH],
-      env: process.env as Record<string, string>,
+      env: cleanEnv,
     });
 
     // Create and connect client
@@ -60,14 +65,14 @@ describe("MCP Server Integration", () => {
 
     // Check for some expected tools
     const toolNames = tools.map(tool => tool.name);
-    expect(toolNames).toContain("rename_symbol");
-    expect(toolNames).toContain("move_file");
-    expect(toolNames).toContain("get_type_in_module");
+    expect(toolNames).toContain("lsmcp_rename_symbol");
+    expect(toolNames).toContain("lsmcp_move_file");
+    expect(toolNames).toContain("lsmcp_get_type_in_module");
   });
 
   it("should call get_module_symbols tool", async () => {
     const result = await client.callTool({
-      name: "get_module_symbols",
+      name: "lsmcp_get_module_symbols",
       arguments: {
         root: path.join(__dirname, ".."),
         moduleName: "neverthrow",
@@ -91,7 +96,7 @@ describe("MCP Server Integration", () => {
 
   it("should handle get_type_in_module tool", async () => {
     const result = await client.callTool({
-      name: "get_type_in_module",
+      name: "lsmcp_get_type_in_module",
       arguments: {
         root: path.join(__dirname, ".."),
         moduleName: "neverthrow",
@@ -115,7 +120,7 @@ describe("MCP Server Integration", () => {
 
   it("should handle errors gracefully", async () => {
     const result = await client.callTool({
-      name: "get_module_symbols",
+      name: "lsmcp_get_module_symbols",
       arguments: {
         root: "/non/existent/path",
         moduleName: "non-existent-module",

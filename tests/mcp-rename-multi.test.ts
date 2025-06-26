@@ -24,13 +24,16 @@ describe("MCP rename multi-file", () => {
     await fs.mkdir(tmpDir, { recursive: true });
 
     // Create transport with server parameters
+    const cleanEnv = { ...process.env } as Record<string, string>;
+    cleanEnv.PROJECT_ROOT = tmpDir;
+    // Ensure TypeScript-specific tools are enabled
+    delete cleanEnv.FORCE_LSP;
+    delete cleanEnv.LSP_COMMAND;
+    
     transport = new StdioClientTransport({
       command: "node",
       args: [SERVER_PATH, "--project-root", tmpDir],
-      env: {
-        ...process.env,
-        PROJECT_ROOT: tmpDir,
-      } as Record<string, string>,
+      env: cleanEnv,
     });
 
     // Create and connect client
@@ -90,7 +93,7 @@ describe("MCP rename multi-file", () => {
 
       // Perform rename via MCP
       const result = await client.callTool({
-        name: "rename_symbol",
+        name: "lsmcp_rename_symbol",
         arguments: {
           root: tmpDir,
           filePath: renameFilePath!,

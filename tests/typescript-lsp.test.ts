@@ -96,15 +96,15 @@ describe("TypeScript Language Server Integration", { timeout: 30000 }, () => {
     const toolNames = response.tools.map(t => t.name);
 
     // Check for LSP tools
-    expect(toolNames).toContain("lsp_get_hover");
-    expect(toolNames).toContain("lsp_find_references");
-    expect(toolNames).toContain("lsp_get_definitions");
-    expect(toolNames).toContain("lsp_get_diagnostics");
-    expect(toolNames).toContain("lsp_rename_symbol");
-    expect(toolNames).toContain("lsp_get_document_symbols");
-    expect(toolNames).toContain("lsp_get_completion");
-    expect(toolNames).toContain("lsp_get_signature_help");
-    expect(toolNames).toContain("lsp_format_document");
+    expect(toolNames).toContain("lsmcp_get_hover");
+    expect(toolNames).toContain("lsmcp_find_references");
+    expect(toolNames).toContain("lsmcp_get_definitions");
+    expect(toolNames).toContain("lsmcp_get_diagnostics");
+    expect(toolNames).toContain("lsmcp_rename_symbol");
+    expect(toolNames).toContain("lsmcp_get_document_symbols");
+    expect(toolNames).toContain("lsmcp_get_completion");
+    expect(toolNames).toContain("lsmcp_get_signature_help");
+    expect(toolNames).toContain("lsmcp_format_document");
   });
 
   it("should get hover information for TypeScript code", async () => {
@@ -128,7 +128,7 @@ console.log(person.name);
 
     // Get hover information for 'person'
     const result = await client.callTool({
-      name: "lsp_get_hover",
+      name: "lsmcp_get_hover",
       arguments: {
         root: tmpDir,
         filePath: "test.ts",
@@ -160,7 +160,7 @@ console.log(message.);
 
     // Get completions after 'message.'
     const result = await client.callTool({
-      name: "lsp_get_completion",
+      name: "lsmcp_get_completion",
       arguments: {
         root: tmpDir,
         filePath: "completion.ts",
@@ -198,7 +198,7 @@ greet("Alice", );
 
     // Get signature help inside greet call
     const result = await client.callTool({
-      name: "lsp_get_signature_help",
+      name: "lsmcp_get_signature_help",
       arguments: {
         root: tmpDir,
         filePath: "signature.ts",
@@ -233,7 +233,7 @@ console.log("Hello"  )  ;
 
     // Format the document
     const result = await client.callTool({
-      name: "lsp_format_document",
+      name: "lsmcp_format_document",
       arguments: {
         root: tmpDir,
         filePath: "format.ts",
@@ -276,7 +276,7 @@ const total = calculateSum(10, 20);
 
     // Rename 'calculateSum' to 'addNumbers'
     const result = await client.callTool({
-      name: "lsp_rename_symbol",
+      name: "lsmcp_rename_symbol",
       arguments: {
         root: tmpDir,
         filePath: "math.ts",
@@ -328,7 +328,7 @@ instance.myProperty = "value"; // Error: private property
 
     // Get code actions for the error line
     const result = await client.callTool({
-      name: "lsp_get_code_actions",
+      name: "lsmcp_get_code_actions",
       arguments: {
         root: tmpDir,
         filePath: "codeaction.ts",
@@ -418,7 +418,7 @@ console.log(greeting);
 
       // Test hover
       const result = await client.callTool({
-        name: "lsp_get_hover",
+        name: "lsmcp_get_hover",
         arguments: {
           root: tmpDir,
           filePath: "test.ts",
@@ -467,7 +467,7 @@ console.log(content);
 
       // Test diagnostics
       const result = await client.callTool({
-        name: "lsp_get_diagnostics",
+        name: "lsmcp_get_diagnostics",
         arguments: {
           root: tmpDir,
           filePath: "deno_test.ts",
@@ -483,7 +483,7 @@ console.log(content);
   });
 });
 
-describe("TypeScript Native Preview (TSGO) Support", { timeout: 30000 }, () => {
+describe.skip("TypeScript Native Preview (TSGO) Support - DEPRECATED", { timeout: 30000 }, () => {
   let client: Client | undefined;
   let transport: StdioClientTransport | undefined;
   let tmpDir: string | undefined;
@@ -559,15 +559,15 @@ describe("TypeScript Native Preview (TSGO) Support", { timeout: 30000 }, () => {
     const toolNames = response.tools.map(t => t.name);
 
     // When TSGO is enabled, LSP tools should be available
-    expect(toolNames).toContain("lsp_get_hover");
-    expect(toolNames).toContain("lsp_find_references");
-    expect(toolNames).toContain("lsp_get_definitions");
-    expect(toolNames).toContain("lsp_get_diagnostics");
+    expect(toolNames).toContain("lsmcp_get_hover");
+    expect(toolNames).toContain("lsmcp_find_references");
+    expect(toolNames).toContain("lsmcp_get_definitions");
+    expect(toolNames).toContain("lsmcp_get_diagnostics");
     
     // But also should have TypeScript compiler API tools
-    expect(toolNames).toContain("rename_symbol");
-    expect(toolNames).toContain("move_file");
-    expect(toolNames).toContain("delete_symbol");
+    expect(toolNames).toContain("lsmcp_rename_symbol");
+    expect(toolNames).toContain("lsmcp_move_file");
+    expect(toolNames).toContain("lsmcp_delete_symbol");
   });
 
   it("should get hover information using TSGO", async () => {
@@ -591,7 +591,7 @@ console.log(user.name);
 
     // Get hover information for 'user' using LSP
     const result = await client.callTool({
-      name: "lsp_get_hover",
+      name: "lsmcp_get_hover",
       arguments: {
         root: tmpDir,
         filePath: "user.ts",
@@ -630,7 +630,7 @@ add(1);
 
     // Get diagnostics using LSP
     const result = await client.callTool({
-      name: "lsp_get_diagnostics",
+      name: "lsmcp_get_diagnostics",
       arguments: {
         root: tmpDir,
         filePath: "errors.ts",
