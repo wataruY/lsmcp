@@ -814,18 +814,44 @@ export function getTypeSignature(
     }
 
     // Get documentation
+    const symbolDeclarations = actualSymbol.getDeclarations();
+    let jsDocComment = "";
+    
+    if (symbolDeclarations.length > 0) {
+      const firstDeclaration = symbolDeclarations[0];
+      // Try to get JSDoc comment text from various node types
+      const jsDocableNode = firstDeclaration as any;
+      if (jsDocableNode.getJsDocs) {
+        const jsDocs = jsDocableNode.getJsDocs();
+        if (jsDocs.length > 0) {
+          jsDocComment = jsDocs[0].getComment() || "";
+          if (typeof jsDocComment === 'object' && jsDocComment.text) {
+            jsDocComment = jsDocComment.text;
+          }
+        }
+      }
+    }
+    
     const jsDocs = actualSymbol.getJsDocTags();
-    const documentation =
+    const jsDocTags =
       jsDocs.length > 0
         ? jsDocs
             .map((tag: any) => {
               const tagName = tag.getName();
               const tagText =
-                typeof tag.getText === "function" ? tag.getText() : "";
+                typeof tag.getText === "function" 
+                  ? (Array.isArray(tag.getText()) 
+                      ? tag.getText().map((t: any) => typeof t === 'object' ? t.text || '' : t).join(' ')
+                      : tag.getText()) 
+                  : "";
               return `@${tagName} ${tagText}`;
             })
             .join("\n")
-        : undefined;
+        : "";
+        
+    const documentation = jsDocComment 
+      ? (jsDocTags ? `${jsDocComment}\n${jsDocTags}` : jsDocComment)
+      : (jsDocTags || undefined);
 
     // Clean up temporary file
     sourceFile.delete();
