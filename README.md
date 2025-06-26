@@ -219,10 +219,10 @@ npx -y @mizchi/lsmcp --bin "deno lsp"
 
 # Use TypeScript Native Preview (TSGO) for faster performance
 npm install @typescript/native-preview
-npx -y @mizchi/lsmcp --bin "npx @typescript/native-preview -- --lsp --stdio"
+npx -y @mizchi/lsmcp --bin "tsgo --lsp --stdio"
 
 # Use custom rust-analyzer path
-npx -y @mizchi/lsmcp --bin "/usr/local/bin/rust-analyzer"
+npx -y @mizchi/lsmcp --bin "rust-analyzer"
 
 # Use TypeScript LSP with custom tsserver path
 npx -y @mizchi/lsmcp --bin "typescript-language-server --stdio --tsserver-path=/usr/local/lib/node_modules/typescript/lib"
@@ -258,123 +258,179 @@ Or configure it in .mcp.json:
 }
 ```
 
-## Supported Languages
+## Language-Specific Setup
 
-`lsmcp` supports multiple programming languages through their respective Language Server Protocol implementations:
+### TypeScript/JavaScript
 
-### Built-in Language Support
+#### Prerequisites
+```bash
+# Install TypeScript language server
+npm install -g typescript-language-server typescript
+```
 
-| Language              | Detection Files                                  | LSP Server                 | Installation                                                        |
-| --------------------- | ------------------------------------------------ | -------------------------- | ------------------------------------------------------------------- |
-| TypeScript/JavaScript | `tsconfig.json`, `package.json`                  | typescript-language-server | `npm install -g typescript-language-server`                         |
-| Rust                  | `Cargo.toml`                                     | rust-analyzer              | `rustup component add rust-analyzer`                                |
-| Moonbit               | `moon.mod.json`                                  | Moonbit LSP                | Included with [Moonbit SDK](https://www.moonbitlang.com/download)   |
-| Go                    | `go.mod`                                         | gopls                      | `go install golang.org/x/tools/gopls@latest`                        |
-| Python                | `pyproject.toml`, `setup.py`, `requirements.txt` | pylsp                      | `pip install python-lsp-server`                                     |
-| Java                  | `pom.xml`, `build.gradle`                        | jdtls                      | See [jdtls installation](https://github.com/eclipse/eclipse.jdt.ls) |
-| C/C++                 | `CMakeLists.txt`, `Makefile`, `.c/.cpp/.h` files | clangd                     | `apt install clangd` or `brew install llvm`                         |
-
-### Language-Specific Tools
-
-Each language provides a consistent set of LSP-based tools with language-specific prefixes:
-
-#### TypeScript/JavaScript (`typescript_` or via Compiler API)
-
-- `rename_symbol` - Rename symbols across the codebase
-- `move_file` - Move files and update imports
-- `find_references` - Find all references to a symbol
-- `get_diagnostics` - Get errors and warnings
-- `get_type_at_symbol` - Get type information
-- And more...
-
-#### Other Languages (`<language>_` prefix)
-
-- `<language>_get_hover` - Get hover information
-- `<language>_find_references` - Find symbol references
-- `<language>_rename_symbol` - Rename symbols
-- `<language>_get_diagnostics` - Get diagnostics
-- `<language>_get_document_symbols` - List document symbols
-- And more LSP features...
-
-### Available MCP Servers
-
-1. **lsmcp** (Recommended) - Unified CLI with auto-detection
-
-   ```bash
-   npx -y @mizchi/lsmcp                    # Auto-detect language
-   npx -y @mizchi/lsmcp -l typescript      # Specify language
-   ```
-
-2. **Language-specific servers** - Direct access to language features
-   - `npx rust-mcp` - Rust language support
-   - `npx moonbit-mcp` - Moonbit language support
-   - `npx multi-language-mcp` - Multi-language with auto-detection
-   - `npx generic-lsp-mcp` - Use any LSP via LSP_COMMAND
-
-## Usage Examples
-
-### TypeScript Project
-
+#### Quick Setup
 ```bash
 cd my-typescript-project
 npx -y @mizchi/lsmcp --init=claude
 claude
 ```
 
-Then in Claude:
+#### Available Tools
+- `mcp__lsmcp__rename_symbol` - Rename symbols across the codebase
+- `mcp__lsmcp__move_file` - Move files and update imports
+- `mcp__lsmcp__find_references` - Find all references to a symbol
+- `mcp__lsmcp__get_diagnostics` - Get errors and warnings
+- `mcp__lsmcp__get_type_at_symbol` - Get type information
 
+#### Example Usage in Claude
 ```
-# Rename a symbol
-Use mcp__typescript__rename_symbol to rename the function "calculateTotal" to "computeSum" in src/utils.ts
-
-# Find all references
-Use mcp__typescript__find_references to find all uses of the "User" interface
-
-# Get type information
-Use mcp__typescript__get_type_at_symbol to show the type of "config" variable in app.ts line 15
+Use mcp__lsmcp__rename_symbol to rename the function "calculateTotal" to "computeSum" in src/utils.ts
+Use mcp__lsmcp__find_references to find all uses of the "User" interface
 ```
 
-### Rust Project
+### Rust
 
+#### Prerequisites
+```bash
+# Install rust-analyzer
+rustup component add rust-analyzer
+```
+
+#### Quick Setup
 ```bash
 cd my-rust-project
-npx -y @mizchi/lsmcp -l rust --init=claude
-# or use rust-mcp directly
-npx rust-mcp --init=claude
+npx -y @mizchi/lsmcp --init=claude
 claude
 ```
 
-Then in Claude:
+#### Available Tools
+- `rust_get_hover` - Get type information and documentation
+- `rust_find_references` - Find all references to a symbol
+- `rust_rename_symbol` - Rename symbols across the codebase
+- `rust_get_diagnostics` - Get compilation errors and warnings
 
+#### Example Usage in Claude
 ```
 Use rust_rename_symbol to rename the struct "Config" to "AppConfig"
 Use rust_find_references to find all uses of the "parse_args" function
 ```
 
-### Python Project
+### Python
 
+#### Prerequisites
+```bash
+# Install Python LSP server
+pip install python-lsp-server
+```
+
+#### Quick Setup
 ```bash
 cd my-python-project
-npx -y @mizchi/lsmcp --init=claude  # Auto-detects Python
+npx -y @mizchi/lsmcp --init=claude
 claude
 ```
 
-Then in Claude:
+#### Available Tools
+- `python_get_hover` - Get documentation and type information
+- `python_find_references` - Find all references to a symbol
+- `python_rename_symbol` - Rename symbols across the codebase
+- `python_get_diagnostics` - Get syntax and type errors
 
+#### Example Usage in Claude
 ```
 Use python_get_hover to show documentation for the "process_data" function
 Use python_rename_symbol to rename the class "DataProcessor" to "DataHandler"
 ```
 
-### Multi-Language Monorepo
+### Go
 
+#### Prerequisites
 ```bash
-cd my-monorepo
-npx multi-language-mcp --init=claude
+# Install gopls
+go install golang.org/x/tools/gopls@latest
+```
+
+#### Quick Setup
+```bash
+cd my-go-project
+npx -y @mizchi/lsmcp --init=claude
 claude
 ```
 
-The server will automatically detect and use the appropriate LSP based on the file being edited.
+#### Available Tools
+- `go_get_hover` - Get type information and documentation
+- `go_find_references` - Find all references to a symbol
+- `go_rename_symbol` - Rename symbols across the codebase
+- `go_get_diagnostics` - Get compilation errors
+
+### Other Languages
+
+#### C/C++
+```bash
+# Install clangd
+apt install clangd  # Ubuntu/Debian
+brew install llvm   # macOS
+
+# Setup
+cd my-cpp-project
+npx -y @mizchi/lsmcp --init=claude
+```
+
+#### Java
+```bash
+# Install Eclipse JDT Language Server
+# See: https://github.com/eclipse/eclipse.jdt.ls
+
+# Setup
+cd my-java-project
+npx -y @mizchi/lsmcp --init=claude
+```
+
+#### Moonbit
+```bash
+# Install Moonbit SDK (includes LSP)
+# See: https://www.moonbitlang.com/download
+
+# Setup
+cd my-moonbit-project
+npx -y @mizchi/lsmcp --init=claude
+```
+
+## Advanced Configuration
+
+### Custom LSP Server
+```bash
+# Use Deno LSP for TypeScript
+npx -y @mizchi/lsmcp --bin "deno lsp"
+
+# Use custom rust-analyzer path
+npx -y @mizchi/lsmcp --bin "/path/to/rust-analyzer"
+```
+
+### Manual MCP Configuration
+Edit `.mcp.json`:
+```json
+{
+  "mcpServers": {
+    "lsmcp": {
+      "command": "npx",
+      "args": ["-y", "@mizchi/lsmcp"]
+    }
+  }
+}
+```
+
+## Supported Languages
+
+| Language              | Detection Files                                  | LSP Server                 |
+| --------------------- | ------------------------------------------------ | -------------------------- |
+| TypeScript/JavaScript | `tsconfig.json`, `package.json`                  | typescript-language-server |
+| Rust                  | `Cargo.toml`                                     | rust-analyzer              |
+| Python                | `pyproject.toml`, `setup.py`, `requirements.txt` | pylsp                      |
+| Go                    | `go.mod`                                         | gopls                      |
+| Java                  | `pom.xml`, `build.gradle`                        | jdtls                      |
+| C/C++                 | `CMakeLists.txt`, `Makefile`                     | clangd                     |
+| Moonbit               | `moon.mod.json`                                  | Moonbit LSP                |
 
 ## Develop
 
