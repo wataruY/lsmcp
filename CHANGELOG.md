@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### 🔄 Project Renamed to lsmcp (2025-01-26)
-- **Project Rebranding**: typescript-mcp → lsmcp (Language Server MCP)
+- **Project Rebranding**: typescript-mcp → lsmcp (Language Service MCP)
   - Added "LSP for headless AI Agents" tagline
   - Main export now points to `lsmcp` instead of `typescript-mcp`
   - Added migration guide from typescript-mcp to lsmcp

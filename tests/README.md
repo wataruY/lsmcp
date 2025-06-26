@@ -32,7 +32,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 // Create transport with server parameters
 const transport = new StdioClientTransport({
   command: "node",
-  args: ["dist/typescript-mcp.js"],
+  args: ["dist/lsmcp.js"],
   env: process.env as Record<string, string>,
 });
 

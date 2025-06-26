@@ -57,7 +57,7 @@ function showHelp() {
   }
   
   console.log(`
-🌍 LSMCP - Language Server MCP for Multi-Language Support
+🌍 LSMCP - Language Service MCP for Multi-Language Support
 
 Usage:
   lsmcp [options]

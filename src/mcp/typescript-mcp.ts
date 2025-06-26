@@ -129,11 +129,11 @@ async function main() {
       const config = isGlobal
         ? {
             command: "npx",
-            args: ["-y", "typescript-mcp@latest"],
+            args: ["-y", "lsmcp@latest"],
           }
         : {
             command: "npx",
-            args: ["typescript-mcp"],
+            args: ["lsmcp"],
           };
 
       // Generate permissions from tool definitions
@@ -147,7 +147,7 @@ async function main() {
       );
 
       console.log(
-        `✓ Created/updated .mcp.json with typescript-mcp configuration`
+        `✓ Created/updated .mcp.json with lsmcp configuration`
       );
       console.log(`✓ Created/updated .claude/settings.json with permissions`);
 
@@ -162,10 +162,10 @@ async function main() {
       }
 
       if (!isGlobal) {
-        console.log(`\nInstall typescript-mcp as a dev dependency:`);
-        console.log(`  npm install --save-dev typescript-mcp`);
+        console.log(`\nInstall lsmcp as a dev dependency:`);
+        console.log(`  npm install --save-dev lsmcp`);
         console.log(`  # or`);
-        console.log(`  pnpm add -D typescript-mcp`);
+        console.log(`  pnpm add -D lsmcp`);
       }
       
       process.exit(0);

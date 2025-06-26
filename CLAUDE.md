@@ -86,8 +86,8 @@ Before committing, always run:
 
 ```
 dist/               # Build output directory
-  typescript-mcp.js # Main MCP server executable
-  lsmcp.js         # Unified LSP MCP CLI executable
+  typescript-mcp.js # TypeScript-specific MCP server executable
+  lsmcp.js         # Main unified LSP MCP CLI executable
   generic-lsp-mcp.js # Generic LSP MCP server executable
   moonbit-mcp.js   # Moonbit MCP server executable
   rust-mcp.js      # Rust MCP server executable

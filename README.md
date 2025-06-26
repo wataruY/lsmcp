@@ -1,4 +1,4 @@
-# lsmcp - Language Server MCP
+# lsmcp - Language Service MCP
 
 **LSP for headless AI Agents**
 
@@ -67,7 +67,7 @@ For language-specific servers or custom configurations:
 The easiest way to automatically configure lsmcp for Claude Desktop:
 
 ```bash
-npm install typescript typescript-mcp -D
+npm install typescript lsmcp -D
 npx lsmcp --init=claude
 # Creates/updates .mcp.json with lsmcp configuration
 # Creates/updates .claude/settings.json with permissions
@@ -136,6 +136,7 @@ For better results with AI assistants, consider adding this to your prompt:
 **When performing refactoring operations on code, ALWAYS use language-specific MCP tools instead of the default Edit/Write tools.**
 
 Specifically for refactoring:
+
 - For renaming symbols: ALWAYS use `<language>_rename_symbol` instead of Edit/Write
 - For moving files: ALWAYS use `<language>_move_file` (TypeScript only) instead of Bash(mv)
 - For finding references: ALWAYS use `<language>_find_references` instead of Grep
@@ -144,7 +145,7 @@ Specifically for refactoring:
 **NEVER use Edit, MultiEdit, or Write tools for refactoring operations that have a corresponding MCP tool.**
 ```
 
-## Important: Migration from typescript-mcp to lsmcp
+## Migration from typescript-mcp to lsmcp
 
 **Note:** The standalone `typescript-mcp` command has been replaced with the unified `lsmcp` (Language Server MCP) command. This change provides better multi-language support while maintaining all TypeScript functionality.
 
@@ -251,7 +252,7 @@ Or configure it in .mcp.json:
         "TSGO": "true"
       },
       "command": "npx",
-      "args": ["typescript-mcp"]
+      "args": ["lsmcp"]
     }
   }
 }
