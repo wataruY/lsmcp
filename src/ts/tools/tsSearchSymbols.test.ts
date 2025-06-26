@@ -176,4 +176,69 @@ function privateUtil() {}
     // Skip this test for now - file watching implementation verified manually
     // TODO: Fix test isolation for file watching
   });
+  
+  it.skip("should handle simultaneous file changes with buffering", async () => {
+    // Temporarily enable file watching for this test
+    const originalEnv = process.env.VITEST;
+    delete process.env.VITEST;
+    
+    try {
+      // Create multiple test files
+      const files = [
+        { path: join(tmpDir, "src/file1.ts"), content: "export class File1Class {}" },
+        { path: join(tmpDir, "src/file2.ts"), content: "export class File2Class {}" },
+        { path: join(tmpDir, "src/file3.ts"), content: "export class File3Class {}" },
+      ];
+      
+      // Write initial files
+      for (const file of files) {
+        await writeFile(file.path, file.content);
+      }
+      
+      // Build initial index
+      const result1 = await searchSymbolsTool.execute({
+        root: tmpDir,
+        query: "File",
+        buildIndex: true,
+      });
+      expect(result1).toContain("File1Class");
+      expect(result1).toContain("File2Class");
+      expect(result1).toContain("File3Class");
+      
+      // Wait for watchers to be set up
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Update all files simultaneously
+      const updatePromises = files.map((file, index) => 
+        writeFile(file.path, `export class UpdatedFile${index + 1}Class {}`)
+      );
+      await Promise.all(updatePromises);
+      
+      // Wait for debounced updates to process (100ms debounce + processing time)
+      await new Promise(resolve => setTimeout(resolve, 600));
+      
+      // Verify all updates were processed
+      const result2 = await searchSymbolsTool.execute({
+        root: tmpDir,
+        query: "UpdatedFile",
+        buildIndex: false,
+      });
+      expect(result2).toContain("UpdatedFile1Class");
+      expect(result2).toContain("UpdatedFile2Class");
+      expect(result2).toContain("UpdatedFile3Class");
+      
+      // Old classes should not be found
+      const result3 = await searchSymbolsTool.execute({
+        root: tmpDir,
+        query: "File1Class",
+        buildIndex: false,
+      });
+      expect(result3).toContain("No symbols found");
+    } finally {
+      // Restore environment variable
+      if (originalEnv !== undefined) {
+        process.env.VITEST = originalEnv;
+      }
+    }
+  });
 });

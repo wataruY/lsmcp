@@ -28,6 +28,9 @@ export class ProjectSymbolIndexer {
   private watchers: Map<string, FSWatcher> = new Map();
   private watchedDirs: Set<string> = new Set();
   private includePatterns: string[] = [];
+  private updateQueue: Map<string, { eventType: string; timestamp: number }> = new Map();
+  private updateTimer: NodeJS.Timeout | null = null;
+  private readonly UPDATE_DELAY_MS = 100; // Debounce delay in milliseconds
 
   constructor(project: Project, rootPath: string) {
     this.project = project;
@@ -359,23 +362,72 @@ export class ProjectSymbolIndexer {
   }
 
   /**
-   * Handle file change events
+   * Handle file change events with debouncing
    */
   private handleFileChange(filePath: string, eventType: string): void {
-    const relativePath = relative(this.rootPath, filePath);
-
-    if (eventType === 'rename') {
-      // File deleted or renamed
-      this.removeFileFromIndex(relativePath);
+    // Add to update queue
+    this.updateQueue.set(filePath, { eventType, timestamp: Date.now() });
+    
+    // Clear existing timer
+    if (this.updateTimer) {
+      clearTimeout(this.updateTimer);
+    }
+    
+    // Set new timer to process queued updates
+    this.updateTimer = setTimeout(() => {
+      this.processUpdateQueue();
+    }, this.UPDATE_DELAY_MS);
+  }
+  
+  /**
+   * Process all queued file updates
+   */
+  private processUpdateQueue(): void {
+    if (this.updateQueue.size === 0) return;
+    
+    debug(`Processing ${this.updateQueue.size} queued file updates`);
+    const startTime = Date.now();
+    
+    // Group updates by type to optimize processing
+    const updates = Array.from(this.updateQueue.entries());
+    const toRemove: string[] = [];
+    const toUpdate: string[] = [];
+    
+    for (const [filePath, { eventType }] of updates) {
+      const relativePath = relative(this.rootPath, filePath);
       
-      // If file still exists, it was renamed (not deleted)
-      if (existsSync(filePath)) {
-        this.updateFileInIndex(filePath);
+      if (eventType === 'rename') {
+        // File deleted or renamed
+        toRemove.push(relativePath);
+        
+        // If file still exists, it was renamed (not deleted)
+        if (existsSync(filePath)) {
+          toUpdate.push(filePath);
+        }
+      } else if (eventType === 'change') {
+        // File modified - only update if not already scheduled for removal
+        if (!toRemove.includes(relativePath)) {
+          toUpdate.push(filePath);
+        }
       }
-    } else if (eventType === 'change') {
-      // File modified
+    }
+    
+    // Process removals first
+    for (const relativePath of toRemove) {
+      this.removeFileFromIndex(relativePath);
+    }
+    
+    // Then process updates
+    for (const filePath of toUpdate) {
       this.updateFileInIndex(filePath);
     }
+    
+    // Clear the queue
+    this.updateQueue.clear();
+    this.updateTimer = null;
+    
+    const duration = Date.now() - startTime;
+    debug(`Processed file updates in ${duration}ms`);
   }
 
   /**
@@ -430,7 +482,7 @@ export class ProjectSymbolIndexer {
    * Clear all file watchers
    */
   private clearWatchers(): void {
-    for (const [dir, watcher] of this.watchers) {
+    for (const [, watcher] of this.watchers) {
       watcher.close();
     }
     this.watchers.clear();
@@ -441,6 +493,14 @@ export class ProjectSymbolIndexer {
    * Dispose of the indexer and clean up resources
    */
   dispose(): void {
+    // Clear any pending updates
+    if (this.updateTimer) {
+      clearTimeout(this.updateTimer);
+      this.updateTimer = null;
+    }
+    this.updateQueue.clear();
+    
+    // Clear watchers and index
     this.clearWatchers();
     this.index.symbols.clear();
     this.index.modules.clear();

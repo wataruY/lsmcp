@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Monitors directories containing source files
   - Incremental updates on file modifications
   - Proper cleanup on process exit
+- **Buffering/Debouncing**: Handles simultaneous file changes gracefully
+  - 100ms debounce delay to batch multiple changes
+  - Processes all queued updates in a single operation
+  - Prevents race conditions during bulk file operations
 - **Removed 5-minute Cache**: Replaced heuristic caching with real-time updates
 - **Performance**: File watching is disabled in test environments for stability
 
