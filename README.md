@@ -18,7 +18,7 @@ The easiest way to set up typescript-mcp in your project:
 
 ```bash
 npm install typescript typescript-mcp -D
-npx typescript-mcp --init=claude
+npx lsmcp --init=claude
 # Creates/updates .mcp.json with typescript-mcp configuration
 # Creates/updates .claude/settings.json with permissions
 ```
@@ -84,6 +84,26 @@ Add permissions in `.claude/settings.json`:
   }
 }
 ```
+
+## Important: Migration from typescript-mcp to lsmcp
+
+**Note:** The standalone `typescript-mcp` command has been replaced with the unified `lsmcp` (Language Server MCP) command. This change provides better multi-language support while maintaining all TypeScript functionality.
+
+### Migration Guide
+
+If you were using:
+```bash
+npx typescript-mcp
+```
+
+Now use:
+```bash
+npx lsmcp                    # Auto-detects TypeScript projects
+# or explicitly:
+npx lsmcp --language typescript
+```
+
+All TypeScript-specific features remain available through `lsmcp`. The tool will automatically detect TypeScript projects by looking for `tsconfig.json` or `package.json` files.
 
 ## Using lsmcp - Unified Language Server MCP
 
@@ -193,9 +213,11 @@ Or configure it in .mcp.json:
 
 ### Language-Specific MCP Servers
 
-- **TypeScript**: `npx typescript-mcp` - Full TypeScript compiler API support
+- **TypeScript**: `npx lsmcp` or `npx lsmcp -l typescript` - Full TypeScript compiler API support
 - **Rust**: `npx rust-mcp` - Rust-specific tools via rust-analyzer
 - **Moonbit**: `npx moonbit-mcp` - Moonbit language support
+- **Multi-language**: `npx multi-language-mcp` - Auto-detects and uses appropriate LSP
+- **Generic LSP**: `npx generic-lsp-mcp` - Use any LSP server via LSP_COMMAND env
 - **Others**: Use `npx lsmcp` with auto-detection or `--language` flag
 
 ## Usage Examples
