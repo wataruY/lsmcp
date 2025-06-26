@@ -217,7 +217,7 @@ if (import.meta.vitest) {
       // Using the example connected.ts file which imports from "./scratch"
       const result = await lspGetDefinitionsTool.execute({
         root,
-        filePath: "playground/connected.ts",
+        filePath: "examples/typescript/connected.ts",
         line: 1, // export line
         symbolName: "x",
       });
@@ -230,7 +230,7 @@ if (import.meta.vitest) {
       // The types.ts file has Value type used in getValue function
       const result = await lspGetDefinitionsTool.execute({
         root,
-        filePath: "playground/types.ts",
+        filePath: "examples/typescript/types.ts",
         line: 10, // getValue function that returns Value type
         symbolName: "Value",
       });
@@ -241,7 +241,7 @@ if (import.meta.vitest) {
     it.skip("should handle string line matching", async () => {
       const result = await lspGetDefinitionsTool.execute({
         root,
-        filePath: "playground/types.ts",
+        filePath: "examples/typescript/types.ts",
         line: "ValueWithOptional",
         symbolName: "ValueWithOptional",
       });
@@ -253,7 +253,7 @@ if (import.meta.vitest) {
       await expect(
         lspGetDefinitionsTool.execute({
           root,
-          filePath: "playground/types.ts",
+          filePath: "examples/typescript/types.ts",
           line: 1,
           symbolName: "nonexistent",
         })
@@ -264,7 +264,7 @@ if (import.meta.vitest) {
       await expect(
         lspGetDefinitionsTool.execute({
           root,
-          filePath: "playground/types.ts",
+          filePath: "examples/typescript/types.ts",
           line: "nonexistent line",
           symbolName: "Value",
         })
@@ -285,7 +285,7 @@ if (import.meta.vitest) {
     it.skip("should handle no definition found for built-in symbols", async () => {
       const result = await lspGetDefinitionsTool.execute({
         root,
-        filePath: "playground/types.ts",
+        filePath: "examples/typescript/types.ts",
         line: 11, // The return statement line
         symbolName: "v",
         before: 2,

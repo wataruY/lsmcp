@@ -7,8 +7,8 @@ async function runTests() {
   
   const targets: BuildTarget[] = ["wasm", "js"];
   
-  for (const target of targets) {
-    
+  for (const _target of targets) {
+    // Run tests for each target
   }
 }
 

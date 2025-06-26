@@ -179,7 +179,7 @@ if (import.meta.vitest) {
     it("should find references to a type", async () => {
       const result = await lspFindReferencesTool.execute({
         root,
-        filePath: "playground/types.ts",
+        filePath: "examples/typescript/types.ts",
         line: 1,
         symbolName: "Value",
       });
@@ -191,7 +191,7 @@ if (import.meta.vitest) {
     it("should find references to a function", async () => {
       const result = await lspFindReferencesTool.execute({
         root,
-        filePath: "playground/types.ts",
+        filePath: "examples/typescript/types.ts",
         line: 10,
         symbolName: "getValue",
       });
@@ -203,7 +203,7 @@ if (import.meta.vitest) {
     it("should handle string line matching", async () => {
       const result = await lspFindReferencesTool.execute({
         root,
-        filePath: "playground/types.ts",
+        filePath: "examples/typescript/types.ts",
         line: "ValueWithOptional",
         symbolName: "ValueWithOptional",
       });
@@ -215,7 +215,7 @@ if (import.meta.vitest) {
       await expect(
         lspFindReferencesTool.execute({
           root,
-          filePath: "playground/types.ts",
+          filePath: "examples/typescript/types.ts",
           line: 1,
           symbolName: "nonexistent",
         })
@@ -226,7 +226,7 @@ if (import.meta.vitest) {
       await expect(
         lspFindReferencesTool.execute({
           root,
-          filePath: "playground/types.ts",
+          filePath: "examples/typescript/types.ts",
           line: "nonexistent line",
           symbolName: "Value",
         })
@@ -247,7 +247,7 @@ if (import.meta.vitest) {
     it("should include preview context in results", async () => {
       const result = await lspFindReferencesTool.execute({
         root,
-        filePath: "playground/types.ts",
+        filePath: "examples/typescript/types.ts",
         line: 11,
         symbolName: "v",
       });
@@ -260,7 +260,7 @@ if (import.meta.vitest) {
       // The Value type is defined and used in types.ts
       const result = await lspFindReferencesTool.execute({
         root,
-        filePath: "playground/types.ts",
+        filePath: "examples/typescript/types.ts",
         line: 1,
         symbolName: "Value",
       });

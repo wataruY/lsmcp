@@ -825,8 +825,8 @@ export function getTypeSignature(
         const jsDocs = jsDocableNode.getJsDocs();
         if (jsDocs.length > 0) {
           jsDocComment = jsDocs[0].getComment() || "";
-          if (typeof jsDocComment === 'object' && jsDocComment.text) {
-            jsDocComment = jsDocComment.text;
+          if (typeof jsDocComment === 'object' && jsDocComment !== null && 'text' in jsDocComment) {
+            jsDocComment = (jsDocComment as any).text;
           }
         }
       }

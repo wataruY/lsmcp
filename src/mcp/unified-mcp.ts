@@ -11,7 +11,7 @@ import { join, dirname, relative } from "path";
 import { fileURLToPath } from "url";
 import { spawn } from "child_process";
 import { debug } from "./_mcplib.ts";
-import { detectProjectLanguage, getLanguageInfo, LANGUAGE_CONFIGS } from "../common/languageDetection.ts";
+import { getLanguageInfo, LANGUAGE_CONFIGS } from "../common/languageDetection.ts";
 
 // Parse command line arguments
 const { values, positionals } = parseArgs({

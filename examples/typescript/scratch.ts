@@ -11,8 +11,8 @@ export const x = 42;
 
 export function testFunction<T extends string>(
   required: string,
-  optional?: number,
-  withDefault: boolean = true,
+  _optional?: number,
+  _withDefault: boolean = true,
   ...rest: T[]
 ): { result: string; count: number } {
   return { result: required, count: rest.length };

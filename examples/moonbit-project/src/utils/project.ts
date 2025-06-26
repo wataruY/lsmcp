@@ -6,7 +6,7 @@ export interface MoonbitConfig {
   dependencies?: Record<string, string>;
 }
 
-export function loadConfig(path: string): MoonbitConfig {
+export function loadConfig(_path: string): MoonbitConfig {
   // Mock implementation
   return {
     name: "moonbit-test",

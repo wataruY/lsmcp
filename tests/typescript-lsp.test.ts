@@ -7,8 +7,16 @@ import fs from "fs/promises";
 import { randomBytes } from "crypto";
 import { execSync } from "child_process";
 
+interface TextContent {
+  type: "text";
+  text: string;
+}
+
+interface CallToolResult {
+  content: TextContent[];
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const GENERIC_LSP_MCP_PATH = path.join(__dirname, "../dist/generic-lsp-mcp.js");
 const LSMCP_PATH = path.join(__dirname, "../dist/lsmcp.js");
 
 describe("TypeScript Language Server Integration", { timeout: 30000 }, () => {
@@ -17,11 +25,11 @@ describe("TypeScript Language Server Integration", { timeout: 30000 }, () => {
   let tmpDir: string | undefined;
 
   beforeEach(async function(this: any) {
-    // Skip test if generic-lsp-mcp.js is not built
+    // Skip test if lsmcp.js is not built
     try {
-      await fs.access(GENERIC_LSP_MCP_PATH);
+      await fs.access(LSMCP_PATH);
     } catch {
-      console.log("Skipping test: dist/generic-lsp-mcp.js not found. Run 'pnpm build' first.");
+      console.log("Skipping test: dist/lsmcp.js not found. Run 'pnpm build' first.");
       this.skip();
       return;
     }
@@ -55,11 +63,10 @@ describe("TypeScript Language Server Integration", { timeout: 30000 }, () => {
     // Create transport with server parameters
     transport = new StdioClientTransport({
       command: "node",
-      args: [GENERIC_LSP_MCP_PATH],
+      args: [LSMCP_PATH, "--bin", "npx typescript-language-server --stdio"],
       env: {
         ...process.env,
         PROJECT_ROOT: tmpDir,
-        LSP_COMMAND: "npx typescript-language-server --stdio",
       } as Record<string, string>,
     });
 
@@ -132,9 +139,10 @@ console.log(person.name);
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(result.content[0]?.type).toBe("text");
-    if (result.content[0]?.type === "text") {
-      const text = result.content[0].text;
+    const typedResult = result as CallToolResult;
+    expect(typedResult.content[0]?.type).toBe("text");
+    if (typedResult.content[0]?.type === "text") {
+      const text = typedResult.content[0].text;
       expect(text).toContain("Person");
       expect(text).toContain("const person: Person");
     }
@@ -163,9 +171,10 @@ console.log(message.);
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(result.content[0]?.type).toBe("text");
-    if (result.content[0]?.type === "text") {
-      const text = result.content[0].text;
+    const typedResult = result as CallToolResult;
+    expect(typedResult.content[0]?.type).toBe("text");
+    if (typedResult.content[0]?.type === "text") {
+      const text = typedResult.content[0].text;
       // String methods should be suggested
       expect(text).toContain("toLowerCase");
       expect(text).toContain("toUpperCase");
@@ -200,9 +209,10 @@ greet("Alice", );
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(result.content[0]?.type).toBe("text");
-    if (result.content[0]?.type === "text") {
-      const text = result.content[0].text;
+    const typedResult = result as CallToolResult;
+    expect(typedResult.content[0]?.type).toBe("text");
+    if (typedResult.content[0]?.type === "text") {
+      const text = typedResult.content[0].text;
       expect(text).toContain("greet");
       expect(text).toContain("name: string");
       expect(text).toContain("age: number");
@@ -278,9 +288,10 @@ const total = calculateSum(10, 20);
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(result.content[0]?.type).toBe("text");
-    if (result.content[0]?.type === "text") {
-      const text = result.content[0].text;
+    const typedResult = result as CallToolResult;
+    expect(typedResult.content[0]?.type).toBe("text");
+    if (typedResult.content[0]?.type === "text") {
+      const text = typedResult.content[0].text;
       expect(text).toContain("Successfully renamed");
     }
 
@@ -328,9 +339,10 @@ instance.myProperty = "value"; // Error: private property
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(result.content[0]?.type).toBe("text");
-    if (result.content[0]?.type === "text") {
-      const text = result.content[0].text;
+    const typedResult = result as CallToolResult;
+    expect(typedResult.content[0]?.type).toBe("text");
+    if (typedResult.content[0]?.type === "text") {
+      const text = typedResult.content[0].text;
       // Should suggest making the property public or adding a setter
       expect(text.toLowerCase()).toMatch(/action|fix|suggest/);
     }
@@ -417,9 +429,10 @@ console.log(greeting);
 
       expect(result).toBeDefined();
       expect(result.content).toBeDefined();
-      expect(result.content[0]?.type).toBe("text");
-      if (result.content[0]?.type === "text") {
-        const text = result.content[0].text;
+      const typedResult = result as CallToolResult;
+      expect(typedResult.content[0]?.type).toBe("text");
+      if (typedResult.content[0]?.type === "text") {
+        const text = typedResult.content[0].text;
         expect(text).toContain("string");
         expect(text).toContain("const greeting: string");
       }
@@ -589,9 +602,10 @@ console.log(user.name);
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(result.content[0]?.type).toBe("text");
-    if (result.content[0]?.type === "text") {
-      const text = result.content[0].text;
+    const typedResult = result as CallToolResult;
+    expect(typedResult.content[0]?.type).toBe("text");
+    if (typedResult.content[0]?.type === "text") {
+      const text = typedResult.content[0].text;
       expect(text).toContain("User");
       expect(text).toContain("const user: User");
     }
@@ -625,9 +639,10 @@ add(1);
 
     expect(result).toBeDefined();
     expect(result.content).toBeDefined();
-    expect(result.content[0]?.type).toBe("text");
-    if (result.content[0]?.type === "text") {
-      const text = result.content[0].text;
+    const typedResult = result as CallToolResult;
+    expect(typedResult.content[0]?.type).toBe("text");
+    if (typedResult.content[0]?.type === "text") {
+      const text = typedResult.content[0].text;
       // TSGO might report differently than standard TypeScript
       if (text.includes("0 errors")) {
         // TSGO might not detect these errors in the same way

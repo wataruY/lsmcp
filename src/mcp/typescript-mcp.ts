@@ -24,6 +24,12 @@ import { lspGetHoverTool } from "../lsp/tools/lspGetHover.ts";
 import { lspFindReferencesTool } from "../lsp/tools/lspFindReferences.ts";
 import { lspGetDefinitionsTool } from "../lsp/tools/lspGetDefinitions.ts";
 import { lspGetDiagnosticsTool } from "../lsp/tools/lspGetDiagnostics.ts";
+import { lspRenameSymbolTool } from "../lsp/tools/lspRenameSymbol.ts";
+import { lspGetDocumentSymbolsTool } from "../lsp/tools/lspGetDocumentSymbols.ts";
+import { lspGetCompletionTool } from "../lsp/tools/lspGetCompletion.ts";
+import { lspGetSignatureHelpTool } from "../lsp/tools/lspGetSignatureHelp.ts";
+import { lspFormatDocumentTool } from "../lsp/tools/lspFormatDocument.ts";
+import { lspGetCodeActionsTool } from "../lsp/tools/lspGetCodeActions.ts";
 import { listToolsTool } from "./tools/listTools.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -32,6 +38,7 @@ import { spawn } from "child_process";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 
 const USE_TSGO: boolean = process.env.TSGO != null;
+const USE_LSP: boolean = process.env.FORCE_LSP === "true" || process.env.LSP_COMMAND != null;
 
 // Define tools based on configuration
 const tools: ToolDef<any>[] = [
@@ -48,12 +55,18 @@ const tools: ToolDef<any>[] = [
   // getModuleGraphTool,
   // getRelatedModulesTool,
 
-  ...(USE_TSGO
+  ...((USE_TSGO || USE_LSP)
     ? [
         lspGetHoverTool,
         lspFindReferencesTool,
         lspGetDefinitionsTool,
         lspGetDiagnosticsTool,
+        lspRenameSymbolTool,
+        lspGetDocumentSymbolsTool,
+        lspGetCompletionTool,
+        lspGetSignatureHelpTool,
+        lspFormatDocumentTool,
+        lspGetCodeActionsTool,
       ]
     : [findReferencesTool, getDefinitionsTool, getDiagnosticsTool]),
 ];
@@ -184,7 +197,7 @@ async function main() {
     server.setDefaultRoot(projectRoot);
     server.registerTools(tools);
 
-    // Initialize LSP if using TSGO
+    // Initialize LSP if using TSGO or custom LSP
     if (USE_TSGO) {
       const tsgoProcess = spawn(
         "npx",
@@ -196,6 +209,18 @@ async function main() {
       );
       await initializeLSPClient(projectRoot, tsgoProcess, "typescript");
       debug("[tsgo] Initialized tsgo LSP client");
+    } else if (USE_LSP && process.env.LSP_COMMAND) {
+      // Parse LSP command
+      const parts = process.env.LSP_COMMAND.split(" ");
+      const command = parts[0];
+      const args = parts.slice(1);
+      
+      const lspProcess = spawn(command, args, {
+        cwd: projectRoot,
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+      await initializeLSPClient(projectRoot, lspProcess, "typescript");
+      debug(`[lsp] Initialized custom LSP client: ${process.env.LSP_COMMAND}`);
     }
 
     // Connect transport and start server

@@ -57,7 +57,7 @@ describe("Language Detection with lsmcp", () => {
     });
   }
 
-  it("should detect TypeScript project", async () => {
+  it("should require --language option for TypeScript project", async () => {
     // Skip test if lsmcp.js is not built
     try {
       await fs.access(LSMCP_PATH);
@@ -81,12 +81,18 @@ export function hello() {
 }
 `);
 
-    const result = await runLsmcp(tmpDir, ["--help"]);
-    expect(result.code).toBe(0);
-    expect(result.stderr).toContain("Auto-detected language: typescript");
+    // Running without --language should fail
+    const result = await runLsmcp(tmpDir, []);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain("Error: Either --language or --bin option is required");
+
+    // Running with --language should work
+    const result2 = await runLsmcp(tmpDir, ["--language", "typescript", "--help"]);
+    expect(result2.code).toBe(0);
+    expect(result2.stdout).toContain("LSMCP - Language Service MCP");
   });
 
-  it("should detect Rust project", async () => {
+  it("should require --language option for Rust project", async () => {
     // Skip test if lsmcp.js is not built
     try {
       await fs.access(LSMCP_PATH);
@@ -110,12 +116,12 @@ fn main() {
 }
 `);
 
-    const result = await runLsmcp(tmpDir, ["--help"]);
-    expect(result.code).toBe(0);
-    expect(result.stderr).toContain("Auto-detected language: rust");
+    const result = await runLsmcp(tmpDir, []);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain("Error: Either --language or --bin option is required");
   });
 
-  it("should detect Moonbit project", async () => {
+  it("should require --language option for Moonbit project", async () => {
     // Skip test if lsmcp.js is not built
     try {
       await fs.access(LSMCP_PATH);
@@ -137,12 +143,12 @@ fn main {
 }
 `);
 
-    const result = await runLsmcp(tmpDir, ["--help"]);
-    expect(result.code).toBe(0);
-    expect(result.stderr).toContain("Auto-detected language: moonbit");
+    const result = await runLsmcp(tmpDir, []);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain("Error: Either --language or --bin option is required");
   });
 
-  it("should detect Python project", async () => {
+  it("should require --language option for Python project", async () => {
     // Skip test if lsmcp.js is not built
     try {
       await fs.access(LSMCP_PATH);
@@ -166,12 +172,12 @@ if __name__ == "__main__":
     main()
 `);
 
-    const result = await runLsmcp(tmpDir, ["--help"]);
-    expect(result.code).toBe(0);
-    expect(result.stderr).toContain("Auto-detected language: python");
+    const result = await runLsmcp(tmpDir, []);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain("Error: Either --language or --bin option is required");
   });
 
-  it("should detect JavaScript project", async () => {
+  it("should require --language option for JavaScript project", async () => {
     // Skip test if lsmcp.js is not built
     try {
       await fs.access(LSMCP_PATH);
@@ -180,28 +186,26 @@ if __name__ == "__main__":
       return;
     }
 
-    // Create package.json without TypeScript
+    // Create package.json
     await fs.writeFile(path.join(tmpDir, "package.json"), JSON.stringify({
       name: "test-project",
-      version: "1.0.0",
-      main: "index.js",
+      version: "0.1.0",
+      type: "module",
     }, null, 2));
 
     // Create a JavaScript file
     await fs.writeFile(path.join(tmpDir, "index.js"), `
-function hello() {
+export function hello() {
   console.log("Hello from JavaScript!");
 }
-
-module.exports = { hello };
 `);
 
-    const result = await runLsmcp(tmpDir, ["--help"]);
-    expect(result.code).toBe(0);
-    expect(result.stderr).toContain("Auto-detected language: javascript");
+    const result = await runLsmcp(tmpDir, []);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain("Error: Either --language or --bin option is required");
   });
 
-  it("should detect Go project", async () => {
+  it("should require --language option for Go project", async () => {
     // Skip test if lsmcp.js is not built
     try {
       await fs.access(LSMCP_PATH);
@@ -227,30 +231,12 @@ func main() {
 }
 `);
 
-    const result = await runLsmcp(tmpDir, ["--help"]);
-    expect(result.code).toBe(0);
-    expect(result.stderr).toContain("Auto-detected language: go");
-  });
-
-  it("should fail when no project detected", async () => {
-    // Skip test if lsmcp.js is not built
-    try {
-      await fs.access(LSMCP_PATH);
-    } catch {
-      console.log("Skipping test: dist/lsmcp.js not found. Run 'pnpm build' first.");
-      return;
-    }
-
-    // Don't create any project files
-    await fs.writeFile(path.join(tmpDir, "random.txt"), "Some random file");
-
-    // When running without --help (to actually start the server), it should fail
     const result = await runLsmcp(tmpDir, []);
-    expect(result.code).toBe(1);
-    expect(result.stderr).toContain("Could not detect project language");
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain("Error: Either --language or --bin option is required");
   });
 
-  it("should override detection with --language flag", async () => {
+  it("should fail when neither --language nor --bin is provided", async () => {
     // Skip test if lsmcp.js is not built
     try {
       await fs.access(LSMCP_PATH);
@@ -259,17 +245,23 @@ func main() {
       return;
     }
 
-    // Create a TypeScript project
-    await fs.writeFile(path.join(tmpDir, "tsconfig.json"), JSON.stringify({
-      compilerOptions: {
-        target: "es2020",
-      }
-    }, null, 2));
+    const result = await runLsmcp(tmpDir, []);
+    expect(result.code).not.toBe(0);
+    expect(result.stderr).toContain("Error: Either --language or --bin option is required");
+  });
 
-    // But override to use Rust
-    const result = await runLsmcp(tmpDir, ["--language", "rust", "--help"]);
+  it("should work with --language flag", async () => {
+    // Skip test if lsmcp.js is not built
+    try {
+      await fs.access(LSMCP_PATH);
+    } catch {
+      console.log("Skipping test: dist/lsmcp.js not found. Run 'pnpm build' first.");
+      return;
+    }
 
-    // Should not see auto-detection message when language is specified
-    expect(result.stderr).not.toContain("Auto-detected language");
+    const result = await runLsmcp(tmpDir, ["--language", "typescript", "--help"]);
+    expect(result.code).toBe(0);
+    expect(result.stdout).toContain("LSMCP - Language Service MCP");
+    expect(result.stdout).toContain("--language");
   });
 });

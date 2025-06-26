@@ -35,7 +35,7 @@ describe("LSP Client Direct Integration", () => {
     client = createLSPClient({ rootPath: projectRoot, process });
     await client.start();
 
-    const testFilePath = resolve(projectRoot, "playground/types.ts");
+    const testFilePath = resolve(projectRoot, "examples/typescript/types.ts");
     const fileContent = readFileSync(testFilePath, "utf-8");
     const fileUri = `file://${testFilePath}`;
 
@@ -56,7 +56,7 @@ describe("LSP Client Direct Integration", () => {
     client = createLSPClient({ rootPath: projectRoot, process });
     await client.start();
 
-    const testFilePath = resolve(projectRoot, "playground/types.ts");
+    const testFilePath = resolve(projectRoot, "examples/typescript/types.ts");
     const fileContent = readFileSync(testFilePath, "utf-8");
     const fileUri = `file://${testFilePath}`;
 
@@ -90,7 +90,7 @@ describe("LSP Client Direct Integration", () => {
     client = createLSPClient({ rootPath: projectRoot, process });
     await client.start();
 
-    const testFilePath = resolve(projectRoot, "playground/types.ts");
+    const testFilePath = resolve(projectRoot, "examples/typescript/types.ts");
     const fileContent = readFileSync(testFilePath, "utf-8");
     const fileUri = `file://${testFilePath}`;
 
@@ -117,7 +117,7 @@ describe("LSP Client Direct Integration", () => {
     client = createLSPClient({ rootPath: projectRoot, process });
     await client.start();
 
-    const testFilePath = resolve(projectRoot, "playground/types.ts");
+    const testFilePath = resolve(projectRoot, "examples/typescript/types.ts");
     const fileContent = readFileSync(testFilePath, "utf-8");
     const fileUri = `file://${testFilePath}`;
 

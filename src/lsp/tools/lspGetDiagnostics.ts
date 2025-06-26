@@ -245,7 +245,7 @@ if (import.meta.vitest) {
     it("should get diagnostics for actual file", async () => {
       const result = await lspGetDiagnosticsTool.execute({
         root,
-        filePath: "playground/scratch.ts",
+        filePath: "examples/typescript/scratch.ts",
       });
 
       expect(result).toMatch(/Found \d+ errors? and \d+ warnings?/);
