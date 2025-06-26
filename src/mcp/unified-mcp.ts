@@ -353,10 +353,8 @@ async function main() {
   await runLanguageServer(language, positionals);
 }
 
-// Only run if this is the main module
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith("/lsmcp.js")) {
-  main().catch(error => {
-    console.error("Fatal error:", error);
-    process.exit(1);
-  });
-}
+// Always run main when this script is executed directly
+main().catch(error => {
+  console.error("Fatal error:", error);
+  process.exit(1);
+});
