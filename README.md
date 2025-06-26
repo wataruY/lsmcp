@@ -87,11 +87,13 @@ If configuring manually, add permissions to `.claude/settings.json`:
 {
   "permissions": {
     "allow": [
-      // TypeScript tools
-      "mcp__typescript__*",
+      // lsmcp tools (TypeScript via Compiler API)
+      "mcp__lsmcp__*",
       // Or specific tools
-      "mcp__typescript__rename_symbol",
-      "mcp__typescript__move_file",
+      "mcp__lsmcp__rename_symbol",
+      "mcp__lsmcp__move_file",
+      // TypeScript-specific server
+      "mcp__typescript__*",
       // Language-specific tools
       "rust_*",
       "python_*",
