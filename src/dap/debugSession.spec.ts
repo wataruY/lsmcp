@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll, vi } from "vitest";
+import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { createDebugSession } from "./index.ts";
 import { EnhancedMockDAPServer } from "./__tests__/test-helpers/enhanced-mock-dap-server.ts";
 

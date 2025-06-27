@@ -21,7 +21,8 @@
   },
   "bin": {
     "typescript-mcp": "./dist/typescript-mcp.js",
-    "lsmcp": "./dist/lsmcp.js"
+    "lsmcp": "./dist/lsmcp.js",
+    "dap-mcp": "./dist/dap-mcp.js"
   },
   "files": [
     "dist",
