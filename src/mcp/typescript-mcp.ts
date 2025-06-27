@@ -138,6 +138,11 @@ async function main() {
       allowPositionals: false,
     });
 
+    // Project root resolution order:
+    // 1. Command line argument --project-root
+    // 2. Environment variable PROJECT_ROOT (for backward compatibility)
+    // 3. Current working directory
+    // TODO: When MCP adds client cwd support, prioritize that over env var
     const projectRoot = values["project-root"] || 
                        process.env.PROJECT_ROOT || 
                        process.cwd();

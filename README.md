@@ -153,10 +153,6 @@ lsmcp --include "**/*.ts" --exclude "node_modules/**"
 # Use custom LSP command
 export LSP_COMMAND="my-custom-lsp --stdio"
 npx @mizchi/lsmcp
-
-# Force project root
-export PROJECT_ROOT="/path/to/project"
-npx @mizchi/lsmcp
 ```
 
 ## CRITICAL: Tool Usage Priority for Refactoring
