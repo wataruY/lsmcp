@@ -146,7 +146,7 @@ export class DAPClient extends EventEmitter {
 
     try {
       return JSON.parse(body);
-    } catch (error) {
+    } catch {
       throw new Error(`Failed to parse message body: ${body}`);
     }
   }

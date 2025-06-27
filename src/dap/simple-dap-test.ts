@@ -1,5 +1,4 @@
 #!/usr/bin/env -S npx tsx
-import { DAPClient } from "./dapClient.ts";
 import { writeFileSync } from "fs";
 import { resolve } from "path";
 import { fileURLToPath } from "url";

@@ -42,7 +42,8 @@ async function testDebugger() {
 
     // Create a simple test program
     const testProgram = resolve(import.meta.dirname!, "test-program.js");
-    await Deno.writeTextFile(
+    const { writeFileSync } = await import("fs");
+    writeFileSync(
       testProgram,
       `
 console.log('Starting program...');

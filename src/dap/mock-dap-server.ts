@@ -8,13 +8,11 @@ import { EventEmitter } from "events";
 class MockDAPServer extends EventEmitter {
   private server: ReturnType<typeof createServer>;
   private sequenceNumber = 1;
-  private client: Socket | null = null;
 
   constructor() {
     super();
     this.server = createServer((socket) => {
       console.log("Client connected");
-      this.client = socket;
       this.setupClient(socket);
     });
   }
@@ -54,7 +52,6 @@ class MockDAPServer extends EventEmitter {
 
     socket.on("close", () => {
       console.log("Client disconnected");
-      this.client = null;
     });
   }
 

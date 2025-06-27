@@ -3,44 +3,10 @@ import { DAPClient } from "./dapClient.ts";
 import { writeFileSync } from "fs";
 import { resolve } from "path";
 import { fileURLToPath } from "url";
-import { spawn } from "child_process";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
-async function findVSCodeJsDebug(): Promise<string | null> {
-  // Try to find vscode-js-debug installed globally or locally
-  const possiblePaths = [
-    // Global npm installation
-    "/usr/local/lib/node_modules/@vscode/js-debug",
-    "/usr/lib/node_modules/@vscode/js-debug",
-    // Local installation
-    resolve(__dirname, "../../node_modules/@vscode/js-debug"),
-    // VSCode extension path (Linux)
-    resolve(process.env.HOME || "", ".vscode/extensions"),
-    // VSCode extension path (WSL)
-    "/mnt/c/Users/*/AppData/Local/Programs/Microsoft VS Code/resources/app/extensions",
-  ];
-
-  console.log("🔍 Searching for vscode-js-debug...");
-  
-  // First, let's try to install it if not found
-  console.log("📦 Installing @vscode/js-debug-dap...");
-  const installProcess = spawn("npm", ["install", "-g", "@vscode/js-debug-dap"], {
-    stdio: "inherit",
-  });
-
-  await new Promise<void>((resolve, reject) => {
-    installProcess.on("exit", (code) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(new Error(`Installation failed with code ${code}`));
-      }
-    });
-  });
-
-  return null;
-}
+// Removed unused function
 
 async function testWithVSCodeJsDebug() {
   const client = new DAPClient();
@@ -124,7 +90,7 @@ console.log('Program finished!');
 
     // Launch
     console.log("🚀 Launching program...");
-    const launchResponse = await client.sendRequest("launch", {
+    await client.sendRequest("launch", {
       type: "pwa-node",
       request: "launch",
       name: "Test Program",
