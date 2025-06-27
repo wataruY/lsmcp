@@ -3,8 +3,8 @@
  * Run all DAP tests in sequence
  */
 import { spawn } from "child_process";
-import { resolve } from "path";
 import { fileURLToPath } from "url";
+import { join } from "path";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -38,16 +38,16 @@ const tests = [
 
 async function runTest(testFile: string): Promise<boolean> {
   return new Promise((resolve) => {
-    const testPath = resolve(__dirname, testFile);
+    const testPath = join(__dirname, testFile);
     const proc = spawn("npx", ["tsx", testPath], {
       stdio: "inherit",
     });
 
-    proc.on("exit", (code) => {
+    proc.on("exit", (code: number | null) => {
       resolve(code === 0);
     });
 
-    proc.on("error", (err) => {
+    proc.on("error", (err: Error) => {
       console.error(`Failed to run ${testFile}:`, err);
       resolve(false);
     });

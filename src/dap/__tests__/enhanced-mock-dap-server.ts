@@ -24,7 +24,7 @@ class EnhancedMockDAPServer extends EventEmitter {
   private server: ReturnType<typeof createServer>;
   private sequenceNumber = 1;
   private variableHandles = new Map<number, any>();
-  private nextVariableReference = 1000;
+  // private nextVariableReference = 1000;
   
   // Program state
   private programState: ProgramState = {

@@ -1,31 +1,14 @@
 import { EventEmitter } from "events";
 import { ChildProcess, spawn } from "child_process";
+import type {
+  DAPMessage,
+  DAPRequest,
+  DAPResponse,
+  DAPEvent,
+  InitializeRequestArguments,
+  InitializeResponse,
+} from "./types.ts";
 
-interface DAPMessage {
-  seq: number;
-  type: "request" | "response" | "event";
-}
-
-interface DAPRequest extends DAPMessage {
-  type: "request";
-  command: string;
-  arguments?: any;
-}
-
-interface DAPResponse extends DAPMessage {
-  type: "response";
-  request_seq: number;
-  success: boolean;
-  command: string;
-  message?: string;
-  body?: any;
-}
-
-interface DAPEvent extends DAPMessage {
-  type: "event";
-  event: string;
-  body?: any;
-}
 
 export class DAPClient extends EventEmitter {
   private process: ChildProcess | null = null;
@@ -52,8 +35,8 @@ export class DAPClient extends EventEmitter {
     await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
-  async initialize(args?: any): Promise<any> {
-    const defaultArgs = {
+  async initialize(args?: InitializeRequestArguments): Promise<InitializeResponse> {
+    const defaultArgs: InitializeRequestArguments = {
       clientID: "dap-test-client",
       clientName: "DAP Test Client",
       adapterID: "node",
