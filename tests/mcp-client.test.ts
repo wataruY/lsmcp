@@ -40,8 +40,9 @@ describe("MCP TypeScript Tools", () => {
     
     transport = new StdioClientTransport({
       command: "node",
-      args: [SERVER_PATH, "--project-root", tmpDir],
+      args: [SERVER_PATH],
       env: cleanEnv,
+      cwd: tmpDir,  // Use cwd instead of --project-root
     });
 
     // Create and connect client

@@ -57,9 +57,6 @@ async function main() {
         init: {
           type: "string",
         },
-        "project-root": {
-          type: "string",
-        },
         "lsp-command": {
           type: "string",
         },
@@ -68,11 +65,9 @@ async function main() {
       allowPositionals: false,
     });
 
-    // Project root resolution order:
-    // 1. Command line argument --project-root
-    // 2. Current working directory
+    // Project root is always the current working directory
     // TODO: When MCP adds client cwd support, use that
-    const projectRoot = values["project-root"] || process.cwd();
+    const projectRoot = process.cwd();
 
     const lspCommand = values["lsp-command"] || process.env.LSP_COMMAND;
     

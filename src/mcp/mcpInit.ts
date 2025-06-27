@@ -19,19 +19,14 @@ export async function handleMcpInit(
       init: {
         type: "string",
       },
-      "project-root": {
-        type: "string",
-      },
     },
     strict: true,
     allowPositionals: false,
   });
 
-  // Project root resolution order:
-  // 1. Command line argument --project-root
-  // 2. Current working directory
+  // Project root is always the current working directory
   // TODO: When MCP adds client cwd support, use that
-  const projectRoot = values["project-root"] || process.cwd();
+  const projectRoot = process.cwd();
 
   // Handle initialization
   if (values.init !== undefined) {
