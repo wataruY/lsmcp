@@ -2,7 +2,58 @@ You are a TypeScript/MCP expert developing the lsmcp tool.
 
 Given a URL, use read_url_content_as_markdown and summary contents.
 
-## CRITICAL: Tool Usage Priority for Refactoring
+## CRITICAL: Tool Usage Priority for Code Analysis and Refactoring
+
+### 🔍 Code Analysis - ALWAYS Use lsmcp Tools First
+
+**When analyzing TypeScript/JavaScript code, you MUST prioritize lsmcp MCP tools over basic file reading tools.**
+
+#### Mandatory Analysis Workflow:
+
+1. **Symbol Analysis** (ALWAYS use these before Read/Grep):
+   - `mcp__typescript__lsmcp_search_symbols` - Search for any symbol across the project
+   - `mcp__typescript__lsmcp_get_symbols_in_scope` - Understand available symbols at a location
+   - `mcp__typescript__lsmcp_find_references` - Find all usages of a symbol
+   - `mcp__typescript__lsmcp_get_definitions` - Jump to symbol definitions
+
+2. **Type Information** (NEVER use Read for understanding types):
+   - `mcp__typescript__lsmcp_get_type_at_symbol` - Get complete type information
+   - `mcp__typescript__lsmcp_get_type_in_module` - Analyze module exports
+   - `mcp__typescript__lsmcp_get_module_symbols` - List all exports from a module
+
+3. **Import Analysis** (ALWAYS for import-related questions):
+   - `mcp__typescript__lsmcp_find_import_candidates` - Find where to import from
+
+4. **Diagnostics** (ALWAYS for error checking):
+   - `mcp__typescript__lsmcp_get_diagnostics` - Get TypeScript errors/warnings
+
+#### Example Scenarios:
+
+**❌ WRONG**: Using Read/Grep to find a function
+```
+Read file.ts → Grep for "functionName"
+```
+
+**✅ CORRECT**: Using lsmcp tools
+```
+mcp__typescript__lsmcp_search_symbols with query="functionName"
+→ mcp__typescript__lsmcp_get_definitions to see implementation
+→ mcp__typescript__lsmcp_find_references to see usage
+```
+
+**❌ WRONG**: Reading files to understand code structure
+```
+Read src/index.ts → Read src/utils.ts → ...
+```
+
+**✅ CORRECT**: Using semantic analysis
+```
+mcp__typescript__lsmcp_get_module_symbols for exports
+→ mcp__typescript__lsmcp_get_type_in_module for details
+→ mcp__typescript__lsmcp_get_symbols_in_scope for context
+```
+
+### 🔧 Refactoring - MANDATORY lsmcp Usage
 
 **When performing refactoring operations on TypeScript/JavaScript code, ALWAYS use lsmcp MCP tools instead of the default Edit/Write tools.**
 
@@ -15,6 +66,19 @@ Specifically for refactoring:
 - For type analysis: ALWAYS use `mcp__typescript__lsmcp_get_type_*` tools
 
 **NEVER use Edit, MultiEdit, or Write tools for TypeScript refactoring operations that have a corresponding lsmcp_* tool.**
+
+### 📋 Quick Reference - Tool Selection Guide
+
+| Task | ❌ Don't Use | ✅ Use Instead |
+|------|--------------|----------------|
+| Find a function/class/variable | Read + Grep | `lsmcp_search_symbols` |
+| Understand what a symbol is | Read file | `lsmcp_get_type_at_symbol` |
+| Find where symbol is used | Grep | `lsmcp_find_references` |
+| See module exports | Read file | `lsmcp_get_module_symbols` |
+| Check for errors | Read output | `lsmcp_get_diagnostics` |
+| Rename variable/function | Edit/MultiEdit | `lsmcp_rename_symbol` |
+| Move file | Bash mv | `lsmcp_move_file` |
+| Find import location | Grep/Read | `lsmcp_find_import_candidates` |
 
 ## Project Goal
 
