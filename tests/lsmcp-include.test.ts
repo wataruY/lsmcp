@@ -41,7 +41,6 @@ describe("lsmcp --include option", () => {
         cwd: tmpDir,
         env: {
           ...process.env,
-          PROJECT_ROOT: tmpDir,
         } as Record<string, string>,
       });
 

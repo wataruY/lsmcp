@@ -66,8 +66,7 @@ describe("TypeScript Language Server Integration", { timeout: 30000 }, () => {
       args: [LSMCP_PATH, "--bin", "npx typescript-language-server --stdio"],
       env: {
         ...process.env,
-        PROJECT_ROOT: tmpDir,
-      } as Record<string, string>,
+        } as Record<string, string>,
     });
 
     // Create and connect client
@@ -390,8 +389,7 @@ describe("TypeScript MCP with custom LSP via lsmcp", { timeout: 30000 }, () => {
       args: [LSMCP_PATH, "--bin", lspCommand],
       env: {
         ...process.env,
-        PROJECT_ROOT: tmpDir,
-      } as Record<string, string>,
+        } as Record<string, string>,
     });
 
     const client = new Client({
@@ -528,8 +526,7 @@ describe.skip("TypeScript Native Preview (TSGO) Support - DEPRECATED", { timeout
       args: [TYPESCRIPT_MCP_PATH],
       env: {
         ...process.env,
-        PROJECT_ROOT: tmpDir,
-        TSGO: "1", // Enable TSGO mode
+          TSGO: "1", // Enable TSGO mode
       } as Record<string, string>,
     });
 

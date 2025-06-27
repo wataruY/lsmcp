@@ -77,7 +77,6 @@ Supported Languages:
   - Any language via LSP server with --bin option
 
 Environment Variables:
-  PROJECT_ROOT          Override project root directory (fallback, prefer --project-root)
   FORCE_LANGUAGE        Force a specific language (same as -l)
 `);
 }
@@ -215,8 +214,8 @@ async function main() {
     }
     
     // Get matching files
-    // TODO: When MCP adds client cwd support, use that instead of env var
-    const projectRoot = process.env.PROJECT_ROOT || process.cwd();
+    // TODO: When MCP adds client cwd support, use that
+    const projectRoot = process.cwd();
     
     // Simple glob pattern matching for TypeScript files
     const files: string[] = [];

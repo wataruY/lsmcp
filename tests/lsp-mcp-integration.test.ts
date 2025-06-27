@@ -45,7 +45,6 @@ describe.skip("LSP MCP integration tests", () => {
       env: {
         ...process.env,
         LSP_COMMAND: "typescript-language-server --stdio",
-        PROJECT_ROOT: tmpDir,
       },
       stdio: ["pipe", "pipe", "pipe"],
     });
@@ -57,7 +56,6 @@ describe.skip("LSP MCP integration tests", () => {
       env: {
         ...process.env,
         LSP_COMMAND: "typescript-language-server --stdio",
-        PROJECT_ROOT: tmpDir,
       },
     });
 

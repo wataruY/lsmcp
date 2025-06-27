@@ -25,7 +25,6 @@ describe("MCP rename multi-file", () => {
 
     // Create transport with server parameters
     const cleanEnv = { ...process.env } as Record<string, string>;
-    cleanEnv.PROJECT_ROOT = tmpDir;
     // Ensure TypeScript-specific tools are enabled
     delete cleanEnv.FORCE_LSP;
     delete cleanEnv.LSP_COMMAND;

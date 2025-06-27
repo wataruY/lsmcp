@@ -31,7 +31,6 @@ describe("Language Detection with lsmcp", () => {
         cwd,
         env: {
           ...process.env,
-          PROJECT_ROOT: cwd,
           DEBUG: "true", // Enable debug output
         } as Record<string, string>,
       });
