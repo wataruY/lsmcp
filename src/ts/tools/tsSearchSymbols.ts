@@ -43,12 +43,32 @@ async function getOrCreateIndexer(root: string, forceRebuild: boolean = false): 
   return indexer;
 }
 
-// Clean up indexers on process exit
-process.on('exit', () => {
+// Export for test cleanup
+export function disposeAllIndexers(): void {
   for (const indexer of indexerCache.values()) {
     indexer.dispose();
   }
-});
+  indexerCache.clear();
+}
+
+// Clean up indexers on process exit (only in non-test environments)
+if (!process.env.VITEST && !process.env.NODE_ENV?.includes('test')) {
+  process.on('exit', () => {
+    for (const indexer of indexerCache.values()) {
+      indexer.dispose();
+    }
+  });
+  
+  // Also handle SIGTERM and SIGINT
+  const cleanup = () => {
+    for (const indexer of indexerCache.values()) {
+      indexer.dispose();
+    }
+  };
+  
+  process.on('SIGTERM', cleanup);
+  process.on('SIGINT', cleanup);
+}
 
 export const searchSymbolsTool: ToolDef<typeof schema> = {
   name: "lsmcp_search_symbols",

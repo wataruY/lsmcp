@@ -21,7 +21,7 @@ export default defineConfig({
     // Increase timeout for CI environment
     testTimeout: isCI ? 30000 : 10000, // 30 seconds in CI, 10 seconds locally
     hookTimeout: isCI ? 30000 : 10000, // 30 seconds in CI, 10 seconds locally
-    // Add hanging process reporter in CI
+    // Add hanging process reporter in CI to debug test hanging
     reporters: isCI ? ["default", "hanging-process"] : ["default"],
     // Force exit after tests complete in CI
     teardownTimeout: isCI ? 5000 : undefined,

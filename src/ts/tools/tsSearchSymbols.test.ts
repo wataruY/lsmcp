@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, afterAll } from "vitest";
 import { mkdtemp, rm, writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import { searchSymbolsTool } from "./tsSearchSymbols.ts";
+import { searchSymbolsTool, disposeAllIndexers } from "./tsSearchSymbols.ts";
 
 describe("searchSymbolsTool", () => {
   let tmpDir: string;
@@ -15,6 +15,11 @@ describe("searchSymbolsTool", () => {
   afterEach(async () => {
     // Clear any cached indexers to ensure clean state
     await rm(tmpDir, { recursive: true, force: true });
+  });
+  
+  afterAll(() => {
+    // Dispose all indexers after all tests
+    disposeAllIndexers();
   });
 
   it("should find symbols by prefix match", async () => {

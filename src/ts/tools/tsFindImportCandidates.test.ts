@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, afterAll } from "vitest";
 import { mkdtemp, rm, writeFile, mkdir } from "fs/promises";
 import { join } from "path";
 import { tmpdir } from "os";
-import { findImportCandidatesTool } from "./tsFindImportCandidates.ts";
+import { findImportCandidatesTool, disposeAllIndexers } from "./tsFindImportCandidates.ts";
 
 describe("findImportCandidatesTool", () => {
   let tmpDir: string;
@@ -17,6 +17,11 @@ describe("findImportCandidatesTool", () => {
 
   afterEach(async () => {
     await rm(tmpDir, { recursive: true, force: true });
+  });
+  
+  afterAll(() => {
+    // Dispose all indexers after all tests
+    disposeAllIndexers();
   });
 
   it("should find import candidates for a symbol", async () => {

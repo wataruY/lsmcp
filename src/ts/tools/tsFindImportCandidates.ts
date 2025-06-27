@@ -32,6 +32,14 @@ async function getOrCreateIndexer(root: string): Promise<ProjectSymbolIndexer> {
   return indexer;
 }
 
+// Export for test cleanup
+export function disposeAllIndexers(): void {
+  for (const indexer of indexerCache.values()) {
+    indexer.dispose();
+  }
+  indexerCache.clear();
+}
+
 function calculateImportPath(fromFile: string, toFile: string): string {
   const fromDir = dirname(fromFile);
   const relativePath = relative(fromDir, toFile);

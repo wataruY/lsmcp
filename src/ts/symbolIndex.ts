@@ -46,8 +46,8 @@ export class ProjectSymbolIndexer {
    * Build or rebuild the symbol index for the entire project
    */
   async buildIndex(includePatterns: string[] = ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx"], enableWatch: boolean = true): Promise<void> {
-    // Disable file watching in test environment
-    if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+    // Always disable file watching in test environment
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST || process.env.CI === 'true') {
       enableWatch = false;
     }
     
