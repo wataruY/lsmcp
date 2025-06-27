@@ -37,6 +37,20 @@ const schema = z.object({
     .optional()
     .default(SymbolMeaning.All)
     .describe("Symbol types to include"),
+  includeBuiltins: z
+    .boolean()
+    .optional()
+    .default(false)
+    .describe("Include built-in types and global symbols (default: false)"),
+  filter: z
+    .string()
+    .optional()
+    .describe("Regular expression pattern to filter symbol names"),
+  limit: z
+    .number()
+    .optional()
+    .default(100)
+    .describe("Maximum number of symbols to return (default: 100)"),
 });
 
 // Map enum values to TypeScript SymbolFlags
@@ -77,6 +91,7 @@ interface GetSymbolsInScopeResult {
   meaning: SymbolMeaning;
   symbolsByKind: Record<string, SymbolInfo[]>;
   totalCount: number;
+  originalCount?: number;
 }
 
 const symbolFlagToKind: Array<[number, string]> = [
@@ -125,18 +140,53 @@ const COMMON_BUILTINS = [
   "Math",
 ] as const;
 
-function shouldIncludeSymbol(symbol: ts.Symbol): boolean {
+function shouldIncludeSymbol(
+  symbol: ts.Symbol,
+  includeBuiltins: boolean,
+  filter?: string
+): boolean {
   const name = symbol.getName();
 
   // Skip compiler-internal symbols
   if (name.startsWith("__")) return false;
   if (name === "undefined" || name === "null") return false;
 
-  // Skip symbols without declarations (usually built-ins we want to keep)
+  // Apply filter if provided
+  if (filter) {
+    try {
+      const regex = new RegExp(filter);
+      if (!regex.test(name)) return false;
+    } catch {
+      // Invalid regex, skip filtering
+    }
+  }
+
+  // Skip symbols without declarations (usually built-ins)
   const declarations = symbol.getDeclarations();
   if (!declarations || declarations.length === 0) {
-    // Keep common built-ins
+    if (!includeBuiltins) {
+      return false;
+    }
+    // Keep common built-ins only if including
     return COMMON_BUILTINS.includes(name as (typeof COMMON_BUILTINS)[number]);
+  }
+
+  // Exclude built-ins based on declaration source
+  if (!includeBuiltins && declarations.length > 0) {
+    const firstDecl = declarations[0];
+    const sourceFile = firstDecl.getSourceFile();
+    const fileName = sourceFile.fileName;
+    
+    // Check if it's from lib.d.ts or node_modules
+    if (
+      fileName.includes("node_modules") ||
+      fileName.includes("/lib/lib.") || // TypeScript lib files
+      fileName.includes("\\lib\\lib.") || // Windows path
+      fileName.includes("@types/") ||
+      (fileName.endsWith(".d.ts") && !fileName.includes(path.sep + "src" + path.sep))
+    ) {
+      return false;
+    }
   }
 
   return true;
@@ -206,6 +256,9 @@ async function handleGetSymbolsInScope({
   filePath,
   line,
   meaning = SymbolMeaning.All,
+  includeBuiltins = false,
+  filter,
+  limit = 100,
 }: z.infer<typeof schema>): Promise<GetSymbolsInScopeResult> {
   // Always treat paths as relative to root
   const absolutePath = path.join(root, filePath);
@@ -246,9 +299,14 @@ async function handleGetSymbolsInScope({
   );
 
   // Process symbols into SymbolInfo objects
-  const processedSymbols = symbols
-    .filter(shouldIncludeSymbol)
+  let processedSymbols = symbols
+    .filter((symbol) => shouldIncludeSymbol(symbol, includeBuiltins, filter))
     .map((symbol) => createSymbolInfo(symbol, typeChecker, node));
+
+  // Apply limit if specified
+  if (limit && limit > 0) {
+    processedSymbols = processedSymbols.slice(0, limit);
+  }
 
   // Group symbols by category
   const symbolsByKind = Object.groupBy(processedSymbols, (symbolInfo) =>
@@ -260,11 +318,9 @@ async function handleGetSymbolsInScope({
     symbolsByKind[category].sort((a, b) => a.name.localeCompare(b.name));
   });
 
-  // Count total symbols
-  const totalCount = Object.values(symbolsByKind).reduce(
-    (sum, symbols) => sum + symbols.length,
-    0
-  );
+  // Count total symbols (before limit was applied)
+  const originalCount = symbols.filter((symbol) => shouldIncludeSymbol(symbol, includeBuiltins, filter)).length;
+  const totalCount = processedSymbols.length;
 
   return {
     location: {
@@ -274,6 +330,7 @@ async function handleGetSymbolsInScope({
     meaning,
     symbolsByKind,
     totalCount,
+    originalCount,
   };
 }
 
@@ -315,7 +372,8 @@ function formatSymbolLine(symbol: SymbolInfo): string {
 
 function formatGetSymbolsInScopeResult(
   result: GetSymbolsInScopeResult,
-  root: string
+  root: string,
+  limit?: number
 ): string {
   const { location, meaning, symbolsByKind, totalCount } = result;
   const relativePath = path.relative(root, location.filePath);
@@ -337,8 +395,13 @@ function formatGetSymbolsInScopeResult(
     ]);
 
   const footer = [`Total: ${totalCount} symbols`];
+  
+  // Add limit notice if results were truncated
+  const limitNotice = limit && result.originalCount && result.originalCount > totalCount
+    ? [`\nNote: Results limited to ${limit} symbols out of ${result.originalCount} total. Use a higher limit or filter to see more.`]
+    : [];
 
-  return [...header, ...categoryBlocks, ...footer].join("\n");
+  return [...header, ...categoryBlocks, ...footer, ...limitNotice].join("\n");
 }
 
 export const getSymbolsInScopeTool: ToolDef<typeof schema> = {
@@ -348,7 +411,7 @@ export const getSymbolsInScopeTool: ToolDef<typeof schema> = {
   schema,
   execute: async (args) => {
     const result = await handleGetSymbolsInScope(args);
-    return formatGetSymbolsInScopeResult(result, args.root);
+    return formatGetSymbolsInScopeResult(result, args.root, args.limit);
   },
 };
 
@@ -435,6 +498,7 @@ enum Status {
         filePath: "test.ts",
         line: 16, // Inside processUser function
         meaning: SymbolMeaning.All,
+        includeBuiltins: true, // Include built-ins for this test
       });
 
       // Check that we have symbols in different categories
@@ -634,7 +698,7 @@ function outer() {
         totalCount: 6,
       };
 
-      const formatted = formatGetSymbolsInScopeResult(result, "/project");
+      const formatted = formatGetSymbolsInScopeResult(result, "/project", undefined);
 
       expect(formatted).toContain("Symbols in scope at src/test.ts:10");
       expect(formatted).toContain("Meaning: All");
@@ -683,6 +747,90 @@ const c = 3;
       });
 
       expect(result.location.line).toBe(3);
+    });
+
+    test("should exclude built-ins by default", async () => {
+      const { Project } = await getTestDependencies();
+      const projectCacheMock = await import("../projectCache.ts");
+      
+      const project = new Project({
+        useInMemoryFileSystem: true,
+      });
+
+      const testFile = project.createSourceFile(
+        "/project/test.ts",
+        `
+const myVar = "test";
+console.log(myVar);
+      `.trim()
+      );
+
+      await testFile.save();
+
+      // Mock the project cache functions
+      vi.mocked(projectCacheMock.findProjectForFile).mockReturnValue(project);
+      vi.mocked(projectCacheMock.getOrCreateSourceFileWithRefresh).mockReturnValue(
+        testFile
+      );
+
+      const result = await handleGetSymbolsInScope({
+        root: "/project",
+        filePath: "test.ts",
+        line: 2,
+        meaning: SymbolMeaning.All,
+        // includeBuiltins is false by default
+      });
+
+      // Should have local variables but not built-ins like console
+      const varsFuncs = result.symbolsByKind["Variables & Functions"] || [];
+      const symbolNames = varsFuncs.map((s) => s.name);
+      
+      expect(symbolNames).toContain("myVar");
+      expect(symbolNames).not.toContain("console");
+      expect(symbolNames).not.toContain("Array");
+    });
+
+    test("should filter symbols by regex", async () => {
+      const { Project } = await getTestDependencies();
+      const projectCacheMock = await import("../projectCache.ts");
+      
+      const project = new Project({
+        useInMemoryFileSystem: true,
+      });
+
+      const testFile = project.createSourceFile(
+        "/project/test.ts",
+        `
+const userService = "service";
+const userData = { name: "test" };
+const config = { port: 3000 };
+const processUser = () => {};
+      `.trim()
+      );
+
+      await testFile.save();
+
+      // Mock the project cache functions
+      vi.mocked(projectCacheMock.findProjectForFile).mockReturnValue(project);
+      vi.mocked(projectCacheMock.getOrCreateSourceFileWithRefresh).mockReturnValue(
+        testFile
+      );
+
+      const result = await handleGetSymbolsInScope({
+        root: "/project",
+        filePath: "test.ts",
+        line: 4,
+        meaning: SymbolMeaning.All,
+        filter: "^user", // Match symbols starting with "user"
+      });
+
+      const varsFuncs = result.symbolsByKind["Variables & Functions"] || [];
+      const symbolNames = varsFuncs.map((s) => s.name);
+      
+      expect(symbolNames).toContain("userService");
+      expect(symbolNames).toContain("userData");
+      expect(symbolNames).not.toContain("config");
+      expect(symbolNames).not.toContain("processUser"); // Doesn't start with "user"
     });
   });
 }

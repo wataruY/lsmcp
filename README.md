@@ -18,6 +18,8 @@ A unified MCP (Model Context Protocol) server that provides advanced code manipu
 
 See [Language Support Matrix](docs/LANGUAGE_SUPPORT_MATRIX.md) for detailed information about available tools for each language.
 
+See [Tool Categories](docs/TOOL_CATEGORIES.md) for the difference between TypeScript-specific and LSP-based tools.
+
 ## Motivation
 
 While AI assistants like Claude can see errors in the IDE, they cannot perform semantic refactorings such as Go to Definition or Rename without proper tooling.
