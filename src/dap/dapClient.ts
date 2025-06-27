@@ -1,5 +1,6 @@
 import { EventEmitter } from "events";
 import { ChildProcess, spawn } from "child_process";
+import { Socket } from "net";
 import type {
   DAPMessage,
   DAPRequest,
@@ -12,6 +13,7 @@ import type {
 
 export class DAPClient extends EventEmitter {
   private process: ChildProcess | null = null;
+  private socket: Socket | null = null;
   private sequenceNumber = 1;
   private pendingRequests = new Map<
     number,
@@ -21,18 +23,42 @@ export class DAPClient extends EventEmitter {
     }
   >();
   private buffer = "";
+  private connectionType: "process" | "socket" = "process";
 
   async connect(command: string, args: string[]): Promise<void> {
-    console.error(`[DAP] Spawning: ${command} ${args.join(" ")}`);
-    this.process = spawn(command, args, {
-      stdio: ["pipe", "pipe", "pipe"],
+    // Check if this is a TCP connection
+    if (command === "tcp" && args.length > 0) {
+      const [host, port] = args[0].split(":");
+      await this.connectTcp(host, parseInt(port, 10));
+    } else {
+      console.error(`[DAP] Spawning: ${command} ${args.join(" ")}`);
+      this.process = spawn(command, args, {
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+      this.connectionType = "process";
+
+      this.setupMessageHandling();
+      this.setupErrorHandling();
+
+      // Wait for process to be ready
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+
+  private async connectTcp(host: string, port: number): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.socket = new Socket();
+      this.connectionType = "socket";
+
+      this.socket.connect(port, host, () => {
+        console.error(`[DAP] Connected to ${host}:${port}`);
+        this.setupMessageHandling();
+        this.setupErrorHandling();
+        resolve();
+      });
+
+      this.socket.once("error", reject);
     });
-
-    this.setupMessageHandling();
-    this.setupErrorHandling();
-
-    // Wait for process to be ready
-    await new Promise((resolve) => setTimeout(resolve, 100));
   }
 
   async initialize(args?: InitializeRequestArguments): Promise<InitializeResponse> {
@@ -80,22 +106,24 @@ export class DAPClient extends EventEmitter {
   }
 
   private sendMessage(message: any): void {
-    if (!this.process || !this.process.stdin) {
-      throw new Error("Not connected");
-    }
-
     const json = JSON.stringify(message);
     const contentLength = Buffer.byteLength(json, "utf8");
     const header = `Content-Length: ${contentLength}\r\n\r\n`;
+    const data = header + json;
 
     console.error(`[DAP] Sending: ${json}`);
-    this.process.stdin.write(header + json);
+
+    if (this.connectionType === "socket" && this.socket) {
+      this.socket.write(data);
+    } else if (this.connectionType === "process" && this.process && this.process.stdin) {
+      this.process.stdin.write(data);
+    } else {
+      throw new Error("Not connected");
+    }
   }
 
   private setupMessageHandling(): void {
-    if (!this.process || !this.process.stdout) return;
-
-    this.process.stdout.on("data", (data: Buffer) => {
+    const handleData = (data: Buffer) => {
       this.buffer += data.toString();
 
       while (true) {
@@ -105,7 +133,13 @@ export class DAPClient extends EventEmitter {
         console.error(`[DAP] Received: ${JSON.stringify(message)}`);
         this.handleMessage(message);
       }
-    });
+    };
+
+    if (this.connectionType === "socket" && this.socket) {
+      this.socket.on("data", handleData);
+    } else if (this.connectionType === "process" && this.process && this.process.stdout) {
+      this.process.stdout.on("data", handleData);
+    }
   }
 
   private tryParseMessage(): any | null {
@@ -164,35 +198,49 @@ export class DAPClient extends EventEmitter {
   }
 
   private setupErrorHandling(): void {
-    if (!this.process) return;
-
-    this.process.on("error", (error) => {
-      console.error("[DAP] Process error:", error);
-      this.emit("error", error);
-    });
-
-    this.process.on("exit", (code, signal) => {
-      console.error(`[DAP] Process exited: code=${code}, signal=${signal}`);
-      this.emit("exit", { code, signal });
-      this.cleanup();
-    });
-
-    if (this.process.stderr) {
-      this.process.stderr.on("data", (data) => {
-        console.error("[DAP] Stderr:", data.toString());
+    if (this.connectionType === "socket" && this.socket) {
+      this.socket.on("error", (error) => {
+        console.error("[DAP] Socket error:", error);
+        this.emit("error", error);
       });
+
+      this.socket.on("close", () => {
+        console.error("[DAP] Socket closed");
+        this.emit("close");
+        this.cleanup();
+      });
+    } else if (this.connectionType === "process" && this.process) {
+      this.process.on("error", (error) => {
+        console.error("[DAP] Process error:", error);
+        this.emit("error", error);
+      });
+
+      this.process.on("exit", (code, signal) => {
+        console.error(`[DAP] Process exited: code=${code}, signal=${signal}`);
+        this.emit("exit", { code, signal });
+        this.cleanup();
+      });
+
+      if (this.process.stderr) {
+        this.process.stderr.on("data", (data) => {
+          console.error("[DAP] Stderr:", data.toString());
+        });
+      }
     }
   }
 
   disconnect(): void {
-    if (this.process) {
+    if (this.connectionType === "socket" && this.socket) {
+      this.socket.end();
+    } else if (this.connectionType === "process" && this.process) {
       this.process.kill();
-      this.cleanup();
     }
+    this.cleanup();
   }
 
   private cleanup(): void {
     this.process = null;
+    this.socket = null;
     this.pendingRequests.clear();
     this.buffer = "";
     this.removeAllListeners();
