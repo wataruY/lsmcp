@@ -31,10 +31,6 @@ const { values, positionals } = parseArgs({
       type: 'string',
       description: 'Glob pattern for files to get diagnostics (e.g., "src/**/*.ts")'
     },
-    'init': {
-      type: 'string',
-      description: 'Initialize MCP configuration (claude or global)'
-    },
     help: {
       type: 'boolean',
       short: 'h',
@@ -55,13 +51,11 @@ function showHelp() {
 Usage:
   lsmcp --language <lang> [options]
   lsmcp --bin <command> [options]
-  lsmcp --init <target> --language <lang>
 
 Options:
   -l, --language <lang>  Language to use (required unless --bin is provided)
   --bin <command>        Custom LSP server command (e.g., "deno lsp", "rust-analyzer")
   --include <pattern>    Glob pattern for files to get diagnostics (TypeScript/JS only)
-  --init <target>        Initialize MCP configuration (requires --language)
   --list                 List all supported languages
   -h, --help            Show this help message
 
@@ -70,7 +64,6 @@ Examples:
   lsmcp -l rust                Use Rust MCP server
   lsmcp --bin "deno lsp"       Use custom LSP server
   lsmcp --include "src/**/*.ts" -l typescript  Get diagnostics for TypeScript files
-  lsmcp --init claude -l typescript            Initialize for Claude Desktop
 
 Supported Languages:
   - TypeScript/JavaScript (built-in support)
@@ -150,36 +143,6 @@ async function main() {
     process.exit(0);
   }
 
-  // Handle initialization
-  if (values.init) {
-    const language = values.language || process.env.FORCE_LANGUAGE;
-    
-    if (!language) {
-      const context: ErrorContext = {
-        operation: "initialization"
-      };
-      const error = new Error("--init requires --language option");
-      console.error(formatError(error, context));
-      console.error("Example: lsmcp --init=claude --language=typescript");
-      process.exit(1);
-    }
-    
-    // Validate language
-    if (language !== "typescript" && language !== "javascript") {
-      const context: ErrorContext = {
-        operation: "language validation",
-        language
-      };
-      const error = new Error(`Only TypeScript/JavaScript are supported with --language`);
-      console.error(formatError(error, context));
-      console.error("For other languages, use --bin option with an LSP server");
-      process.exit(1);
-    }
-    
-    // Run specific language server with --init
-    await runLanguageServer(language, [`--init=${values.init}`]);
-    return;
-  }
 
   // Check if custom LSP command is provided
   if (values.bin) {

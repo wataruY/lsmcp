@@ -27,7 +27,6 @@ export class ProjectSymbolIndexer {
   private rootPath: string;
   private watchers: Map<string, FSWatcher> = new Map();
   private watchedDirs: Set<string> = new Set();
-  private includePatterns: string[] = [];
   private updateQueue: Map<string, { eventType: string; timestamp: number }> = new Map();
   private updateTimer: NodeJS.Timeout | null = null;
   private readonly UPDATE_DELAY_MS = 100; // Debounce delay in milliseconds
@@ -54,8 +53,6 @@ export class ProjectSymbolIndexer {
     debug("Building project symbol index...");
     const startTime = Date.now();
 
-    // Store patterns for file watching
-    this.includePatterns = includePatterns;
 
     // Clear existing index
     this.index.symbols.clear();

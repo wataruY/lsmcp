@@ -499,6 +499,7 @@ enum Status {
         line: 16, // Inside processUser function
         meaning: SymbolMeaning.All,
         includeBuiltins: true, // Include built-ins for this test
+        limit: 100,
       });
 
       // Check that we have symbols in different categories
@@ -570,6 +571,8 @@ type Port = number;
         filePath: "test.ts",
         line: 8, // Inside getPort function
         meaning: SymbolMeaning.Type,
+        limit: 100,
+        includeBuiltins: false,
       });
 
       // Should have types but not variables
@@ -582,6 +585,8 @@ type Port = number;
         filePath: "test.ts",
         line: 8,
         meaning: SymbolMeaning.Value,
+        limit: 100,
+        includeBuiltins: false,
       });
 
       // Should have variables but not types - although some global types might leak through
@@ -636,6 +641,8 @@ function outer() {
         filePath: "test.ts",
         line: 8,
         meaning: SymbolMeaning.Variable,
+        limit: 100,
+        includeBuiltins: false,
       });
 
       const innerVars = innerResult.symbolsByKind["Variables & Functions"];
@@ -651,6 +658,8 @@ function outer() {
         filePath: "test.ts",
         line: 12,
         meaning: SymbolMeaning.Variable,
+        limit: 100,
+        includeBuiltins: false,
       });
 
       const outerVars = outerResult.symbolsByKind["Variables & Functions"];
@@ -744,6 +753,8 @@ const c = 3;
         filePath: "test.ts",
         line: "Special marker", // Should match line 3
         meaning: SymbolMeaning.Variable,
+        limit: 100,
+        includeBuiltins: false,
       });
 
       expect(result.location.line).toBe(3);
@@ -778,7 +789,8 @@ console.log(myVar);
         filePath: "test.ts",
         line: 2,
         meaning: SymbolMeaning.All,
-        // includeBuiltins is false by default
+        includeBuiltins: false,
+        limit: 100,
       });
 
       // Should have local variables but not built-ins like console
@@ -822,6 +834,8 @@ const processUser = () => {};
         line: 4,
         meaning: SymbolMeaning.All,
         filter: "^user", // Match symbols starting with "user"
+        includeBuiltins: false,
+        limit: 100,
       });
 
       const varsFuncs = result.symbolsByKind["Variables & Functions"] || [];

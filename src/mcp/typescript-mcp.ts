@@ -3,9 +3,7 @@
 import {
   BaseMcpServer,
   StdioServerTransport,
-  initializeMcpConfig,
   readJsonFile,
-  generatePermissions,
   debug,
   type ToolDef,
 } from "./_mcplib.ts";
@@ -35,7 +33,6 @@ import { lspGetCodeActionsTool } from "../lsp/tools/lspGetCodeActions.ts";
 import { listToolsTool } from "./tools/listTools.ts";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { parseArgs } from "node:util";
 import { spawn } from "child_process";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 import { formatError, ErrorContext } from "./utils/errorHandler.ts";
@@ -124,79 +121,9 @@ function getTypescriptInfo(): {
 
 async function main() {
   try {
-    // Parse command line arguments
-    const { values } = parseArgs({
-      options: {
-        init: {
-          type: "string",
-        },
-      },
-      strict: true,
-      allowPositionals: false,
-    });
-
     // Project root is always the current working directory
     // TODO: When MCP adds client cwd support, use that
     const projectRoot = process.cwd();
-
-    // Handle initialization
-    if (values.init !== undefined) {
-      const target = values.init || "claude";
-      const validTargets = ["claude", "global"];
-      
-      if (!validTargets.includes(target)) {
-        console.error(
-          `Unknown init target: ${target}. Supported: ${validTargets.join(", ")}`
-        );
-        process.exit(1);
-      }
-
-      const isGlobal = target === "global";
-      
-      const config = isGlobal
-        ? {
-            command: "npx",
-            args: ["-y", "lsmcp@latest"],
-          }
-        : {
-            command: "npx",
-            args: ["lsmcp"],
-          };
-
-      // Generate permissions from tool definitions
-      const permissions = generatePermissions("typescript", tools);
-
-      initializeMcpConfig(
-        projectRoot,
-        "typescript",
-        config,
-        permissions
-      );
-
-      console.log(
-        `✓ Created/updated .mcp.json with lsmcp configuration`
-      );
-      console.log(`✓ Created/updated .claude/settings.json with permissions`);
-
-      // Display TypeScript information
-      const tsInfo = getTypescriptInfo();
-      if (tsInfo) {
-        console.log(`\nTypeScript detected:`);
-        console.log(`  Version: ${tsInfo.version}`);
-        console.log(`  Path: ${tsInfo.path}`);
-      } else {
-        console.log(`\n⚠️  TypeScript not found in current project`);
-      }
-
-      if (!isGlobal) {
-        console.log(`\nInstall lsmcp as a dev dependency:`);
-        console.log(`  npm install --save-dev lsmcp`);
-        console.log(`  # or`);
-        console.log(`  pnpm add -D lsmcp`);
-      }
-      
-      process.exit(0);
-    }
 
     // Start MCP server
     const serverName = process.env.FORCE_LSP === "true" 

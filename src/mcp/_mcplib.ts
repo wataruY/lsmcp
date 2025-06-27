@@ -268,45 +268,6 @@ export function generatePermissions(
   return tools.map(tool => `mcp__${serverName}__${tool.name}`);
 }
 
-/**
- * Initialize MCP configuration for a project
- */
-export function initializeMcpConfig(
-  projectRoot: string,
-  serverName: string,
-  config: {
-    command: string;
-    args: string[];
-    env?: Record<string, string>;
-  },
-  permissions: string[]
-): void {
-  const mcpConfigPath = path.join(projectRoot, ".mcp.json");
-  const claudeDir = path.join(projectRoot, ".claude");
-  const claudeSettingsPath = path.join(claudeDir, "settings.json");
-
-  // Update MCP config
-  const existingMcpConfig = (readJsonFile(mcpConfigPath) as McpConfig | null) || {};
-  const mergedMcpConfig: McpConfig = {
-    ...existingMcpConfig,
-    mcpServers: {
-      ...existingMcpConfig.mcpServers,
-      [serverName]: config,
-    },
-  };
-  writeJsonFile(mcpConfigPath, mergedMcpConfig);
-
-  // Update Claude settings
-  const existingSettings = (readJsonFile(claudeSettingsPath) as ClaudeSettings | null) || {};
-  const mergedSettings: ClaudeSettings = {
-    ...existingSettings,
-    permissions: {
-      allow: mergeArrays(existingSettings.permissions?.allow, permissions),
-      deny: existingSettings.permissions?.deny || [],
-    },
-  };
-  writeJsonFile(claudeSettingsPath, mergedSettings);
-}
 
 
 // Tests

@@ -71,6 +71,7 @@ export class ProductService {
       exact: false,
       includeNonExported: false,
       buildIndex: true,
+      limit: 50,
     });
 
     expect(result).toContain("Found 2 symbols matching \"User\"");
@@ -95,6 +96,8 @@ export class Configuration {}
       query: "Config",
       exact: true,
       buildIndex: true,
+      includeNonExported: false,
+      limit: 50,
     });
 
     expect(result).toContain("Found 1 symbols matching \"Config\"");
@@ -120,6 +123,9 @@ export const myVariable = 42;
       query: "My",
       kinds: ["Class", "Interface"],
       buildIndex: true,
+      exact: false,
+      includeNonExported: false,
+      limit: 50,
     });
 
     expect(result).toContain("MyClass [Class]");
@@ -144,6 +150,8 @@ function privateUtil() {}
       query: "",
       includeNonExported: false,
       buildIndex: true,
+      exact: false,
+      limit: 50,
     });
 
     const withInternal = await searchSymbolsTool.execute({
@@ -151,6 +159,8 @@ function privateUtil() {}
       query: "",
       includeNonExported: true,
       buildIndex: false, // Use cached index
+      exact: false,
+      limit: 50,
     });
 
     expect(withoutInternal).toContain("PublicAPI");
@@ -171,6 +181,9 @@ function privateUtil() {}
       root: tmpDir,
       query: "Test",
       buildIndex: true,
+      exact: false,
+      includeNonExported: false,
+      limit: 50,
     });
 
     expect(result).toMatch(/📊 Index stats: \d+ symbols, \d+ modules/);
@@ -205,6 +218,9 @@ function privateUtil() {}
         root: tmpDir,
         query: "File",
         buildIndex: true,
+        exact: false,
+        includeNonExported: false,
+        limit: 50,
       });
       expect(result1).toContain("File1Class");
       expect(result1).toContain("File2Class");
@@ -227,6 +243,9 @@ function privateUtil() {}
         root: tmpDir,
         query: "UpdatedFile",
         buildIndex: false,
+        exact: false,
+        includeNonExported: false,
+        limit: 50,
       });
       expect(result2).toContain("UpdatedFile1Class");
       expect(result2).toContain("UpdatedFile2Class");
@@ -237,6 +256,9 @@ function privateUtil() {}
         root: tmpDir,
         query: "File1Class",
         buildIndex: false,
+        exact: false,
+        includeNonExported: false,
+        limit: 50,
       });
       expect(result3).toContain("No symbols found");
     } finally {

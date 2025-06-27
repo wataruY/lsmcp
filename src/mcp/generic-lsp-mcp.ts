@@ -7,11 +7,10 @@
  * This server only includes LSP-based tools, not TypeScript-specific tools.
  */
 
+import { parseArgs } from "node:util";
 import {
   BaseMcpServer,
   StdioServerTransport,
-  initializeMcpConfig,
-  generatePermissions,
   debug,
   type ToolDef,
 } from "./_mcplib.ts";
@@ -27,7 +26,6 @@ import { lspGetSignatureHelpTool } from "../lsp/tools/lspGetSignatureHelp.ts";
 import { lspFormatDocumentTool } from "../lsp/tools/lspFormatDocument.ts";
 import { lspGetCodeActionsTool } from "../lsp/tools/lspGetCodeActions.ts";
 import { listToolsTool } from "./tools/listTools.ts";
-import { parseArgs } from "node:util";
 import { spawn } from "child_process";
 import { initialize as initializeLSPClient } from "../lsp/lspClient.ts";
 import { getLanguageFromLSPCommand } from "./utils/languageSupport.ts";
@@ -54,9 +52,6 @@ async function main() {
     // Parse command line arguments
     const { values } = parseArgs({
       options: {
-        init: {
-          type: "string",
-        },
         "lsp-command": {
           type: "string",
         },
@@ -83,57 +78,6 @@ async function main() {
     }
 
     const detectedLanguage = getLanguageFromLSPCommand(lspCommand);
-
-    // Handle initialization
-    if (values.init !== undefined) {
-      const target = values.init || "claude";
-      const validTargets = ["claude", "global"];
-      
-      if (!validTargets.includes(target)) {
-        console.error(
-          `Unknown init target: ${target}. Supported: ${validTargets.join(", ")}`
-        );
-        process.exit(1);
-      }
-
-      const isGlobal = target === "global";
-      
-      const config = isGlobal
-        ? {
-            command: "npx",
-            args: ["-y", "lsmcp@latest", "--bin", lspCommand],
-          }
-        : {
-            command: "npx",
-            args: ["lsmcp", "--bin", lspCommand],
-          };
-
-      // Generate permissions from tool definitions
-      const permissions = generatePermissions("generic-lsp", tools);
-
-      initializeMcpConfig(
-        projectRoot,
-        "generic-lsp",
-        config,
-        permissions
-      );
-
-      console.log(
-        `✓ Created/updated .mcp.json with generic LSP configuration`
-      );
-      console.log(`✓ Created/updated .claude/settings.json with permissions`);
-      console.log(`\nLSP command: ${lspCommand}`);
-      console.log(`Detected language: ${detectedLanguage}`);
-      
-      if (!isGlobal) {
-        console.log(`\nInstall lsmcp as a dev dependency:`);
-        console.log(`  npm install --save-dev lsmcp`);
-        console.log(`  # or`);
-        console.log(`  pnpm add -D lsmcp`);
-      }
-      
-      process.exit(0);
-    }
 
     // Start MCP server
     const server = new BaseMcpServer({

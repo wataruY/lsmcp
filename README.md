@@ -33,33 +33,29 @@ This project provides AI with functionality equivalent to Language Server Protoc
 <details>
 <summary>Language Server Installation Guide</summary>
 
-| Language | Install Command | LSP Binary |
-|----------|----------------|------------|
-| TypeScript/JavaScript | `npm add typescript typescript-language-server` | `typescript-language-server` |
-| Rust | `rustup component add rust-analyzer` | `rust-analyzer` |
-| Python | `pip install python-lsp-server` | `pylsp` |
-| Go | Download from [releases](https://github.com/golang/tools/tree/master/gopls) | `gopls` |
-| C/C++ | `apt install clangd` or `brew install llvm` | `clangd` |
-| Java | Download from [eclipse.org](https://download.eclipse.org/jdtls/) | `jdtls` |
-| Ruby | `gem install solargraph` | `solargraph` |
+| Language              | Install Command                                                             | LSP Binary                   |
+| --------------------- | --------------------------------------------------------------------------- | ---------------------------- |
+| TypeScript/JavaScript | `npm add typescript typescript-language-server`                             | `typescript-language-server` |
+| Rust                  | `rustup component add rust-analyzer`                                        | `rust-analyzer`              |
+| Python                | `pip install python-lsp-server`                                             | `pylsp`                      |
+| Go                    | Download from [releases](https://github.com/golang/tools/tree/master/gopls) | `gopls`                      |
+| C/C++                 | `apt install clangd` or `brew install llvm`                                 | `clangd`                     |
+| Java                  | Download from [eclipse.org](https://download.eclipse.org/jdtls/)            | `jdtls`                      |
+| Ruby                  | `gem install solargraph`                                                    | `solargraph`                 |
 
 </details>
 
-### 2. Initialize Project
+### 2. Add MCP Server
 
 ```bash
 # TypeScript/JavaScript
-npx -y @mizchi/lsmcp --init=claude --language=typescript
+claude mcp add npx --scope local -- -y @mizchi/lsmcp --language=typescript
 
 # Other languages (use --bin with LSP command)
-npx -y @mizchi/lsmcp --init=claude --bin="rust-analyzer"  # Rust
-npx -y @mizchi/lsmcp --init=claude --bin="pylsp"          # Python
-npx -y @mizchi/lsmcp --init=claude --bin="gopls"          # Go
+claude mcp add npx --scope local -- -y @mizchi/lsmcp --bin="rust-analyzer"  # Rust
+claude mcp add npx --scope local -- -y @mizchi/lsmcp --bin="pylsp"          # Python
+claude mcp add npx --scope local -- -y @mizchi/lsmcp --bin="gopls"          # Go
 ```
-
-This automatically:
-- Creates/updates `.mcp.json` with lsmcp configuration
-- Creates/updates `.claude/settings.json` with permissions
 
 ### 3. Start Claude
 
@@ -95,6 +91,7 @@ For other languages, use the `--bin` option:
   }
 }
 ```
+
 </details>
 
 <details>
@@ -113,6 +110,7 @@ For other languages, use the `--bin` option:
   }
 }
 ```
+
 </details>
 
 ## Usage
@@ -162,6 +160,7 @@ npx @mizchi/lsmcp
 **When performing refactoring operations on TypeScript/JavaScript code, ALWAYS use lsmcp MCP tools instead of the default Edit/Write tools.**
 
 For example:
+
 - ✅ Use `lsmcp_rename_symbol` for renaming
 - ❌ Don't use Edit/MultiEdit/Write for refactoring
 - ✅ Use `lsmcp_move_file` for moving files
@@ -210,11 +209,12 @@ For best results with AI assistants, include this context:
 I have lsmcp MCP server connected, which provides LSP-based code intelligence tools.
 
 Available tools:
+
 - lsmcp_find_references - Find all usages of a symbol
 - lsmcp_get_definitions - Jump to definition
 - lsmcp_rename_symbol - Rename across project
 - lsmcp_get_diagnostics - Get errors/warnings
-[... other tools based on your language ...]
+  [... other tools based on your language ...]
 
 Please use these tools to explore the codebase and perform refactoring operations.
 ```
@@ -252,6 +252,7 @@ Error: LSP server for typescript not found
 ```
 
 **Solution**: Install the language server:
+
 ```bash
 npm add typescript typescript-language-server
 ```
@@ -267,6 +268,7 @@ Error: Permission denied for tool 'lsmcp_rename_symbol'
 ### Empty Diagnostics
 
 If `lsmcp_get_diagnostics` returns empty results:
+
 1. Ensure the language server is running: `ps aux | grep language-server`
 2. Check for tsconfig.json or equivalent config file
 3. Try opening the file first with `lsmcp_get_hover`
@@ -274,15 +276,18 @@ If `lsmcp_get_diagnostics` returns empty results:
 ### Debugging
 
 Enable verbose logging:
+
 ```bash
 npx @mizchi/lsmcp --verbose
 ```
 
 Check language server output:
+
 ```bash
 # Run language server directly
 typescript-language-server --stdio
 ```
+
 </details>
 
 ## License

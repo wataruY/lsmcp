@@ -70,6 +70,8 @@ person.
       filePath,
       line: "person.",
       target: "person.",
+      resolve: false,
+      includeAutoImport: false,
     });
 
     expect(result).toContain("Completions at");
@@ -95,6 +97,8 @@ numbers.
       filePath,
       line: "numbers.",
       target: "numbers.",
+      resolve: false,
+      includeAutoImport: false,
     });
 
     expect(result).toContain("map [Method]");
@@ -120,6 +124,8 @@ path.
       filePath,
       line: "path.",
       target: "path.",
+      resolve: false,
+      includeAutoImport: false,
     });
 
     expect(result).toContain("join [Function]");
@@ -150,6 +156,8 @@ const user: User = {
       root: tmpDir,
       filePath,
       line: 9, // Inside the object literal
+      resolve: false,
+      includeAutoImport: false,
     });
 
     expect(result).toContain("id [Property]");
@@ -170,6 +178,8 @@ const user: User = {
       root: tmpDir,
       filePath,
       line: 1,
+      resolve: false,
+      includeAutoImport: false,
     });
 
     expect(result).toContain("No completions available");
@@ -192,6 +202,8 @@ str.
       filePath,
       line: 3,
       target: "str.",
+      resolve: false,
+      includeAutoImport: false,
     });
 
     expect(result).toContain("charAt [Method]");
@@ -220,6 +232,8 @@ async function test() {
       filePath,
       line: "Promise.",
       target: "Promise.",
+      resolve: false,
+      includeAutoImport: false,
     });
 
     expect(result).toContain("resolve [Method]");

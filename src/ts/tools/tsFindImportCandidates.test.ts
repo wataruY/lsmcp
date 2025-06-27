@@ -62,6 +62,7 @@ export class UserService {
       root: tmpDir,
       symbolName: "Logger",
       currentFile: join(tmpDir, "src/index.ts"),
+      limit: 10,
     });
 
     expect(result).toContain("Found 1 import candidates for \"Logger\"");
@@ -81,6 +82,7 @@ export class UserService {
       root: tmpDir,
       symbolName: "Product",
       currentFile: join(tmpDir, "src/models/index.ts"),
+      limit: 10,
     });
     expect(result1).toContain('import { Product } from "./product"');
 
@@ -89,6 +91,7 @@ export class UserService {
       root: tmpDir,
       symbolName: "Product",
       currentFile: join(tmpDir, "src/index.ts"),
+      limit: 10,
     });
     expect(result2).toContain('import { Product } from "./models/product"');
 
@@ -97,6 +100,7 @@ export class UserService {
       root: tmpDir,
       symbolName: "Product",
       currentFile: join(tmpDir, "src/services/order.ts"),
+      limit: 10,
     });
     expect(result3).toContain('import { Product } from "../models/product"');
   });
@@ -125,6 +129,7 @@ export interface ConfigOptions {}
     const result = await findImportCandidatesTool.execute({
       root: tmpDir,
       symbolName: "NonExistentSymbol",
+      limit: 10,
     });
 
     expect(result).toBe('No import candidates found for "NonExistentSymbol"');
