@@ -52,12 +52,25 @@ describe("MCP TypeScript Tools", () => {
     });
 
     await client.connect(transport);
-  });
+  }, 20000); // 20 second timeout for setup
 
   afterEach(async () => {
-    await client.close();
-    await fs.rm(tmpDir, { recursive: true, force: true });
-  });
+    try {
+      // Close client and transport
+      if (client) {
+        await client.close();
+      }
+    } catch (error) {
+      console.error("Error during client cleanup:", error);
+    }
+    
+    // Clean up temp directory
+    try {
+      await fs.rm(tmpDir, { recursive: true, force: true });
+    } catch (error) {
+      console.error("Error during temp directory cleanup:", error);
+    }
+  }, 10000); // 10 second timeout for cleanup
 
   describe("rename_symbol", () => {
     it("should rename a symbol in a file", async () => {
