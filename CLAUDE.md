@@ -1,4 +1,4 @@
-You are a TypeScript/MCP expert developing the lsmcp tool.
+You are a TypeScript/MCP expert developing the lsmcp tool - a unified Language Service MCP for multi-language support.
 
 Given a URL, use read_url_content_as_markdown and summary contents.
 
@@ -82,14 +82,26 @@ Specifically for refactoring:
 
 ## Project Goal
 
-Provide unified Language Server Protocol (LSP) features as Model Context Protocol (MCP) tools, with advanced TypeScript support via Compiler API.
+Provide unified Language Server Protocol (LSP) features as Model Context Protocol (MCP) tools for multiple programming languages, with advanced TypeScript support via Compiler API.
+
+## Key Features
+
+- 🌍 **Multi-Language Support** - Built-in TypeScript/JavaScript, extensible to any language via LSP
+- 🔍 **Semantic Code Analysis** - Go to definition, find references, type information
+- ♻️ **Intelligent Refactoring** - Rename symbols, move files, with automatic import updates
+- 🔧 **Flexible Configuration** - Use with any LSP server via `--bin` option
+- 🤖 **AI-Optimized** - Designed for LLMs with line and symbol-based interfaces
+- ⚡ **Fast Symbol Search** - Project-wide symbol index with real-time file watching
+- 🎯 **Smart Import Suggestions** - Find and suggest import candidates with relative paths
 
 ## Development Stack
 
-- pnpm
-- typescript
-- ts-morph: manipulate typescript project
-- tsdown: rolldown based bundler
+- pnpm: Package manager
+- typescript: Core language
+- ts-morph: TypeScript AST manipulation
+- tsdown: Rolldown-based bundler
+- @modelcontextprotocol/sdk: MCP implementation
+- vscode-languageserver-protocol: LSP client implementation
 
 ## Coding Rules
 
@@ -150,12 +162,9 @@ Before committing, always run:
 
 ```
 dist/               # Build output directory
-  typescript-mcp.js # TypeScript-specific MCP server executable
   lsmcp.js         # Main unified LSP MCP CLI executable
+  typescript-mcp.js # TypeScript-specific MCP server executable
   generic-lsp-mcp.js # Generic LSP MCP server executable
-  moonbit-mcp.js   # Moonbit MCP server executable
-  rust-mcp.js      # Rust MCP server executable
-  multi-language-mcp.js # Multi-language MCP server executable
 
 src/
   lsp/             # LSP client implementation
@@ -172,12 +181,12 @@ src/
   mcp/             # MCP server implementations
     _mcplib.ts     # Generic MCP server library
     typescript-mcp.ts # TypeScript MCP server
-    unified-mcp.ts # Unified LSP MCP CLI (outputs as lsmcp.js)
+    lsmcp.ts       # Main unified LSP MCP CLI (outputs as lsmcp.js)
     generic-lsp-mcp.ts # Generic LSP MCP server
-    moonbit-mcp.ts # Moonbit MCP server
-    rust-mcp.ts    # Rust MCP server
-    multi-language-mcp.ts # Multi-language MCP server
     languageServerInit.ts # Shared language server initialization
+    utils/         # MCP utility modules
+      errorHandler.ts # Error handling with context
+      languageSupport.ts # Language detection and support
     
   textUtils/       # Text manipulation utilities
 
@@ -227,11 +236,38 @@ export const toolNameTool: ToolDef<typeof schema> = {
 - `src/ts/utils/toolHandlers.ts` - Shared tool preparation and context setup
 - `src/mcp/languageServerInit.ts` - Unified language server initialization
 
-## Memories
+## Implementation Notes
 
-- AI はワードカウントが苦手なので、LSPのLine Character ではなく、一致する行と、一致するコードでインターフェースを調整する必要があります。既存のコードを参考に、そうなってないMCPサーバーのインターフェースを調整します。
+### Line-based Interface Design
+AI はワードカウントが苦手なので、LSPのLine Character ではなく、一致する行と、一致するコードでインターフェースを調整する必要があります。すべてのツールは以下の方式を採用:
+- `line`: 行番号（1-based）または行内の文字列マッチング
+- `symbolName`: シンボル名での指定
+- Character offset は使用しない
 
-## Recent Changes (2025-01-26)
+### Symbol Index Architecture
+- ファイル変更を自動検知して更新
+- プロジェクト全体のシンボルを高速検索
+- ts-morph のプロジェクトインスタンスをキャッシュ
+
+## Tool Categories
+
+### TypeScript-specific Tools (Compiler API)
+These tools use TypeScript Compiler API directly and provide advanced features:
+- `lsmcp_move_file`, `lsmcp_move_directory` - Move with import updates
+- `lsmcp_rename_symbol`, `lsmcp_delete_symbol` - Semantic refactoring
+- `lsmcp_get_type_at_symbol`, `lsmcp_get_module_symbols` - Type analysis
+- `lsmcp_search_symbols`, `lsmcp_find_import_candidates` - Fast indexing
+- `lsmcp_get_symbols_in_scope` - Scope analysis
+
+### LSP-based Tools (All Languages)
+These tools work with any language that has an LSP server:
+- `lsp_get_hover`, `lsp_find_references`, `lsp_get_definitions`
+- `lsp_get_diagnostics`, `lsp_rename_symbol`, `lsp_delete_symbol`
+- `lsp_get_document_symbols`, `lsp_get_workspace_symbols`
+- `lsp_get_completion`, `lsp_get_signature_help`
+- `lsp_get_code_actions`, `lsp_format_document`
+
+## Recent Changes (2025-01-27)
 
 1. **Added Python MCP Tests**
    - `tests/python-mcp.test.ts` - Comprehensive Python MCP server tests
@@ -248,14 +284,38 @@ export const toolNameTool: ToolDef<typeof schema> = {
    - Enhanced language detection for Python, Go, Java, and other languages
    - Improved error handling and user feedback
 
+## Current Status
+
+### Supported Languages
+- **TypeScript/JavaScript** - Full support with advanced features
+- **Other Languages** - Via LSP with `--bin` option:
+  - Rust (`rust-analyzer`)
+  - Python (`pylsp`)
+  - Go (`gopls`)
+  - C/C++ (`clangd`)
+  - Java (`jdtls`)
+  - Ruby (`solargraph`)
+
+### Installation
+```bash
+# TypeScript/JavaScript
+claude mcp add npx --scope local -- -y @mizchi/lsmcp --language=typescript
+
+# Other languages
+claude mcp add npx --scope local -- -y @mizchi/lsmcp --bin="rust-analyzer"  # Rust
+claude mcp add npx --scope local -- -y @mizchi/lsmcp --bin="pylsp"          # Python
+```
+
 ## TODO
 
 - [ ] Multi Project support
 - [ ] Extract function refactoring
 - [ ] Add Java MCP tests
+- [ ] Enhanced error recovery for LSP communication
 - [x] Fix MCP client tests for move_file and delete_symbol ✅ 2025-01-13
 - [x] Add Python MCP tests ✅ 2025-01-26
 - [x] Refactor code duplication ✅ 2025-01-26
+- [x] Unified lsmcp CLI for all languages ✅ 2025-01-27
 
 ## LICENSE
 
