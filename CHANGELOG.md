@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### 🐛 Debug Adapter Protocol (DAP) Support (2025-01-28)
+- **DAP MCP Server**: New MCP server for debugging capabilities
+  - Launch and attach to debug sessions
+  - Set breakpoints with conditions
+  - Step through code (step over/into/out)
+  - Inspect variables and evaluate expressions
+  - Stack trace inspection
+  - Multiple concurrent debug sessions
+- **TypeScript Debugging**: Support for debugging TypeScript files
+  - Uses ts-blank-space for source transformation
+  - Preserves line numbers for accurate debugging
+  - No source map complexity
+- **Simple Debug MCP**: Lightweight debugging helper
+  - Track value changes over time
+  - Compare values before/after
+  - Measure execution time
+  - Clear history functionality
+- **Language Support Roadmap**: 
+  - Current: JavaScript, TypeScript
+  - Planned: Python, Go, Java, C/C++, Rust, C#, Ruby, PHP
+
 #### ⚡ Real-time File Watching for Symbol Index (2025-01-26)
 - **File System Watching**: Symbol index now automatically updates when files change
   - Monitors directories containing source files

@@ -18,6 +18,7 @@ const launchDebugSessionTool: ToolDef<z.ZodType> = {
   schema: z.object({
     sessionId: z.string().describe("Unique identifier for this debug session"),
     adapter: z.string().describe("Debug adapter to use (e.g., 'node', 'python')"),
+    adapterArgs: z.array(z.string()).optional().describe("Arguments for the debug adapter"),
     program: z.string().describe("Path to the program to debug"),
     args: z.array(z.string()).optional().describe("Program arguments"),
     env: z.record(z.string()).optional().describe("Environment variables"),
@@ -31,6 +32,7 @@ const launchDebugSessionTool: ToolDef<z.ZodType> = {
 
     const session = createDebugSession({
       adapter: args.adapter,
+      adapterArgs: args.adapterArgs,
       clientID: `mcp-dap-${args.sessionId}`,
       clientName: "MCP DAP Server",
     });
@@ -76,6 +78,7 @@ const attachDebugSessionTool: ToolDef<z.ZodType> = {
   schema: z.object({
     sessionId: z.string().describe("Unique identifier for this debug session"),
     adapter: z.string().describe("Debug adapter to use"),
+    adapterArgs: z.array(z.string()).optional().describe("Arguments for the debug adapter"),
     processId: z.number().optional().describe("Process ID to attach to"),
     port: z.number().optional().describe("Debug port to connect to"),
     host: z.string().optional().describe("Debug host to connect to"),
@@ -87,6 +90,7 @@ const attachDebugSessionTool: ToolDef<z.ZodType> = {
 
     const session = createDebugSession({
       adapter: args.adapter,
+      adapterArgs: args.adapterArgs,
       clientID: `mcp-dap-${args.sessionId}`,
       clientName: "MCP DAP Server",
     });
@@ -374,6 +378,7 @@ class DAPMcpServer extends BaseMcpServer {
       version: "1.0.0",
       description: "Debug Adapter Protocol MCP server for debugging programs"
     });
+    this.setupHandlers();
   }
 
   protected setupHandlers(): void {

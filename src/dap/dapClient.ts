@@ -95,13 +95,14 @@ export class DAPClient extends EventEmitter {
       this.pendingRequests.set(seq, { resolve, reject });
       this.sendMessage(request);
 
-      // Timeout after 5 seconds
+      // Timeout after 30 seconds for initialize, 10 seconds for others
+      const timeout = command === "initialize" ? 30000 : 10000;
       setTimeout(() => {
         if (this.pendingRequests.has(seq)) {
           this.pendingRequests.delete(seq);
-          reject(new Error(`Request timeout: ${command}`));
+          reject(new Error(`Request timeout: ${command} (after ${timeout}ms)`));
         }
-      }, 5000);
+      }, timeout);
     });
   }
 

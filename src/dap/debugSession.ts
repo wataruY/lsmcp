@@ -3,6 +3,8 @@
  */
 
 import { DAPClient } from "./dapClient.ts";
+import { resolveAdapter, getAdapterCapabilities } from "./adapterResolver.ts";
+import { isTypeScriptFile, createTempJsFile } from "./typescriptSupport.ts";
 import type {
   InitializeRequestArguments,
   SetBreakpointsArguments,
@@ -78,10 +80,14 @@ export class DebugSession {
    * Connect and initialize the debug session
    */
   async connect(): Promise<void> {
-    await this.client.connect(
-      this.options.adapter,
-      this.options.adapterArgs || []
-    );
+    // Resolve the adapter command and arguments
+    const { command, args } = resolveAdapter(this.options.adapter);
+    const adapterArgs = [...args, ...(this.options.adapterArgs || [])];
+    
+    await this.client.connect(command, adapterArgs);
+
+    // Get adapter capabilities
+    const capabilities = getAdapterCapabilities(this.options.adapter);
 
     const initArgs: InitializeRequestArguments = {
       clientID: this.options.clientID || "dap-client",
@@ -93,6 +99,8 @@ export class DebugSession {
       pathFormat: "path",
       supportsVariableType: this.options.supportsVariableType ?? true,
       supportsVariablePaging: this.options.supportsVariablePaging ?? true,
+      // Include adapter-specific capabilities
+      ...capabilities,
     };
 
     await this.client.initialize(initArgs);
@@ -130,8 +138,16 @@ export class DebugSession {
    */
   async launch(program: string, args?: LaunchRequestArguments): Promise<void> {
     await this.client.sendRequest("configurationDone");
+    
+    // Handle TypeScript files
+    let actualProgram = program;
+    if (isTypeScriptFile(program)) {
+      // Transform TypeScript to JavaScript using ts-blank-space
+      actualProgram = createTempJsFile(program);
+    }
+    
     await this.client.sendRequest("launch", {
-      program,
+      program: actualProgram,
       ...args,
     });
   }

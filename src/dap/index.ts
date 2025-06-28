@@ -38,3 +38,4 @@ export type {
 
 // Export utility functions
 export { createDebugSession, DebugSession } from "./debugSession.ts";
+export { resolveAdapter, getAdapterCapabilities } from "./adapterResolver.ts";

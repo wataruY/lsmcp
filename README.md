@@ -15,6 +15,7 @@ A unified MCP (Model Context Protocol) server that provides advanced code manipu
 - 🤖 **AI-Optimized** - Designed for LLMs with line and symbol-based interfaces
 - ⚡ **Fast Symbol Search** - Project-wide symbol index with real-time file watching
 - 🎯 **Smart Import Suggestions** - Find and suggest import candidates with relative paths
+- 🐛 **Debug Support** - DAP integration for debugging with breakpoints, step execution, and variable inspection
 
 See [Language Support Matrix](docs/LANGUAGE_SUPPORT_MATRIX.md) for detailed information about available tools for each language.
 

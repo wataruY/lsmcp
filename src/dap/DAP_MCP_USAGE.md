@@ -38,13 +38,20 @@ Launch a new debug session for a program.
 // Example: Debug a Node.js program
 debug_launch({
   sessionId: "node-app-1",
-  adapter: "node",
+  adapter: "node",  // Built-in Node.js adapter is automatically resolved
   program: "/path/to/app.js",
   args: ["--verbose"],
   env: { NODE_ENV: "development" },
   stopOnEntry: true
 })
 ```
+
+**Supported Adapters:**
+- `node` / `nodejs` - Built-in Node.js debugger (no additional setup required)
+- `python` / `python3` - Python debugger (requires `debugpy`)
+- `go` - Go debugger (requires `dlv`)
+- `rust` - Rust debugger (requires `rust-analyzer`)
+- Custom adapters can be specified by path
 
 #### `debug_attach`
 Attach to a running process.
