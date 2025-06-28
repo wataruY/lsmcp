@@ -5,7 +5,7 @@ import { Project, SourceFile, Node } from "ts-morph";
 import { ok, err, Result } from "neverthrow";
 import path from "path";
 import fs from "fs/promises";
-import { getProjectCached } from "../projectCache.ts";
+import { getOrCreateProject } from "../projectCache.ts";
 import { resolveLineParameter } from "../../textUtils/resolveLineParameter.ts";
 import { findTargetInFile } from "../../textUtils/findTargetInFile.ts";
 import ts from "typescript";
@@ -27,7 +27,7 @@ export async function prepareToolContext(
   filePath: string,
   tsconfigPath?: string
 ): Promise<Result<ToolContext, string>> {
-  const projectResult = await getProjectCached(root, tsconfigPath);
+  const projectResult = await getOrCreateProject(root, tsconfigPath);
   if (projectResult.isErr()) {
     return err(projectResult.error);
   }
