@@ -8,21 +8,9 @@
       "command": "npx",
       "args": ["-y", "@mizchi/readability", "--mcp"]
     },
-    "dap-demo": {
+    "dap": {
       "command": "node",
       "args": ["dist/dap-mcp.js"]
-    },
-    "simple-debug": {
-      "command": "node",
-      "args": ["dist/simple-debug-mcp.js"]
-    },
-    "dap-dev": {
-      "command": "node",
-      "args": ["dist/dap-mcp.js"]
-    },
-    "enhanced-dap": {
-      "command": "node",
-      "args": ["dist/enhanced-dap-mcp-v2.js"]
     }
   }
 }

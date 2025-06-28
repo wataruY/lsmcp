@@ -9,7 +9,6 @@ export default defineConfig({
     "node-dap-adapter": "src/dap/adapters/node-dap-adapter.ts",
     "minimal-adapter": "src/dap/minimal-adapter.ts",
     "debug-adapter": "src/dap/debug-adapter.ts",
-    "simple-debug-mcp": "src/mcp/simple-debug-mcp.ts",
   },
   define: {
     "import.meta.vitest": "undefined",
