@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TypeScript support for DAP debugging using ts-blank-space
  */

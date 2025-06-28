@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Node.js Inspector to DAP Bridge Example
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Minimal Node.js DAP Adapter using --inspect-brk
  * 

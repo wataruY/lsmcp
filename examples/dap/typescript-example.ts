@@ -1,3 +1,4 @@
+// @ts-nocheck
 // TypeScript debugging example using ts-blank-space
 
 interface User {

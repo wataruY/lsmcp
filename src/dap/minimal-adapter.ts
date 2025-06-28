@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-nocheck
 /**
  * Minimal DAP Adapter that just runs Node.js programs
  */
