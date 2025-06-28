@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2025-01-28
+
+### Added
+
+#### 🎯 Debug Adapter Protocol (DAP) MCP v2 - Enhanced Debugging Tools
+- **Complete DAP MCP Implementation**: Production-ready debug adapter protocol support
+  - Session state management with proper lifecycle tracking
+  - Breakpoint management with hit counts and conditional breakpoints
+  - Debug event logging to JSONL files for analysis
+  - Value tracking and history across debug sessions
+  - Performance metrics tracking
+  - Automatic cleanup of stale sessions
+- **Enhanced Features**:
+  - Export debug logs in multiple formats (JSON, JSONL, text)
+  - Breakpoint statistics and hit count tracking
+  - Session info and management tools
+  - Comprehensive error handling and recovery
+- **Examples and Documentation**:
+  - Algorithm debugging examples (LCS, performance analysis)
+  - Detailed usage documentation in `docs/dap-mcp-usage.md`
+  - Test coverage for all debugging scenarios
+
+### Changed
+- Consolidated debug tools into single `dap-mcp` server
+- Removed redundant `dap-demo` and `simple-debug` implementations
+
+### Fixed
+- Type errors in TypeScript tool handlers
+- Flaky tests in DAP algorithm debugging suite
+- MCP server startup issues
+
 ## [Unreleased]
 
 ### Added
