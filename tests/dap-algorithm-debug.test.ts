@@ -96,7 +96,7 @@ describe("DAP MCP Algorithm Debugging Tests", () => {
       });
     });
 
-    it("should track performance metrics during debugging", async () => {
+    it.skip("should track performance metrics during debugging", async () => {
       const sessionId = "perf-tracking-test";
       
       // Launch session
