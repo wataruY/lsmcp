@@ -1,6 +1,12 @@
 import { z } from "zod";
+import path from "path";
 import { findReferences } from "../navigations/findReferences.ts";
-import { prepareToolContext, formatRelativePath } from "../utils/toolHandlers.ts";
+import {
+  getOrCreateProject,
+  getOrCreateSourceFileWithRefresh,
+} from "../projectCache.ts";
+import { resolveLineParameterForSourceFile as resolveLineParameter } from "../../textUtils/resolveLineParameterForSourceFile.ts";
+import { findSymbolInLine } from "../../textUtils/findSymbolInLine.ts";
 import type { ToolDef } from "../../mcp/_mcplib.ts";
 import { symbolLocationSchema } from "../../common/schemas.ts";
 import { formatError, ErrorContext } from "../../mcp/utils/errorHandler.ts";
@@ -24,19 +30,45 @@ interface FindReferencesResult {
 async function handleFindReferences(
   params: z.infer<typeof schema>
 ): Promise<FindReferencesResult> {
-  let context;
-  try {
-    context = await prepareToolContext(params);
-  } catch (error) {
-    // prepareToolContext already formats errors properly
-    throw error;
+  const { root, filePath, line, symbolName } = params;
+  
+  // Always treat paths as relative to root
+  const absolutePath = path.join(root, filePath);
+  
+  // Get or create project based on the file path
+  const project = await getOrCreateProject(absolutePath);
+  
+  // Ensure the source file is loaded in the project with fresh content
+  const sourceFile = getOrCreateSourceFileWithRefresh(absolutePath);
+  
+  // Resolve line parameter
+  const resolvedLine = resolveLineParameter(sourceFile, line);
+  
+  // Get the line content
+  const lines = sourceFile.getFullText().split("\n");
+  const lineContent = lines[resolvedLine - 1];
+  
+  // Find the symbol position in the line
+  const symbolResult = findSymbolInLine(lineContent, symbolName);
+  
+  if ("error" in symbolResult) {
+    const errorContext: ErrorContext = {
+      operation: "find symbol",
+      filePath,
+      symbolName,
+      language: "typescript",
+      details: { line, error: symbolResult.error }
+    };
+    throw new Error(formatError(new Error(symbolResult.error), errorContext));
   }
-
+  
+  const column = symbolResult.characterIndex + 1; // Convert to 1-based
+  
   // Find references
-  const result = findReferences(context.project, {
-    filePath: context.absolutePath,
-    line: context.resolvedLine,
-    column: context.column,
+  const result = findReferences(project, {
+    filePath: absolutePath,
+    line: resolvedLine,
+    column,
   });
 
   if (result.isErr()) {
@@ -68,7 +100,7 @@ function formatFindReferencesResult(
   ];
 
   for (const ref of references) {
-    const relativePath = formatRelativePath(ref.filePath, root);
+    const relativePath = path.relative(root, ref.filePath);
     output.push(
       `  ${relativePath}:${ref.line}:${ref.column} - ${ref.lineText}`
     );
