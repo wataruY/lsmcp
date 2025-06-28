@@ -154,17 +154,11 @@ export function getRelatedModules(
 
 if (import.meta.vitest) {
   const { describe, it, expect } = await import("vitest");
-  const { Project } = await import("ts-morph");
+  const { createTestProject } = await import("../test-utils/createTestProject.ts");
 
   describe("getRelatedModules", () => {
     it("should find modules that a file imports", () => {
-      const project = new Project({
-        useInMemoryFileSystem: true,
-        compilerOptions: {
-          target: 99,
-          module: 99,
-        },
-      });
+      const project = createTestProject();
 
       // Create test files
       project.createSourceFile(
@@ -219,13 +213,7 @@ export const config = {
     });
 
     it("should find modules that import a file", () => {
-      const project = new Project({
-        useInMemoryFileSystem: true,
-        compilerOptions: {
-          target: 99,
-          module: 99,
-        },
-      });
+      const project = createTestProject();
 
       // Create test files
       project.createSourceFile(
@@ -283,13 +271,7 @@ export const b = sharedFunction();
     });
 
     it("should find re-export relationships", () => {
-      const project = new Project({
-        useInMemoryFileSystem: true,
-        compilerOptions: {
-          target: 99,
-          module: 99,
-        },
-      });
+      const project = createTestProject();
 
       // Create test files
       project.createSourceFile(
@@ -345,13 +327,7 @@ export { feature as renamedFeature } from "./core/feature.ts";
     });
 
     it("should handle circular dependencies", () => {
-      const project = new Project({
-        useInMemoryFileSystem: true,
-        compilerOptions: {
-          target: 99,
-          module: 99,
-        },
-      });
+      const project = createTestProject();
 
       // Create circular dependency
       project.createSourceFile(
@@ -392,13 +368,7 @@ export const b = "b" + a;
     });
 
     it("should handle files with no relationships", () => {
-      const project = new Project({
-        useInMemoryFileSystem: true,
-        compilerOptions: {
-          target: 99,
-          module: 99,
-        },
-      });
+      const project = createTestProject();
 
       project.createSourceFile(
         "/project/src/isolated.ts",

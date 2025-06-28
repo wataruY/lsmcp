@@ -4,6 +4,13 @@
  */
 import { createServer, Socket, Server } from "net";
 import { EventEmitter } from "events";
+import {
+  sendSuccessResponse,
+  sendErrorResponse,
+  sendEventWithDelay,
+  sendDAPMessage,
+  createEvent,
+} from "./dap-test-utils.ts";
 
 interface ProgramState {
   stopped: boolean;
@@ -209,36 +216,30 @@ export class EnhancedMockDAPServer extends EventEmitter {
   }
 
   private handleConfigurationDone(request: any, socket: Socket) {
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-    };
-
-    this.sendMessage(response, socket);
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket
+    );
   }
 
   private handleLaunch(request: any, socket: Socket) {
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-    };
-
-    this.sendMessage(response, socket);
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket
+    );
 
     setTimeout(() => {
-      this.sendEvent(
+      sendEventWithDelay(
+        this.sequenceNumber++,
         "output",
         {
           category: "console",
           output: "Starting program...\n",
         },
-        socket
+        socket,
+        0
       );
     }, 50);
 
@@ -247,7 +248,8 @@ export class EnhancedMockDAPServer extends EventEmitter {
       this.programState.stopReason = "breakpoint";
       this.programState.currentLine = 24;
       
-      this.sendEvent(
+      sendEventWithDelay(
+        this.sequenceNumber++,
         "stopped",
         {
           reason: "breakpoint",
@@ -255,29 +257,26 @@ export class EnhancedMockDAPServer extends EventEmitter {
           threadId: this.programState.threadId,
           allThreadsStopped: true,
         },
-        socket
+        socket,
+        0
       );
     }, 100);
   }
 
   private handleThreads(request: any, socket: Socket) {
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-      body: {
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket,
+      {
         threads: [
           {
             id: this.programState.threadId,
             name: "Main Thread",
           },
         ],
-      },
-    };
-
-    this.sendMessage(response, socket);
+      }
+    );
   }
 
   private handleStackTrace(request: any, socket: Socket) {
@@ -291,34 +290,26 @@ export class EnhancedMockDAPServer extends EventEmitter {
       }
     ];
 
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-      body: {
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket,
+      {
         stackFrames: frames,
         totalFrames: frames.length,
-      },
-    };
-
-    this.sendMessage(response, socket);
+      }
+    );
   }
 
   private handleScopes(request: any, socket: Socket) {
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-      body: {
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket,
+      {
         scopes: this.programState.scopes,
-      },
-    };
-
-    this.sendMessage(response, socket);
+      }
+    );
   }
 
   private handleVariables(request: any, socket: Socket) {
@@ -366,18 +357,14 @@ export class EnhancedMockDAPServer extends EventEmitter {
       }
     }
 
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-      body: {
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket,
+      {
         variables,
-      },
-    };
-
-    this.sendMessage(response, socket);
+      }
+    );
   }
 
   private handleEvaluate(request: any, socket: Socket) {
@@ -400,101 +387,82 @@ export class EnhancedMockDAPServer extends EventEmitter {
         result = '"string"';
         break;
       default:
-        const response = {
-          seq: this.sequenceNumber++,
-          type: "response",
-          request_seq: request.seq,
-          success: false,
-          command: request.command,
-          message: `Cannot evaluate expression: ${expression}`,
-        };
-        this.sendMessage(response, socket);
+        this.sequenceNumber = sendErrorResponse(
+          this.sequenceNumber,
+          request,
+          socket,
+          `Cannot evaluate expression: ${expression}`
+        );
         return;
     }
 
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-      body: {
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket,
+      {
         result,
         type: "string",
         variablesReference,
-      },
-    };
-
-    this.sendMessage(response, socket);
+      }
+    );
   }
 
   private handleNext(request: any, socket: Socket) {
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-    };
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket
+    );
 
-    this.sendMessage(response, socket);
-
-    setTimeout(() => {
-      this.sendEvent(
-        "stopped",
-        {
-          reason: "step",
-          threadId: this.programState.threadId,
-        },
-        socket
-      );
-    }, 50);
+    sendEventWithDelay(
+      this.sequenceNumber++,
+      "stopped",
+      {
+        reason: "step",
+        threadId: this.programState.threadId,
+      },
+      socket,
+      50
+    );
   }
 
   private handleStepIn(request: any, socket: Socket) {
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-    };
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket
+    );
 
-    this.sendMessage(response, socket);
-
-    setTimeout(() => {
-      this.sendEvent(
-        "stopped",
-        {
-          reason: "step",
-          threadId: this.programState.threadId,
-        },
-        socket
-      );
-    }, 50);
+    sendEventWithDelay(
+      this.sequenceNumber++,
+      "stopped",
+      {
+        reason: "step",
+        threadId: this.programState.threadId,
+      },
+      socket,
+      50
+    );
   }
 
   private handleStepOut(request: any, socket: Socket) {
-    const response = {
-      seq: this.sequenceNumber++,
-      type: "response",
-      request_seq: request.seq,
-      success: true,
-      command: request.command,
-    };
+    this.sequenceNumber = sendSuccessResponse(
+      this.sequenceNumber,
+      request,
+      socket
+    );
 
-    this.sendMessage(response, socket);
-
-    setTimeout(() => {
-      this.sendEvent(
-        "stopped",
-        {
-          reason: "step",
-          threadId: this.programState.threadId,
-        },
-        socket
-      );
-    }, 50);
+    sendEventWithDelay(
+      this.sequenceNumber++,
+      "stopped",
+      {
+        reason: "step",
+        threadId: this.programState.threadId,
+      },
+      socket,
+      50
+    );
   }
 
   private handleContinue(request: any, socket: Socket) {
@@ -551,15 +519,9 @@ export class EnhancedMockDAPServer extends EventEmitter {
     this.sendMessage(response, socket);
   }
 
-  private sendEvent(event: string, body: any, socket: Socket) {
-    const message = {
-      seq: this.sequenceNumber++,
-      type: "event",
-      event,
-      body,
-    };
-
-    this.sendMessage(message, socket);
+  private sendEvent(eventName: string, body: any, socket: Socket) {
+    const event = createEvent(this.sequenceNumber++, eventName, body);
+    sendDAPMessage(event, socket);
   }
 
   private sendMessage(message: any, socket: Socket) {
