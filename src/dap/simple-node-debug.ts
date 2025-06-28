@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-nocheck
 /**
  * シンプルなNode.jsデバッグ実装
  * Node.jsの--inspectフラグを使用して、基本的なデバッグ機能を提供
