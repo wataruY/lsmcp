@@ -19,6 +19,10 @@
     "dap-dev": {
       "command": "node",
       "args": ["dist/dap-mcp.js"]
+    },
+    "enhanced-dap": {
+      "command": "node",
+      "args": ["dist/enhanced-dap-mcp-v2.js"]
     }
   }
 }
