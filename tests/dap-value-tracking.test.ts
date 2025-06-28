@@ -362,7 +362,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(launchResult.content[0].text).toContain("Debug session launched");
+    expect((launchResult as any).content[0].text).toContain("Debug session launched");
 
     // Set breakpoints at value change locations
     const bpResult = await client.callTool({
@@ -374,7 +374,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(bpResult.content[0].text).toContain("4 breakpoints set");
+    expect((bpResult as any).content[0].text).toContain("4 breakpoints set");
 
     // Get initial variables (counter should be 0)
     const vars1 = await client.callTool({
@@ -384,7 +384,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(vars1.content[0].text).toContain("counter = 0");
+    expect((vars1 as any).content[0].text).toContain("counter = 0");
 
     // Continue to first breakpoint (line 5)
     await client.callTool({
@@ -405,7 +405,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(vars2.content[0].text).toContain("counter = 5");
+    expect((vars2 as any).content[0].text).toContain("counter = 5");
 
     // Continue to second breakpoint (line 8)
     await client.callTool({
@@ -425,7 +425,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(vars3.content[0].text).toContain("counter = 15");
+    expect((vars3 as any).content[0].text).toContain("counter = 15");
 
     // Evaluate expression
     const evalResult = await client.callTool({
@@ -436,7 +436,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(evalResult.content[0].text).toContain("115");
+    expect((evalResult as any).content[0].text).toContain("115");
 
     // Continue to third breakpoint (line 14) - object changes
     await client.callTool({
@@ -456,8 +456,8 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(vars4.content[0].text).toContain("value\":200");
-    expect(vars4.content[0].text).toContain("status\":\"updated\"");
+    expect((vars4 as any).content[0].text).toContain("value\":200");
+    expect((vars4 as any).content[0].text).toContain("status\":\"updated\"");
 
     // Disconnect
     await client.callTool({
@@ -482,7 +482,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(launchResult.content[0].text).toContain("Debug session launched");
+    expect((launchResult as any).content[0].text).toContain("Debug session launched");
 
     // Set conditional breakpoints
     const bpResult = await client.callTool({
@@ -495,7 +495,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Value Tracking", () => {
       }
     });
     
-    expect(bpResult.content[0].text).toContain("2 breakpoints set");
+    expect((bpResult as any).content[0].text).toContain("2 breakpoints set");
 
     // Continue and verify conditional breakpoints work
     await client.callTool({

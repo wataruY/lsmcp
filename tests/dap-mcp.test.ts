@@ -377,7 +377,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(result.content[0]?.text).toContain("Debug session test-session-1 launched");
+    expect((result as any).content[0]?.text).toContain("Debug session test-session-1 launched");
   });
 
   it("should set breakpoints", async () => {
@@ -390,7 +390,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(result.content[0]?.text).toContain("Set 3 breakpoints");
+    expect((result as any).content[0]?.text).toContain("Set 3 breakpoints");
   });
 
   it("should continue execution", async () => {
@@ -404,7 +404,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(result.content[0]?.text).toContain("Execution continued");
+    expect((result as any).content[0]?.text).toContain("Execution continued");
   });
 
   it("should get stack trace", async () => {
@@ -415,8 +415,8 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(result.content[0]?.text).toContain("main");
-    expect(result.content[0]?.text).toContain("/test/program.js");
+    expect((result as any).content[0]?.text).toContain("main");
+    expect((result as any).content[0]?.text).toContain("/test/program.js");
   });
 
   it("should disconnect session", async () => {
@@ -427,7 +427,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(result.content[0]?.text).toContain("Debug session test-session-1 disconnected");
+    expect((result as any).content[0]?.text).toContain("Debug session test-session-1 disconnected");
   });
 
   it("should list active sessions", async () => {
@@ -448,7 +448,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       arguments: {},
     });
 
-    expect(result.content[0]?.text).toContain("test-session-2");
+    expect((result as any).content[0]?.text).toContain("test-session-2");
 
     // Clean up
     await client.callTool({
@@ -467,7 +467,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(result.content[0]?.text).toContain("Session non-existent not found");
+    expect((result as any).content[0]?.text).toContain("Session non-existent not found");
   });
 
   it.skip("should track value changes through debugging", async () => {
@@ -484,7 +484,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(launchResult.content[0]?.text).toContain("Debug session launched");
+    expect((launchResult as any).content[0]?.text).toContain("Debug session launched");
 
     // Set breakpoints
     const bpResult = await client.callTool({
@@ -496,7 +496,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(bpResult.content[0]?.text).toContain("3 breakpoints set");
+    expect((bpResult as any).content[0]?.text).toContain("3 breakpoints set");
 
     // Get initial variables (counter should be 0)
     const vars1 = await client.callTool({
@@ -506,7 +506,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(vars1.content[0]?.text).toContain("counter = 0");
+    expect((vars1 as any).content[0]?.text).toContain("counter = 0");
 
     // Continue to first breakpoint
     await client.callTool({
@@ -527,7 +527,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(vars2.content[0]?.text).toContain("counter = 5");
+    expect((vars2 as any).content[0]?.text).toContain("counter = 5");
 
     // Continue to second breakpoint
     await client.callTool({
@@ -547,7 +547,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(vars3.content[0]?.text).toContain("counter = 15");
+    expect((vars3 as any).content[0]?.text).toContain("counter = 15");
 
     // Evaluate expression
     const evalResult = await client.callTool({
@@ -558,7 +558,7 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(evalResult.content[0]?.text).toContain("115");
+    expect((evalResult as any).content[0]?.text).toContain("115");
 
     // Continue to third breakpoint (object change)
     await client.callTool({
@@ -578,8 +578,8 @@ describe.skipIf(process.env.CI === "true")("DAP MCP Server", () => {
       },
     });
 
-    expect(vars4.content[0]?.text).toContain("value\":200");
-    expect(vars4.content[0]?.text).toContain("status\":\"updated\"");
+    expect((vars4 as any).content[0]?.text).toContain("value\":200");
+    expect((vars4 as any).content[0]?.text).toContain("status\":\"updated\"");
 
     // Clean up
     await client.callTool({
